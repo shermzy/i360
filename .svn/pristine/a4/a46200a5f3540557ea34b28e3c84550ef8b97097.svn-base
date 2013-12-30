@@ -1,0 +1,159 @@
+<%@ page import = "java.sql.*" %>
+<%@ page import = "java.io.*" %>
+<%@ page import = "java.util.*" %>
+<%@ page import = "java.lang.*" %>
+<%@ page import = "CP_Classes.vo.*" %>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+
+<title>Edit Venue</title>
+<%@ page pageEncoding="UTF-8"%>
+<meta http-equiv="Content-Type" content="text/html">
+<style type="text/css">
+<!--
+body {
+	background-color: #eaebf4;
+}
+-->
+</style></head>
+
+<body style="background-color: #DEE3EF">
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>    
+<jsp:useBean id="LoginStatus" class="Coach.LoginStatus" scope="session" />
+<jsp:useBean id="Venue" class="Coach.CoachVenue"scope="session" />
+<jsp:useBean id="SessionSetup" class="Coach.SessionSetup" scope="session" />
+<script language = "javascript">
+function confirmEdit(form)
+{
+		if(form.Address1.value != "") {
+				if (confirm("Edit Venue?")) {
+					form.action = "EditVenue.jsp?edit=1";
+					form.method = "post";
+					form.submit();
+					return true;
+			} else
+				return false;
+		} else {
+			if(form.Address1.value == "") {
+				alert("Please enter address line 1");
+				form.Address1.focus();
+			}
+			return false;
+		}
+		return true;
+	}
+
+	function cancelEdit() {
+		window.close();
+	}
+</script>
+
+<%
+	String username = (String) session.getAttribute("username");
+	int VenuePK=0;
+	//init
+	if(request.getParameter("editedVenue")!=null){
+		VenuePK = Integer.valueOf(request.getParameter("editedVenue"));
+		LoginStatus.setSelectedVenue(VenuePK);
+	}
+	
+	
+	if (!logchk.isUsable(username)) {
+%> <font size="2">
+   
+<script>
+parent.location.href = "../index.jsp";
+</script>
+<%
+	} 
+  else 
+  { 
+	if(request.getParameter("edit") != null) {
+		if(!request.getParameter("Address1").equalsIgnoreCase(""))	{
+  			String Address1 = request.getParameter("Address1");
+  			String Address2="";
+  			String Address3="";
+  			if(!request.getParameter("Address2").equalsIgnoreCase("")){
+  			 Address2 = request.getParameter("Address2");
+  			}
+  			if(!request.getParameter("Address3").equalsIgnoreCase("")){
+  			 Address3 = request.getParameter("Address3");
+			}  			
+			
+					try {
+						
+						boolean editsuc =Venue.updateVenue(LoginStatus.getSelectedVenue(), Address1, Address2, Address3);
+						
+						//System.out.println("editsuc:"+editsuc);
+						
+						if (editsuc) {
+						%>
+						<script>
+						alert("Venue edited successfully");
+						opener.location.href = 'Venue.jsp';
+						window.close();
+						</script>
+						<% 
+					}
+					else{
+					}
+				}catch(SQLException SE) {
+                     System.out.println(SE);
+				}
+
+	}
+	}
+%>	
+
+<form name="EditVenue" method="post">
+  <table border="0" width="480" height="141" font span style='font-size:10.0pt;font-family:Arial'>
+  <tr><b><font color="#000080" size="2" face="Arial">Edit Venue</font></b> </tr>
+    <tr>
+      <td width="110" height="33">Address Line 1:</td>
+      <td width="5" height="33">&nbsp;</td>
+      <td width="300" height="33">
+    	<input name="Address1" type="text"  style='font-size:10.0pt;font-family:Arial' id="Name" value="<%=Venue.getSelectedCoachVenue(LoginStatus.getSelectedVenue()).getVenue1()%>"size="40" maxlength="100">
+	  </td>
+    </tr>
+     <tr>
+      <td width="110" height="33">Address Line 2:</td>
+      <td width="5" height="33">&nbsp;</td>
+      <td width="300" height="33">
+    	<input name="Address2" type="text"  style='font-size:10.0pt;font-family:Arial' id="Name" value="<%=Venue.getSelectedCoachVenue(LoginStatus.getSelectedVenue()).getVenue2()%>"size="40" maxlength="100">
+	  </td>
+    </tr>
+     <tr>
+      <td width="110" height="33">Address Line 3:</td>
+      <td width="5" height="33">&nbsp;</td>
+      <td width="300" height="33">
+    	<input name="Address3" type="text"  style='font-size:10.0pt;font-family:Arial' id="Name" value="<%=Venue.getSelectedCoachVenue(LoginStatus.getSelectedVenue()).getVenue3()%>"size="40" maxlength="100">
+	  </td>
+    </tr>
+    
+    <tr>
+      <td width="82" height="12"></td>
+      <td width="10" height="12"></td>
+      <td width="303" height="12"></td>
+    </tr>
+   
+  </table>
+  <blockquote>
+    <blockquote>
+      <p>
+		<font face="Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</font>		<font face="Arial" span style="font-size: 10.0pt; font-family: Arial">		
+	        <input type="button" name="Submit" value="Submit" onClick="confirmEdit(this.form)"></font><font span style='font-family:Arial'>
+		</font>
+			<font face="Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </font>
+		<font face="Arial" span style="font-size: 10.0pt; font-family: Arial">
+			<input name="Cancel" type="button" id="Cancel" value="Cancel" onClick="cancelEdit()">
+			</font> </p>
+    </blockquote>
+  </blockquote>
+</form>
+<% } %>
+</body>
+</html>

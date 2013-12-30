@@ -1,0 +1,7 @@
+L3onH4rtZz says:
+- Implement new Open Office in i360_Pool
+	- Steps to implement: 		
+                                - Install OpenOffice 2.3
+		- Setup the Setup.xcu config file (port no = 2002 instead)
+		- Change the port no used in Codes from port=8100 to port=2002
+		- Comment off Overlap feature

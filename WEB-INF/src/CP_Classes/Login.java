@@ -1,0 +1,364 @@
+package CP_Classes;
+
+import java.sql.*;
+import java.util.Vector;
+
+import CP_Classes.common.ConnectionBean;
+import CP_Classes.vo.voEthnic;
+import CP_Classes.vo.votblOrganization;
+
+/**
+ * This java file will handle all types of user-login authentication
+ */
+/**
+ * 
+ * Change Log
+ * ==========
+ *
+ * Date        By				Method(s)            								Change(s) 
+ * =========================================================================================================================================
+ * 30/05/12	  Albert		   data members, setSelfSurvey, getSelfSurvey		Added new data members selfSurvey and round and its getter and setter
+ * 								setRound, getRound
+ * 
+ */
+public class Login implements java.io.Serializable
+{	
+	private Database db = new Database();		
+	private int PKUser;
+	private int Org;
+	private int selfOrg;	// Added by Eric Lu 21/5/08
+	private int selfSurvey; // Added by Albert 30/5/12
+	private int round; // Added by Albert 31/5/12
+	private int Company;
+	private int UserType;
+	private String sOrgCode;
+	private String sCompanyName;
+    private int ClusterID; //added by Liu Taichen 18/6/12
+    private int prelimRatingScaleID;
+	
+	public static final String REMOVED="(removed)";
+
+	//String handling methods
+	
+	public boolean getSystemMaintenance(){
+		boolean isMaintenance = false;
+		
+		String sql = "";
+		
+		sql = "SELECT Maintenance FROM SystemMaintenance";
+		
+		Connection con = null;
+        Statement st = null;
+        ResultSet rs = null;
+
+        try
+        {          
+        	con=ConnectionBean.getConnection();
+        	st=con.createStatement();
+        	rs=st.executeQuery(sql);
+            
+        	if(rs.next()){
+        		if(rs.getInt("Maintenance") != 0) isMaintenance = true; 
+        	}
+        	
+        }
+        catch(Exception E) 
+        {
+            System.err.println("Login.java - getSystemMaintenance - " + E);
+            E.printStackTrace();
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		return isMaintenance;
+	}
+	
+	public void changeSystemMaintenance(int maintenance){
+		String sql = "";
+		
+		sql = "UPDATE SystemMaintenance SET Maintenance = "+maintenance;
+		
+		Connection con = null;
+        Statement st = null;
+
+        try
+        {          
+        	con=ConnectionBean.getConnection();
+        	st=con.createStatement();
+        	int success =st.executeUpdate(sql);
+        }
+        catch(Exception E) 
+        {
+            System.err.println("Login.java - changeSystemMaintenance - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+	}
+	
+	public boolean isUsable(String s)
+	{
+		return s!=null && !s.equals("");
+	}
+
+	public String getSingleQuoted(String s)
+	{
+		return "'" + s + "'";
+	}
+
+	public String getWithoutQuoteMarks(String s)
+	{
+		int index;
+		while ((index=s.indexOf('"')) != -1)
+		  s=(new StringBuffer(s)).
+		      replace(index,index+1,"&quot;").toString();
+		while ((index=s.indexOf('\'')) != -1)
+		  s=(new StringBuffer(s)).
+		      replace(index,index+1,"&#039;").toString();
+		return s;
+	}
+
+	//Methods to compose name/value pairs
+	public String makeUrlParameter(String name, String value)
+	{
+		if (isUsable(value))
+			return "?" + name + "=" + value;
+		else
+			return "";
+	}
+
+  public String makeUrlParameters(Vector pairs)
+  {
+    String startChar="?";
+    String params="";
+
+    for (int i=0; i<pairs.size(); i+=2)
+      if (isUsable((String)pairs.elementAt(i)))
+      {
+        params += startChar +
+                  pairs.elementAt(i) +"="+ pairs.elementAt(i+1);
+        startChar="&";
+      }
+    return params;
+  }
+
+
+  public String getValueAttribute(String s)
+  {
+    return isUsable(s)?("value="+s):"";
+  }
+
+
+  //Methods to display options
+
+  public String returnToMain()
+  {
+    return "Return to the <a href=Home.html>main page</a>.<br>";
+  }
+
+
+  public String tryAgain(String warning, String url)
+  {
+    return "<br><br><br><br><br><br><br><br><br><br><br><body bgcolor=#D5EAFF text=red><font size=4><p align=center>" + warning + "</body><br>" +
+           "Please <a href=\"" + url + "\">try again</a>.</font></p>";
+  }
+
+
+  public String notLoggedIn()
+  {
+    return "<font color=red face= Arial>You are not logged in.</font><br>" +
+           "(Your session may have been timed out.)<br>" +
+           returnToMain();
+  }
+  
+  public String LoggedIn()
+  {
+    return "<font color=red>You Have logged in.</font><br>" +
+           "(Your Log session is still valid!!!.)<br>" +
+           "<a href=index.htm>Main page</a>.";
+  }
+  
+  	/*public ResultSet getOrgList() throws SQLException, Exception 
+	{
+		String sql = "";
+
+		sql = "SELECT * FROM tblOrganization WHERE FKCompanyID= "+ getCompany() + " order by OrganizationName";
+		
+		
+		db.openDB();
+		
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(sql);
+		return rs;
+	}*/
+	 
+	public Vector getOrgList(int iFKCompany) throws SQLException, Exception 
+	{
+		String sql = "";
+		Vector v = new Vector();
+		
+		sql = "SELECT * FROM tblOrganization WHERE FKCompanyID= "+iFKCompany+" order by OrganizationName";
+		
+		Connection con = null;
+        Statement st = null;
+        ResultSet rs = null;
+
+        try
+        {          
+        	con=ConnectionBean.getConnection();
+        	st=con.createStatement();
+        	rs=st.executeQuery(sql);
+                        
+            while(rs.next())
+            {
+            	votblOrganization vo = new votblOrganization();
+            	
+        		vo.setPKOrganization(rs.getInt("PKOrganization"));
+        		vo.setOrganizationName(rs.getString("OrganizationName"));
+            	v.add(vo);
+            }
+
+        }
+        catch(Exception E) 
+        {
+            System.err.println("Login.java - getOrgList - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+        
+
+		return v;
+	}
+	
+  	public int getPKUser() {
+  		return PKUser;
+  	}
+  
+  public void setPKUser(int value) {
+	  PKUser = value;
+  }
+  
+  public int getOrg() {
+	  return Org;
+  }
+  
+  public String getOrgName(int pkOrg){
+	  String sql = "";
+	  String name = "";
+		
+	  sql = "SELECT OrganizationCode FROM tblOrganization WHERE PKOrganization= "+pkOrg+"";
+		
+	  Connection con = null;
+      Statement st = null;
+      ResultSet rs = null;
+
+      try
+      {          
+      	con=ConnectionBean.getConnection();
+      	st=con.createStatement();
+      	rs=st.executeQuery(sql);
+                      
+        if(rs.next()){
+        	name = rs.getString("OrganizationCode");
+        }
+
+      }
+      catch(Exception E) 
+      {
+          System.err.println("Login.java - getOrgName - " + E);
+      }
+      finally
+      {
+      	ConnectionBean.closeRset(rs); //Close ResultSet
+      	ConnectionBean.closeStmt(st); //Close statement
+      	ConnectionBean.close(con); //Close connection
+      }
+      
+
+		return name;
+  }
+  
+  public void setSelfOrg(int value) {
+	  selfOrg = value;
+  }
+  
+  public int getSelfOrg() {
+	  return selfOrg;
+  }
+  public void setSelfSurvey(int value) {
+	  selfSurvey = value;
+  }
+  
+  public int getSelfSurvey() {
+	  return selfSurvey;
+  }
+  public void setRound(int value) {
+	  round = value;
+  }
+  
+  public int getRound() {
+	  return round;
+  }
+  public void setOrg(int value) {
+	  Org = value;
+  }
+  
+  public String getOrgCode() {
+	  return sOrgCode;
+  }
+  
+  public void setOrgCode(String value) {
+	  sOrgCode = value;
+  }
+  
+  public int getCompany() {
+	  return Company;
+  }
+  
+  public void setCompany(int value) {
+	  Company = value;
+  }
+  
+  public int getUserType() {
+	  return UserType;
+  }
+  /*	User type 	0 = admin
+   *				1 = SuperAdmin
+   */
+  public void setUserType(int value) {
+	  UserType = value;
+  }
+  
+  public String getCompanyName() {
+	  return sCompanyName;
+  }
+
+  public void setCompanyName(String compCode) {
+	  sCompanyName = compCode;
+  }
+  
+  public void setClusterID(int clusterID){
+	  this.ClusterID = clusterID;
+  }
+
+  public int getClusterID(){
+	  return ClusterID;
+  }
+  
+  public void setPrelimRatingScaleID(int prelimRatingScaleID){
+	  this.prelimRatingScaleID = prelimRatingScaleID;
+  }
+
+  public int getPrelimRatingScaleID(){
+	  return prelimRatingScaleID;
+  }
+}

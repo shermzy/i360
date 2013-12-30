@@ -1,0 +1,320 @@
+<%// Author: Dai Yong in June 2013%>
+<%@ page import="java.sql.*"%>
+<%@ page import="java.io.*"%>
+<%@ page import="java.util.*"%>
+<%@ page import="CP_Classes.vo.*"%>
+<%@ page pageEncoding="UTF-8" %>
+
+<html>
+<head>
+<title>Schedule here</title>
+
+<jsp:useBean id="CoachSlotGroup" class="Coach.CoachSlotGroup"scope="session" />
+<jsp:useBean id="CoachSlot" class="Coach.CoachSlot"scope="session" />
+<jsp:useBean id="LoginStatus" class="Coach.LoginStatus" scope="session" />
+
+
+<script>
+var x = parseInt(window.screen.width) / 2 - 240;  // the number 250 is the exact half of the width of the pop-up and so should be changed according to the size of the pop-up
+var y = parseInt(window.screen.height) / 2 - 115;  // the number 125 is the exact half of the height of the pop-up and so should be changed according to the size of the pop-up
+
+
+function check(field)
+{
+	var isValid = 0;
+	var clickedValue = 0;
+	//check whether any checkbox selected
+	if( field == null ) {
+		isValid = 2;
+	
+	} else {
+
+		if(isNaN(field.length) == false) {
+			for (i = 0; i < field.length; i++)
+				if(field[i].checked) {
+					clickedValue = field[i].value;
+					isValid = 1;
+				}
+		}else {		
+			if(field.checked) {
+				clickedValue = field.value;
+				isValid = 1;
+			}
+				
+		}
+	}
+	
+	if(isValid == 1)
+		return clickedValue;
+	else if(isValid == 0)
+		alert("No record selected");
+	else if(isValid == 2)
+		alert("No record available");
+	
+	isValid = 0;
+
+}
+
+	function proceed(form) {
+		form.action = "SlotGroup.jsp?proceed=1";
+		form.method = "post";
+		form.submit();
+	}
+	function addSlotGroup(form){
+		var myWindow=window.open('AddSlotGroup.jsp','windowRef','scrollbars=no, width=480, height=250');
+		myWindow.moveTo(x,y);
+	    myWindow.location.href = 'AddSlotGroup.jsp';
+	}
+		
+	function editSlotGroup(form, field){
+		var myWindow=window.open('EditSlotGroup.jsp','windowRef','scrollbars=no, width=480, height=250');
+		myWindow.moveTo(x,y);
+	    myWindow.location.href = 'EditSlotGroup.jsp';
+	}
+
+	function deleteSlotGroup(form, field){
+		if(confirm("Are you sure to delete the time slot")){
+		form.action="SlotGroup.jsp?deleteSlotGroup="+field.value;
+		form.method="post";
+		form.submit();
+	}
+	}
+	function addSlot(form){
+		var myWindow=window.open('AddSlot.jsp','windowRef','scrollbars=no, width=480, height=250');
+		myWindow.moveTo(x,y);
+	    myWindow.location.href = 'AddSlot.jsp';
+	}
+		
+	function editSlot(form, field){
+		var value = check(field);
+		
+		if(value)
+		{						
+			var myWindow=window.open('EditSlot.jsp?editedSlot='+ value,'windowRef','scrollbars=no, width=480, height=250');
+			var query = "EditSlot.jsp?editedSlot=" + value;
+			myWindow.moveTo(x,y);
+	    	myWindow.location.href = query;
+		}
+		
+	}
+
+
+	function deleteSlot(form, field) {
+		var value = check(field);
+
+		if (value) {
+			if (confirm("Are you sure to delete the timing")) {
+				form.action = "SlotGroup.jsp?deleteSlot=" + value;
+				form.method = "post";
+				form.submit();
+			}
+		}
+	}
+</script>
+</head>
+<body>
+	<%
+		int logSlotGroupPK = 0;
+		int PKselSlotGroup = CoachSlotGroup.getFirstSlotGroupPK();
+		
+		Vector CoachSlots = new Vector();
+		if (request.getParameter("proceed") == null) {
+			/* start up get the select Schedule detail vector */
+
+			//System.out.println("init Schedule jsp:");
+			if(LoginStatus.getSelectedSlotGroup()==0){
+				CoachSlots = CoachSlotGroup.getSelectedSlotGroupDetails(1);
+				LoginStatus.setSelectedSlotGroup(PKselSlotGroup);
+				logSlotGroupPK = PKselSlotGroup;
+			}else{
+				CoachSlots = CoachSlotGroup.getSelectedSlotGroupDetails(LoginStatus.getSelectedSlotGroup());
+				logSlotGroupPK = LoginStatus.getSelectedSlotGroup();
+			}
+			
+
+		}
+		if (request.getParameter("proceed") != null) {
+			if (Integer.parseInt(request.getParameter("selSlotGroup"))==0) {
+				%>
+				<script>
+				alert("Please Select Time Slot");
+				</script>
+				<%
+				
+			}
+			if (request.getParameter("selSlotGroup") != null) {
+				/* get the select Schedule detail vector */
+				//System.out.println("selSlotGroup"+request.getParameter("selSlotGroup"));
+				PKselSlotGroup = Integer.parseInt(request.getParameter("selSlotGroup"));
+				//System.out.println("Old Page selSlotGroup jsp:" + PKselSlotGroup);
+				CoachSlots = CoachSlotGroup.getSelectedSlotGroupDetails(PKselSlotGroup);
+				LoginStatus.setSelectedSlotGroup(PKselSlotGroup);
+				logSlotGroupPK = PKselSlotGroup;
+			}
+		}
+		if(request.getParameter("deleteSlotGroup")!= null){
+			int PKSlotGroup = new Integer(request.getParameter("deleteSlotGroup")).intValue();
+			//System.out.println("deleteSlotGroup PK:"+PKSlotGroup);
+			 Boolean delete =CoachSlotGroup.deleteSlotGroup(PKSlotGroup);
+			 if(delete){
+				 LoginStatus.setSelectedSlotGroup(1);
+				 CoachSlots = CoachSlotGroup.getSelectedSlotGroupDetails(1);
+				 %><script>
+				 alert("Time Slot deleted successfully.");
+				 </script><% 
+			 }
+			 else{
+				 %><script>
+				 alert("Time Slot used in Coaching Assgiment and cannot be deleted");
+				 </script><% 
+			 }
+			
+		}
+		if(request.getParameter("deleteSlot")!= null){
+			//System.out.println("request:"+request.getParameter("deleteSlot"));
+			int PKSlot = Integer.valueOf(request.getParameter("deleteSlot"));
+			//System.out.println("deleteSlot PK:"+PKSlot);
+			 Boolean delete =CoachSlot.deleteSlot(PKSlot);
+			 if(delete){
+				 %><script>
+				 alert("Timing deleted successfully.");
+				 </script><% 
+				 logSlotGroupPK=LoginStatus.getSelectedSlotGroup();
+				 CoachSlots = CoachSlotGroup.getSelectedSlotGroupDetails(LoginStatus.getSelectedSlotGroup());
+			 }
+			 else{
+				 %><script>
+				 alert("Timing used in user assingment and cannot be deleted.");
+				 </script><% 
+			 }
+		}
+	%>
+
+	<p>
+		<br>
+			<b><font color="#000080" size="3" face="Arial">Time Slot Management</font></b>
+		<br>
+	</p>
+
+	<!-- list all the Schedule  -->
+	<%
+		Vector SlotGroupList = new Vector();
+		SlotGroupList = CoachSlotGroup.getAllSlotGroup();
+		//System.out.println("size of Schedule size jsp: " + SlotGroupList.size());
+	%>
+	<br>
+	<!-- display Schedule-->
+	<form>
+		<table>
+			<tr>
+				<td width="120"><font face="Arial" size="2">Time Slot Name:</font></td>
+				<td width="23">:</td>
+				<td width="500" colspan="1"><select size="1"
+					name="selSlotGroup" onChange="proceed(this.form)">
+					<option value=0 >Please Select Time Slot</option>
+						<%
+							voCoachSlotGroup voCoachSlotGroup = new voCoachSlotGroup();
+
+							for (int i = 0; i < SlotGroupList.size(); i++) {
+								voCoachSlotGroup = (voCoachSlotGroup) SlotGroupList
+										.elementAt(i);
+								int slotGroupPK = voCoachSlotGroup.getPk();
+								String slotGroupName = voCoachSlotGroup.getSlotGroupName();
+
+								if (logSlotGroupPK == slotGroupPK) {
+						%>
+						<option value=<%=slotGroupPK%> selected><%=slotGroupName%>
+							<%
+								} else {
+							%>
+						
+						<option value=<%=slotGroupPK%>><%=slotGroupName%>
+							<%
+								}
+								}
+							%>
+						
+				</select></td>
+			</tr>
+		</table>
+		<br>
+		<!--  button for schedule-->
+		<p></p>
+		<input type="button" name="AddSlotGroup" value="Add Time Slot"
+			onclick="addSlotGroup(this.form)"> 
+		<input type="button" name="EditSlotGroup" value="Edit Time Slot"
+			onclick="editSlotGroup(this.form, this.form.selSlotGroup)"> 
+		<input type="button" name="DeleteSlotGroup" value="Delete Time Slot"
+			onclick="deleteSlotGroup(this.form, this.form.selSlotGroup)">
+		<p></p>
+		
+
+		<!--Display selected Schedule details  -->
+		<br> <br> <br>
+		<p>
+			<b><font color="#000080" size="2" face="Arial">Selected Time Slot Information:</font></b>
+		</p>
+		<table>
+			
+			<th width="30" bgcolor="navy" bordercolor="#3399FF" align="center"><b>
+					<font style='color: white'>&nbsp;</font>
+			</b></th>
+			<th width="30" bgcolor="navy" bordercolor="#3399FF" align="center"><b>
+					<font style='color: white'>No</font>
+			</b></th>
+			<th width="150" bgcolor="navy" bordercolor="#3399FF" align="center"><b>
+					<font style='color: white'>Starting Time</font>
+			</b></th>
+			<th width="150" bgcolor="navy" bordercolor="#3399FF" align="center"><b>
+					<font style='color: white'>Ending Time</font>
+			</b></th>
+
+			<%
+				int DisplayNo = 1;
+					int pkslot=0;
+					for (int i = 0; i < CoachSlots.size(); i++) {
+						voCoachSlot voCoachSlot = new voCoachSlot();
+						voCoachSlot = (voCoachSlot) CoachSlots.elementAt(i);
+
+						pkslot = voCoachSlot.getPK();
+						int startingTime = voCoachSlot.getStartingtime();
+						int endingingTime = voCoachSlot.getEndingtime();
+						String startingTime4Digits;
+						String endingTime4Digits;
+					if (startingTime < 1000) {
+						startingTime4Digits="0"+startingTime;
+					} else {
+						startingTime4Digits=""+startingTime;
+					}
+					if (endingingTime < 1000) {
+						endingTime4Digits="0"+endingingTime;
+					} else {
+						endingTime4Digits=""+endingingTime;
+					}
+				
+
+					
+					//System.out.println("ending time" + endingingTime);
+			%>
+			<tr onMouseOver="this.bgColor = '#99ccff'"
+				onMouseOut="this.bgColor = '#FFFFCC'">
+				<td style="border-width: 1px"><font size="2"> <input type="radio" name="selslot" value=<%=pkslot%>></font></td>
+				<td align="center"><%=DisplayNo%></td>
+				<td align="center"><%=startingTime4Digits%></td>
+				<td align="center"><%=endingTime4Digits%></td>
+			</tr>
+			<%
+				DisplayNo++;
+				}
+			%>
+		</table>
+		<!--  button for slot-->
+		<p></p>
+			<input type="button" name="AddSlot" value="Add Coaching Time" onclick="addSlot(this.form)"> 
+			<input type="button" name="EditSlot" value="Edit Coaching Time" onclick="editSlot(this.form, this.form.selslot)"> 
+			<input type="button" name="DeleteSlot" value="Delete Coaching Time" onclick="deleteSlot(this.form, this.form.selslot)">
+		
+		<p></p>
+	</form>
+</body>
+</html>

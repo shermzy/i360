@@ -1,0 +1,614 @@
+package CP_Classes;
+
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.Vector;
+import java.io.File;
+import java.io.IOException;
+
+import com.sun.star.lang.XComponent;
+import com.sun.star.lang.XMultiComponentFactory;
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.XTableChart;
+
+import CP_Classes.common.ConnectionBean;
+import CP_Classes.vo.voUser;
+import CP_Classes.vo.votblSurvey;
+
+import jxl.Workbook;
+import jxl.read.biff.BiffException;
+import jxl.write.WritableWorkbook;
+import jxl.write.WritableSheet;
+import jxl.write.WritableFont;
+import jxl.write.WritableCellFormat;
+import jxl.write.Label;
+import jxl.write.WriteException;
+import jxl.format.Alignment;
+import jxl.format.Border;
+import jxl.format.BorderLineStyle;
+import jxl.format.Colour;
+import jxl.format.PageOrientation;
+
+public class Report_DistributionOfTotalScoreAndGaps
+{
+
+	private Setting server;
+	private User user;
+	private OpenOffice OO;
+	private Setting ST;
+	private User_Jenty user_Jenty;
+	private EventViewer ev;
+	private Create_Edit_Survey CE_Survey;
+	
+    private XMultiComponentFactory xRemoteServiceManager = null;
+	private XComponent xDoc = null;
+    private XSpreadsheet xSpreadsheet = null;
+    private String storeURL;
+	private final int ROWHEIGHT = 560;
+	private int RANGESPAN = 10;
+	private final int GRAPHHEIGHT = 14000;
+	private final int GRAPHWEIGHT = 18000;
+	
+	String CompName=" ";
+	String OrgName =" ";
+	String SurveyName = " ";
+	String CompName2=" ";
+	String OrgName2 =" ";
+	String SurveyName2 = " ";
+	
+	
+	public Report_DistributionOfTotalScoreAndGaps()
+	{
+
+		server = new Setting();
+		user = new User();
+		ev = new EventViewer();
+		CE_Survey = new Create_Edit_Survey();
+		user_Jenty = new User_Jenty();
+		OO = new OpenOffice();
+		ST = new Setting();
+	}
+	
+	public void write(int surveyID1, int surveyID2, String fileName) throws IOException, WriteException, BiffException
+	{
+		try {
+			InitializeExcel(fileName);
+			Header(surveyID1, surveyID2);
+			FillInTableAndDrawGraph(surveyID1, surveyID2);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally{	
+			try {			
+				OO.storeDocComponent(xRemoteServiceManager, xDoc, storeURL);
+				OO.closeDoc(xDoc);	
+			}catch (SQLException SE) {
+				System.out.println("a " + SE.getMessage());
+			}catch (IOException IO) {
+				System.err.println(IO);
+			}catch (Exception E) {
+				System.out.println("b " + E.getMessage());
+			}
+		}
+		
+		// reset RangeSpan
+		RANGESPAN = 10;
+	}
+	
+
+	/**
+	 * 	Initialize all the processes dealing with Excel Application.
+	 */
+	/**
+	 * @param savedFileName
+	 * @throws IOException
+	 * @throws Exception
+	 */
+	public void InitializeExcel(String savedFileName) throws IOException, Exception 
+	{	
+		System.out.println("2. Excel Initialisation Starts");
+		storeURL 	= "file:///" + ST.getOOReportPath() + savedFileName;
+
+		String templateURL 	= "";
+		if (ST.LangVer == 1){
+			templateURL 	= "file:///" + ST.getOOReportTemplatePath() + "Distribution of Total Scores_Template.xls";
+		}else if (ST.LangVer == 2) {
+			templateURL 	= "file:///" + ST.getOOReportTemplatePath() + "Distribution of Total Scores_Template.xls";
+		}
+		xRemoteServiceManager = OO.getRemoteServiceManager("uno:socket,host=localhost,port=2002;urp;StarOffice.ServiceManager");
+		xDoc = OO.openDoc(xRemoteServiceManager, templateURL);
+		//save as the template into a new file first. This is to avoid the template being used.		
+		OO.storeDocComponent(xRemoteServiceManager, xDoc, storeURL);		
+		OO.closeDoc(xDoc);
+		
+		//open up the saved file and modify from there
+		xDoc = OO.openDoc(xRemoteServiceManager, storeURL);
+		xSpreadsheet = OO.getSheet(xDoc, "Sheet1");
+	}
+	
+	
+	public void Header(int SurveyID1, int SurveyID2) 
+		throws IOException, WriteException, SQLException, Exception
+	{
+		
+		Create_Edit_Survey CE_Survey = new Create_Edit_Survey();
+		
+		votblSurvey vo = CE_Survey.getSurveyDetail(SurveyID1);	
+		CompName = vo.getCompanyName();
+		OrgName = vo.getOrganizationName();
+		SurveyName = vo.getSurveyName();
+		
+		votblSurvey vo2 = CE_Survey.getSurveyDetail(SurveyID2);
+		CompName2 = vo2.getCompanyName();
+		OrgName2 = vo2.getOrganizationName();
+		SurveyName2 = vo2.getSurveyName();
+		String title1 = SurveyName;
+		String title2 = SurveyName2;
+		//String title = SurveyName + " Vs. " + SurveyName2;
+		int height = OO.countTotalRow(title1, 45);
+		int [] titlePosition = OO.findString(xSpreadsheet, "<SurveyName1>");
+		OO.setRowHeight(xSpreadsheet, titlePosition[1], titlePosition[0], height*ROWHEIGHT*2);
+		OO.wrapText(xSpreadsheet, 0, titlePosition[0], 0, titlePosition[1]);
+		OO.findAndReplace(xSpreadsheet, "<SurveyName1>", title1);
+		
+		height = OO.countTotalRow(title2, 45);
+		titlePosition = OO.findString(xSpreadsheet, "<SurveyName2>");
+		OO.setRowHeight(xSpreadsheet, titlePosition[1], titlePosition[0], height*ROWHEIGHT*2);
+		OO.wrapText(xSpreadsheet, 0, titlePosition[0], 0, titlePosition[1]);
+		OO.findAndReplace(xSpreadsheet, "<SurveyName2>", title2);
+	}
+	
+	public void FillInTableAndDrawGraph(int SurveyID1, int SurveyID2)
+		throws IOException, WriteException, SQLException, Exception{
+		int[] position = OO.findString(xSpreadsheet, "Distribution of Total Scores:");
+		int curRow = position[1] + 1;
+		int curCol = position[0] + 1;
+		
+		// get datas
+		int maxScore1 = getMaxScore(SurveyID1);
+		int maxScore2 = getMaxScore(SurveyID2);
+		int maxScore = Math.max(maxScore1, maxScore2);
+		Vector<int[]> rangeList = getRangeList(maxScore);
+		Vector<Integer> targetList1 = getTargetList(SurveyID1);
+		Vector<Integer> targetList2 = getTargetList(SurveyID2);
+		//need save space for graph
+		curRow += 2;
+		int GraphStartRow = curRow;
+		curRow += GRAPHHEIGHT/ROWHEIGHT;
+		
+		
+		// draw table
+		int tableStartCol = curCol;
+		int tableStartRow = curRow;
+		int tableEndCol = curCol;
+		int tableEndRow = curRow;
+		OO.insertString(xSpreadsheet, "", curRow, curCol);
+		curCol ++;
+		OO.insertString(xSpreadsheet, "Total Scores Obtained", curRow, curCol);
+		OO.mergeCells(xSpreadsheet, curCol, curCol+1, curRow, curRow);
+		
+		curRow++;
+		curCol--;
+		OO.insertString(xSpreadsheet, "Range", curRow, curCol);
+		curCol++;
+		OO.insertString(xSpreadsheet, SurveyName, curRow, curCol);
+		int height = OO.countTotalRow(SurveyName, 20);
+		OO.setRowHeight(xSpreadsheet, curRow, curCol, height*ROWHEIGHT);
+		OO.wrapText(xSpreadsheet, curCol, curCol, curRow, curRow);
+		OO.insertString(xSpreadsheet, SurveyName2, curRow, curCol+1);
+		height = OO.countTotalRow(SurveyName2, 20);
+		OO.setRowHeight(xSpreadsheet, curRow, curCol+1, height*ROWHEIGHT);
+		OO.wrapText(xSpreadsheet, curCol+1, curCol+1, curRow, curRow);
+		tableEndCol = curCol+1;
+		
+		curRow++;
+		curCol--;
+		// fill in left header
+		int rowValueCopy = curRow;
+		OO.insertNumeric(xSpreadsheet, 0, rowValueCopy, curCol);
+		//OO.setCellAllignment(xSpreadsheet, curCol,
+				//curCol, curRow, curRow, 1, 2);
+		for(int i = 0; i < rangeList.size(); i++){
+			rowValueCopy++;
+			OO.insertString(xSpreadsheet, rangeList.get(i)[0]+"-"+rangeList.get(i)[1], rowValueCopy, curCol);
+			//OO.setCellAllignment(xSpreadsheet, curCol,
+					//curCol, rowValueCopy, rowValueCopy, 1, 2);
+		}
+		tableEndRow = rowValueCopy;
+
+		OO.setTableBorder(xSpreadsheet, tableStartCol, tableEndCol,
+				tableStartRow, tableEndRow, true, true, true, true, true,
+				true);
+		
+		// calculate content
+		int[] ansList1 = new int[rangeList.size()+1];
+		for(int i = 0; i < targetList1.size(); i++){
+			int ans = calculateTotalScore(SurveyID1, targetList1.get(i),checkOrganization(SurveyID1));
+			ansList1[ans/RANGESPAN] += 1;
+		}
+		
+		int[] ansList2 = new int[rangeList.size()+1];
+		for(int i = 0; i < targetList2.size(); i++){
+			int ans = calculateTotalScore(SurveyID2, targetList2.get(i),checkOrganization(SurveyID2));
+			ansList2[ans/RANGESPAN] += 1;
+		}
+		
+		int dataStartRow = 0;
+		int dataEndRow = 0;
+		int dataStartCol = 0;
+		int dataEndCol = 0;
+		//fill in content
+		curCol++;
+		dataStartCol = curCol;
+		dataStartRow = curRow;
+		rowValueCopy = curRow;
+		for(int i = 0; i < ansList1.length; i++){
+			OO.insertNumeric(xSpreadsheet, ansList1[i], rowValueCopy, curCol);
+			rowValueCopy++;
+		}
+		curCol++;
+		
+		for(int i = 0; i < ansList2.length; i++){
+			OO.insertNumeric(xSpreadsheet, ansList2[i], curRow, curCol);
+			curRow++;
+		}
+		dataEndCol = curCol;
+		dataEndRow = curRow-1;
+		OO.setCellAllignment(xSpreadsheet, 0,
+				dataEndCol, 0, dataEndRow, 1, 2);
+		OO.setCellAllignment(xSpreadsheet, position[0],position[0],position[1],position[1],1,1);
+		// draw graph
+		//GraphStartRow
+		// minus 2 row for the header
+		OO.insertPageBreak(xSpreadsheet, 0, dataStartCol, dataStartRow - 2);
+		drawGraph(dataStartRow, dataStartCol, dataEndRow, dataEndCol,GraphStartRow, rangeList, SurveyName, SurveyName2 , ansList1,ansList2);
+	}
+	
+	public Vector<int[]> getRangeList(int maxScore){
+		Vector<int[]> rangeList = new Vector<int[]>();
+		int length = maxScore / RANGESPAN;
+		if(length > 10){
+			RANGESPAN = maxScore / 10;
+			length = maxScore / RANGESPAN;
+		}
+		for(int n = 0; n < length; n++){
+			int [] range= new int[2];
+			range[0] = n * RANGESPAN + 1;
+			range[1] = n * RANGESPAN + RANGESPAN;
+			rangeList.add(range);
+		}
+		if(maxScore % RANGESPAN != 0){
+			int [] range = new int[2];
+			range[0] = ((int)(maxScore / RANGESPAN))* RANGESPAN + 1;
+			range[1] = maxScore;
+			rangeList.add(range);
+		}
+			
+		return rangeList;
+	}
+	
+	public int getMaxScore(int SurveyID){
+		int result = 0;
+		String sql = "select count(distinct CompetencyID) * max(HighValue) from tblSurvey a inner join tblSurveyRating b on a.SurveyID = b.SurveyID inner join"
+					+" tblScaleValue c on c.ScaleID = b.ScaleID inner join tblSurveyCompetency d on "
+					+" d.SurveyID = a.SurveyID where LevelofSurvey = 0 "
+					+ "and  a.SurveyID = " + SurveyID;
+		
+		if(isKBLevel(SurveyID)){
+			sql = "select count(distinct KeyBehaviourID) * max(HighValue) from tblSurvey a inner join tblSurveyRating b on a.SurveyID = b.SurveyID inner join"
+					+" tblScaleValue c on c.ScaleID = b.ScaleID inner join tblSurveyBehaviour d on "
+					+" d.SurveyID = a.SurveyID where LevelofSurvey = 1 "
+					+ "and  a.SurveyID = " + SurveyID;
+		}
+		System.out.println(sql);
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+	  	try 
+        {          
+	  		con=ConnectionBean.getConnection();
+	  		st=con.createStatement();
+	  		rs=st.executeQuery(sql);
+	  		
+	  		while(rs.next())
+	  			result = rs.getInt(1);
+		
+        }
+        catch(Exception E) 
+        {
+            
+            System.err.println("Report_DistributionofTotalScoreAndGaps.java - getMaxScore - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		return result;
+	}
+	
+	public Vector<Integer> getTargetList(int SurveyID){
+		Vector<Integer> result = new Vector<Integer>();
+		String sql = "Select * from tblAssignment where RTRelation = 2 " +
+				"and SurveyID = "+SurveyID;
+		System.out.println(sql);
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+	  	try 
+        {          
+	  		con=ConnectionBean.getConnection();
+	  		st=con.createStatement();
+	  		rs=st.executeQuery(sql);
+	  		
+	  		while(rs.next())
+	  			result.add(rs.getInt("TargetLoginID"));
+		
+        }
+        catch(Exception E) 
+        {
+            
+            System.err.println("Report_DistributionofTotalScoreAndGaps.java - getTargetList - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		return result;
+	}
+	
+	/**
+	 * organizationType: 10 is SPF, 1 is others
+	 * @param SurveyID
+	 * @param TargetID
+	 * @param organizationType
+	 * @return
+	 */
+	public int calculateTotalScore(int SurveyID, int TargetID, int organizationType){
+		int result = 0;
+		String sql = "Select sum(AvgMean) AS score from tblAvgMean where type = "+organizationType+" and" +
+				" RatingTaskID = 1 and TargetLoginID = "+TargetID+" and SurveyID = " + SurveyID;
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		System.out.println(sql);
+	  	try 
+        {          
+	  		con=ConnectionBean.getConnection();
+	  		st=con.createStatement();
+	  		rs=st.executeQuery(sql);
+	  		
+	  		while(rs.next())
+	  			result = rs.getInt("score");
+	  		
+	  		// this chunk is because some survey for SPF is using weight avg where type = 10 but some are using normal avg where type = 1
+	  		if(result == 0){
+	  			return calculateTotalScore(SurveyID, TargetID, 1);
+	  		}
+        }
+        catch(Exception E) 
+        {
+            
+            System.err.println("Report_DistributionofTotalScoreAndGaps.java - calculateTotalScore - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		return result;
+	}
+	
+	/**
+	 * return 10 mean SPF, 1 for all other organization
+	 * @param SurveyID
+	 * @return
+	 */
+	public int checkOrganization(int SurveyID){
+		int result = 1;
+		String sql = "Select * from tblSurvey " +
+				"where SurveyID = "+SurveyID;
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+	  	try 
+        {          
+	  		con=ConnectionBean.getConnection();
+	  		st=con.createStatement();
+	  		rs=st.executeQuery(sql);
+	  		
+	  		while(rs.next())
+	  			if(rs.getInt("FKOrganization") == 59){
+	  				result = 10;
+	  			}
+		
+        }
+        catch(Exception E) 
+        {
+            
+            System.err.println("Report_DistributionofTotalScoreAndGaps.java - checkOrganization - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		return result;
+	}
+	
+	
+	public void drawGraph(int srcStartRow, int srcStartCol, int srcEndRow, int srcEndCol, int row, Vector<int[]> range, String surveyName1, String surveyName2 , int[] datas1, int [] datas2) throws IOException, Exception 
+	{	
+		int c = 0;
+		XSpreadsheet xSpreadsheet1 = OO.getSheet(xDoc, "Sheet1");
+		
+		int maxTotal = 0;//this is to set the maximum height of Y Axis
+		
+		for(int i=-1; i< range.size(); i++) 
+		{
+			if(maxTotal < datas1[i+1])
+				maxTotal = datas1[i+1];		
+			if(maxTotal < datas2[i+1])
+				maxTotal = datas2[i+1];
+		}
+		
+		String sXAxis = "Score";
+		String sYAxis = "No. of Candidates";
+
+        if (ST.LangVer == 2){
+        	sXAxis = "Score";
+        	sYAxis = "No. of Candidates";
+        }
+
+        XTableChart xtablechart = OO.getChart(xSpreadsheet, xSpreadsheet1, srcStartCol-1, srcEndCol, srcStartRow-1, srcEndRow, "Distribution"+(row-1), GRAPHWEIGHT, GRAPHHEIGHT, row-1, c);
+		OO.setFontSize(8);
+		double step = 1;
+		if(maxTotal > 10)
+			step = maxTotal / 10;
+		xtablechart = OO.setAxes(xtablechart, sXAxis, sYAxis, maxTotal, step, 0, 0,0);
+			
+		OO.setChartProperties(xtablechart, false, true, true, true, true);
+		OO.drawGridLines(xtablechart, 0);		
+		OO.showLegend(xtablechart,true);
+		OO.setLegendPosition(xtablechart, 4);
+		OO.changeChartType("com.sun.star.chart.LineDiagram", xtablechart);
+		
+
+	}
+	
+	/*
+	 * check whether these two survey are comparable
+	 * 
+	 */
+	public boolean compareSurvey(int survey1, int survey2){
+		String checkSurveyLevel = "select count(*) as result from tblSurvey a inner join tblSurvey b on a.levelOfSurvey" +
+				"=b.levelofSurvey where a.surveyID ="+survey1+" and b. SurveyID="+survey2;
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		System.out.println(checkSurveyLevel);
+	  	try 
+        {          
+	  		con=ConnectionBean.getConnection();
+	  		st=con.createStatement();
+	  		rs=st.executeQuery(checkSurveyLevel);
+	  		
+	  		while(rs.next())
+	  			if(rs.getInt("result") == 0)
+	  				return false;
+		
+        }
+        catch(Exception E) 
+        {
+            
+            System.err.println("Report_DistributionofTotalScoreAndGaps.java - compareSurvey - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		String sql = "select CompetencyID from tblSurveyCompetency where SurveyID = "+survey1+" and CompetencyID not in "
+					+"(select CompetencyID from tblSurveyCompetency where SurveyID = "+survey2+")";	
+		con = null;
+		st = null;
+		rs = null;
+		System.out.println(sql);
+	  	try 
+        {          
+	  		con=ConnectionBean.getConnection();
+	  		st=con.createStatement();
+	  		rs=st.executeQuery(sql);
+	  		
+	  		while(rs.next())
+	  			return false;
+		
+        }
+        catch(Exception E) 
+        {
+            
+            System.err.println("Report_DistributionofTotalScoreAndGaps.java - compareSurvey - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		return true;
+	}
+	
+	public boolean isKBLevel(int surveyID){
+		String sql = "Select * from tblSurvey where SurveyID = " + surveyID;
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		System.out.println(sql);
+	  	try 
+        {          
+	  		con=ConnectionBean.getConnection();
+	  		st=con.createStatement();
+	  		rs=st.executeQuery(sql);
+	  		
+	  		while(rs.next()){
+	  			if(rs.getInt("LevelOfSurvey") == 0)
+	  				return false;
+	  			else
+	  				return true;
+	  		}
+		
+        }
+        catch(Exception E) 
+        {
+            
+            System.err.println("Report_DistributionofTotalScoreAndGaps.java - compareSurvey - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		return true;
+	}
+	
+	public boolean checkPCAllGenerated(int SurveyID){
+		String sql = "Select * from tblAvgMean where SurveyID = " + SurveyID;
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		System.out.println(sql);
+	  	try 
+        {          
+	  		con=ConnectionBean.getConnection();
+	  		st=con.createStatement();
+	  		rs=st.executeQuery(sql);
+	  		
+	  		if(rs.next())
+	  			return true;
+	  		else
+	  			return false;
+		
+        }
+        catch(Exception E) 
+        {
+            
+            System.err.println("Report_DistributionofTotalScoreAndGaps.java - checkPCAllGenerated - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		return true;
+	}
+}

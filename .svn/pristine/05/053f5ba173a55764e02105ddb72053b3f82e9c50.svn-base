@@ -1,0 +1,404 @@
+<%@ page import="java.sql.*"%>
+<%@ page import="java.io.*" %>  
+<%@ page pageEncoding="UTF-8"%>
+<%//by Yiting 19/09/2008 Fix jsp files to support Thai Language%>
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>  
+<jsp:useBean id="db" class="CP_Classes.Database" scope="session"/>
+
+<jsp:useBean id="CE_Survey" class="CP_Classes.Create_Edit_Survey" scope="session"/>
+
+<jsp:useBean id="server" class="CP_Classes.Setting" scope="session"/>
+<%@ page import="CP_Classes.EventViewer"%>
+<%@ page import="CP_Classes.Translate"%>
+<%
+Translate trans = new Translate();
+%>
+<HTML>
+
+<SCRIPT LANGUAGE="JavaScript">
+
+<!-- Begin
+//check if all the boxes are filled in
+
+    void function validate(form)
+    {
+      var iValid =0;
+      x = document.Top
+      username = x.txtUsername.value
+      password = x.txtPass.value
+      
+      if (username == "")
+		alert("<%=trans.tslt("Enter Username")%>");
+      else 
+      {
+      	if (password == "")
+       		alert("<%=trans.tslt("Enter Password")%>");
+      	else
+      	{
+      		iValid = 1;
+      		window.document.Top.action = "Top.jsp?result=1";
+      				
+    		window.document.Top.method="post";	
+    		window.document.Top.submit();
+		}
+      }
+    }
+//  End -->
+
+</script>
+<HEAD>
+<TITLE>3-Sixty Profiler</TITLE>
+<meta http-equiv="Content-Type" content="text/html">
+<base target="_parent">
+<% //Store data from TB_Translation into Hashtable
+		trans.getTranslation(); 
+%>
+
+</HEAD>
+<BODY BGCOLOR=#FFFFFF LEFTMARGIN=0 TOPMARGIN=0 MARGINWIDTH=0 MARGINHEIGHT=0>
+
+<%
+String result = request.getParameter("result");
+EventViewer ev = new EventViewer();
+
+
+if( result != null)	
+{
+	String username = request.getParameter("txtUsername");
+	username = username.toLowerCase();
+	String password=request.getParameter("txtPass");
+	
+	//check if the username of the correct format
+	String user = logchk.getWithoutQuoteMarks(username);
+	String usernameQuoted=logchk.getSingleQuoted(user);
+   	
+ 	ResultSet rs = db.getRecord("SELECT * FROM [User] a, tblConsultingCompany b, tblOrganization c WHERE a.LoginName =" + usernameQuoted + " AND a.FKUserType360 != 14 AND a.FKCompanyID = b.CompanyID AND a.FKOrganization = c.PKOrganization");
+	
+	int iLoggedIn = 0; //0= Not logged in, 1= Logged in
+    while (rs.next()) 
+    { 
+    	int PKUser = rs.getInt("PKUser");
+    	String LoginName = rs.getString("LoginName");
+    	String db_password = rs.getString("Password");
+    	int isEnabled = rs.getInt("IsEnabled");
+    	int CompanyID = rs.getInt("CompanyID");
+    	String CompanyName = rs.getString("CompanyName");
+    	int PKOrg = rs.getInt("PKOrganization");
+     	String OrgName = rs.getString("OrganizationName");
+		String OrgCode = rs.getString("OrganizationCode");
+		
+		if(isEnabled == 1)
+		{
+	    	if(db_password.equals(password))
+	    	{
+	    		iLoggedIn = 1; //Logged in
+		     	session.setAttribute("username", username);
+		     	logchk.setPKUser(PKUser);
+				logchk.setCompany(CompanyID);
+				logchk.setCompanyName(CompanyName);
+				logchk.setOrg(PKOrg);
+				logchk.setOrgCode(OrgCode);
+				
+				String desc = "Log into 360 System";
+				String action = "Login";
+				ev.addRecord(action, "Login", desc, LoginName, CompanyName, OrgName);
+				
+				String [] UserDetail = new String[14];
+				UserDetail = CE_Survey.getUserDetail(logchk.getPKUser());
+				
+				if(UserDetail[8].equals("Super Administrator"))
+				{
+					logchk.setUserType(1);
+					%>
+					<jsp:forward page="indexAdmin.htm"/>
+					<%
+				}
+				else if(UserDetail[8].equals("Administrator"))
+				{
+					logchk.setUserType(2);
+					%>
+					<jsp:forward page="indexAdmin.htm"/>
+					<%
+				}
+				else if(UserDetail[8].equals("Data Entry Personnel"))
+				{
+					logchk.setUserType(3);
+					%>
+					<jsp:forward page="indexDE.htm"/>	
+					<%
+				}
+				else if(UserDetail[8].equals("Participant (rater or target)"))
+				{
+					logchk.setUserType(4);
+					%>
+					<jsp:forward page="indexPARTICIPANT.htm"/>	
+					<%
+				}
+				else if(UserDetail[8].equals("No Access"))
+				{	%>
+					<script>
+			        alert("<%=trans.tslt("Your user account has been disabled. Please contact your administrator")%>.");
+			        parent.location.href="index.jsp";
+					</script>
+			<%	}
+			}
+			else 
+			{ 	%>
+		        <script>
+		        alert("<%=trans.tslt("You have entered the wrong combination of Username and Password")%>.\n<%=trans.tslt("Please try again")%>.");
+		        parent.location.href="index.jsp";
+				</script>
+		<%	}
+		}
+		else
+		{	%>
+				<script>
+				alert("<%=trans.tslt("Your user account has been disabled. Please contact your administrator")%>.");
+				parent.location.href="index.jsp";
+				</script>
+	<%	}
+   	} 
+   	
+   	if(iLoggedIn == 0)
+   	{ %>
+        <script>
+        alert("<%=trans.tslt("You have entered the wrong combination of Username and Password")%>.\n<%=trans.tslt("Please try again")%>.");
+        parent.location.href="index.jsp";
+        </script>
+        
+	<%	}
+}
+%>
+
+<form name="Top" action="Top.jsp" method="post">
+
+
+<TABLE WIDTH=800 BORDER=0 CELLPADDING=0 CELLSPACING=0>
+	<TR>
+		<TD width="6" ROWSPAN=19>
+			<IMG SRC="images/360_01.jpg" WIDTH=10 HEIGHT=581 ALT=""></TD>
+			</TR>
+	<TR>
+		<TD COLSPAN=2>
+			<IMG SRC="images/360_03.jpg" WIDTH=156 HEIGHT=69 ALT=""></TD>
+		<TD width="37">
+			<IMG SRC="images/360_04.jpg" WIDTH=28 HEIGHT=69 ALT=""></TD>
+		<TD COLSPAN=4 ROWSPAN=8>
+		<%
+			/* TOYOTA ENV */
+			//if(server.getCompanySetting() == 3)
+			//if(logchk.getOrgCode() != null && (logchk.getOrgCode().equals("KPRBC") || logchk.getOrgCode().equals("DEMO")) )
+			if( logchk.getOrgCode() != null && logchk.getOrgCode().equals("Allianz") )
+			{%>
+				<IMG SRC="images/360_05_Allianz.jpg" WIDTH=399 HEIGHT=132 ALT=""></TD>
+			<%}
+			else
+			{%>
+				<IMG SRC="images/360_05.jpg" WIDTH=399 HEIGHT=132 ALT=""></TD>
+			<%}
+			/* END TOYOTA ENV */
+		%>
+			
+		<TD COLSPAN=3 ROWSPAN=6>
+		<%
+			/* TOYOTA ENV */
+			//if(server.getCompanySetting() == 3)
+			if( logchk.getOrgCode() != null && logchk.getOrgCode().equals("Allianz") )
+			{%>
+				<IMG SRC="images/360_06_TMT.jpg" WIDTH=207 HEIGHT=120 ALT=""></TD>
+			<%}
+			else
+			{%>
+				<IMG SRC="images/360_06.jpg" WIDTH=207 HEIGHT=120 ALT=""></TD>
+			<%}
+			/* END TOYOTA ENV */
+		%>
+			
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=69 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=2>
+			<IMG SRC="images/360_07.jpg" WIDTH=156 HEIGHT=4 ALT=""></TD>
+		<TD ROWSPAN=3>
+			<IMG SRC="images/360_08.jpg" WIDTH=28 HEIGHT=31 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=4 ALT=""></TD>
+	</TR>
+	<TR>
+		
+    <TD COLSPAN=2 background="images/360_09.jpg"><table width="156" border="0" cellpadding="0" cellspacing="0" background="images/360_09.jpg">
+        <tr> 
+          <td width="57"><div align="right"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Log 
+              in </strong></font></div></td>
+          <td width="10"><img src="images/spacer.gif" width="5" height="5"> </td>
+          <td width="89"><input type="text" name="txtUsername" size="10" tabindex = 1 onKeyPress="if(event.keyCode==13) { return validate(); }"></td>
+        </tr>
+      </table> </TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=25 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=2 ROWSPAN=2>
+			<IMG SRC="images/360_10.jpg" WIDTH=156 HEIGHT=5 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=2 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD ROWSPAN=4>
+	
+			<IMG SRC="images/360_11.jpg"  style="cursor:hand" ALT="" WIDTH=28 HEIGHT=32 border="0" name="btnLogin" onclick="validate()"></a></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=3 ALT=""></TD>
+	</TR>
+	<TR>
+		
+    <TD COLSPAN=2 ROWSPAN=2 valign="top" background="images/360_12.jpg"><table width="156" border="0" cellpadding="0" cellspacing="0" background="images/360_12.jpg">
+        <tr> 
+          <td width="57"><div align="right"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>Password</strong></font></div></td>
+          <td width="10"><img src="images/spacer.gif" width="5" height="5"> </td>
+          <td width="89"><input type="password" name="txtPass" size="10" tabindex = 2 onKeyPress="if(event.keyCode==13) { return validate(); }"></td>
+        </tr>
+      </table> </TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=17 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=3 ROWSPAN=2>
+		<%
+			/* TOYOTA ENV */
+			//if(server.getCompanySetting() == 3)
+			if(logchk.getOrgCode() != null && (logchk.getOrgCode().equals("KPRBC") || logchk.getOrgCode().equals("DEMO")) )
+			{%>
+			<IMG SRC="images/360_13.jpg" WIDTH=207 HEIGHT=12 ALT=""></TD>
+			<%}
+			else
+			{%>
+			<IMG SRC="images/360_13.jpg" WIDTH=207 HEIGHT=12 ALT=""></TD>
+			<%}
+			/* END TOYOTA ENV */
+		%>	
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=8 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=2>
+			<IMG SRC="images/360_14.jpg" WIDTH=156 HEIGHT=4 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=4 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=9>
+			<IMG SRC="images/360_15.jpg" WIDTH=789 HEIGHT=7 ALT=""></TD>
+		<TD width="1">
+			<IMG SRC="images/360_16.jpg" WIDTH=1 HEIGHT=7 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=7 ALT=""></TD>
+	</TR>
+	<TR>
+		
+    <TD COLSPAN=2 height="34">&nbsp; 
+  
+    </TD>
+		<TD COLSPAN=2 height="34">&nbsp;
+			</TD>
+		<TD width="108" height="34">&nbsp;
+			</TD>
+		<TD width="89" height="34">&nbsp;
+			</TD>
+		<TD width="87" height="34">&nbsp;
+			</TD>
+		<TD width="88" height="34">&nbsp;
+			</TD>
+		<TD COLSPAN=2 height="34">
+			<IMG SRC="images/360_23.jpg" WIDTH=119 HEIGHT=33 ALT=""></TD>
+		<TD height="34">
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=33 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD bgcolor="#E2E6F1">
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=31 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=56 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=50 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=50 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=49 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=53 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=48 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=78 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=10 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=129 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=27 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=28 HEIGHT=1 ALT=""></TD>
+		<TD width="115">
+			<IMG SRC="images/spacer.gif" WIDTH=115 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=108 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=89 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=87 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=88 HEIGHT=1 ALT=""></TD>
+		<TD width="118">
+			<IMG SRC="images/spacer.gif" WIDTH=118 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=1 ALT=""></TD>
+		<TD></TD>
+	</TR>
+</TABLE>
+
+<!-- End ImageReady Slices -->
+<!-- ImageReady Slices (360 interface revise.psd) -->
+<div id="Layer1" style="position:absolute; width:188px; height:79px; z-index:1; left: 48px; top: 179px; visibility: hidden; overflow: auto;"> 
+  <table width="211" border="0">
+    <tr> 
+      <td width="205" bgcolor="#00CCFF" class="style1"><font size="2" face="Verdana, Arial, Helvetica, sans-serif"><span class="style6">Set 
+        up</span></font></td>
+    </tr>
+    <tr> 
+      <td bgcolor="#006699" class="style1"><font color="#FFFFFF" size="2" face="Verdana, Arial, Helvetica, sans-serif"><span class="style8">System</span></font></td>
+    </tr>
+    <tr> 
+      <td bgcolor="#00CCFF" class="style1"><font size="2" face="Verdana, Arial, Helvetica, sans-serif"><span class="style6">Rater's 
+        Demographic Entry </span></font></td>
+    </tr>
+    <tr> 
+      <td bgcolor="#006699" class="style1"><font color="#FFFFFF" size="2" face="Verdana, Arial, Helvetica, sans-serif"><span class="style8">Event 
+        viewer </span></font></td>
+    </tr>
+  </table>
+</div>
+<map name="Map11">
+  <area shape="rect" coords="2,5,31,26" href="#">
+</map>
+
+</BODY>
+</form>
+</HTML>

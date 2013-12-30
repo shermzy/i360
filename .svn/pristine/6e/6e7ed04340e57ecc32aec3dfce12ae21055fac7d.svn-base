@@ -1,0 +1,626 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Questionnaire</title>
+</head>
+
+<body>
+
+<table border="1" width="100%">
+	<tr>
+		<td bgcolor="#FF9933">
+		<p align="center"><font color="#FFFFFF"><b>Questionnaire</b></font></td>
+	</tr>
+</table>
+<p align="center">&nbsp;</p>
+<table border="0" width="100%">
+	<tr>
+		<td width="113">Target Name : </td>
+		<td width="731">&nbsp;Jessica Chan</td>
+	</tr>
+	<tr>
+		<td width="113">Job Position :</td>
+		<td width="731">&nbsp;NA</td>
+	</tr>
+	<tr>
+		<td width="113">Competency Statement:</td>
+		<td width="731">
+		<table border="1" width="100%">
+			<tr>
+				<td>Maintaining work effectiveness when faced with major changes 
+				in work conditions, roles, tasks, structures, processes or 
+				cultures</td>
+			</tr>
+		</table>
+		</td>
+	</tr>
+	</table>
+
+<p><b>1. Understand the need for change</b></p>
+<form name="Questionnaire" method="post">
+	<strong><!------------------------------------------------------- ADD COMMENTS -------------------------------------------------------------------><!------------------------------------------------------- ADD COMMENTS ------------------------------------------------------------------->
+	<input id="totalCompleted" type="hidden" value="0" name="totalCompleted">
+	<table border="1" width="96%">
+		<tr>
+			<td width="209">&nbsp;</td>
+			<td>
+			<table border="1" width="100%">
+				<tr>
+					<td width="112" align="center" bgcolor="#FF9933">Not Applicable</td>
+					<td width="112" align="center" bgcolor="#FF9933">Very Poor</td>
+					<td width="115" align="center" bgcolor="#FF9933">Poor</td>
+					<td width="114" align="center" bgcolor="#FF9933">Fair</td>
+					<td width="115" align="center" bgcolor="#FF9933">Good</td>
+					<td align="center" bgcolor="#FF9933">Very Good</td>
+				</tr>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td width="209">&nbsp;</td>
+			<td>
+	<strong>
+			<table border="1" width="100%">
+				<tr>
+					<td width="112" bgcolor="#FF9933">
+					<p align="center">N/A</td>
+					<td width="50" bgcolor="#FF9933">
+					<p align="center">1</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">2</td>
+					<td width="56" bgcolor="#FF9933">
+					<p align="center">3</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">4</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">5</td>
+					<td bgcolor="#FF9933">
+					<p align="center">6</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">7</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">8</td>
+					<td width="53" bgcolor="#FF9933">
+					<p align="center">9</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">10</td>
+				</tr>
+			</table>
+	</strong>
+			</td>
+		</tr>
+		<tr>
+			<td width="209" bgcolor="#FF9933">
+			<p align="center"><b>Current Proficiency</b></td>
+			<td bgcolor="#FFCC99">
+	<strong>
+			<table border="1" width="100%">
+				<tr>
+					<td width="110">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="32" /></strong></td>
+					<td width="52">
+					<p align="center"><input type="radio" /></td>
+					<td>
+					<p align="center">
+	<strong>
+					<input type="radio" name value="1" /></strong></td>
+					<td>
+					<p align="center">
+	<strong>
+					<input type="radio" name value="2" /></strong></td>
+					<td width="53">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="3" /></strong></td>
+					<td>
+					<p align="center">
+	<strong>
+					<input type="radio" name value="4" /></strong></td>
+					<td width="52">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="5" /></strong></td>
+					<td width="54">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="6" /></strong></td>
+					<td width="55">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="7" /></strong></td>
+					<td width="53">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="8" /></strong></td>
+					<td width="52">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="9" /></strong></td>
+				</tr>
+			</table>
+	</strong>
+			</td>
+		</tr>
+		<tr>
+			<td width="209" bgcolor="#FF9933">
+			<p align="center"><b>Current Proficiency Required</b></td>
+			<td bgcolor="#FFCC99">
+	<strong>
+			<table border="1" width="100%">
+				<tr>
+					<td>
+					<p align="center">
+	<strong>
+					<input type="radio" name value="31" /></strong></td>
+					<td width="48">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="28" /></strong></td>
+					<td width="56">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="26" /></strong></td>
+					<td width="59">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="25" /></strong></td>
+					<td width="52">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="22" /></strong></td>
+					<td width="57">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="21" /></strong></td>
+					<td width="52">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="18" /></strong></td>
+					<td width="55">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="17" /></strong></td>
+					<td width="55">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="14" /></strong></td>
+					<td width="51">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="13" /></strong></td>
+					<td width="53">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="10" /></strong></td>
+				</tr>
+			</table>
+	</strong>
+			</td>
+		</tr>
+		</table>
+	<p align="center">&nbsp;</p>
+	<table border="1" width="96%">
+		<tr>
+			<td width="209">&nbsp;</td>
+			<td>
+			<table border="1" width="100%">
+				<tr>
+					<td width="112" align="center" bgcolor="#FF9933">Not Applicable</td>
+					<td width="112" align="center" bgcolor="#FF9933">Very Low 
+					Importance</td>
+					<td width="115" align="center" bgcolor="#FF9933">Low 
+					Importance</td>
+					<td width="114" align="center" bgcolor="#FF9933">Somewhat 
+					Important</td>
+					<td width="115" align="center" bgcolor="#FF9933">Important</td>
+					<td align="center" bgcolor="#FF9933">Extremely Important</td>
+				</tr>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td width="209">&nbsp;</td>
+			<td>
+	<strong>
+			<table border="1" width="100%">
+				<tr>
+					<td width="112" bgcolor="#FF9933">
+					<p align="center">N/A</td>
+					<td width="50" bgcolor="#FF9933">
+					<p align="center">1</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">2</td>
+					<td width="56" bgcolor="#FF9933">
+					<p align="center">3</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">4</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">5</td>
+					<td bgcolor="#FF9933">
+					<p align="center">6</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">7</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">8</td>
+					<td width="53" bgcolor="#FF9933">
+					<p align="center">9</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">10</td>
+				</tr>
+			</table>
+	</strong>
+			</td>
+		</tr>
+		<tr>
+			<td width="209" bgcolor="#FF9933">
+			<p align="center"><b>Current Importance (now)</b></td>
+			<td bgcolor="#FFCC99">
+	<strong>
+			<table border="1" width="100%">
+				<tr>
+					<td>
+					<p align="center">
+	<strong>
+					<input type="radio" name value="310" /></strong></td>
+					<td width="53">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="228" /></strong></td>
+					<td width="56">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="229" /></strong></td>
+					<td width="56">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="230" /></strong></td>
+					<td width="51">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="231" /></strong></td>
+					<td width="59">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="232" /></strong></td>
+					<td width="54">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="127" /></strong></td>
+					<td width="55">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="128" /></strong></td>
+					<td width="54">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="129" /></strong></td>
+					<td width="51">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="130" /></strong></td>
+					<td width="53">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="131" /></strong></td>
+				</tr>
+			</table>
+	</strong>
+			</td>
+		</tr>
+	</table>
+	<p align="center">&nbsp;</p>
+
+<p>2. Accept given circumstances in a situation</p>
+	<p>&nbsp;</p>
+	<!------------------------------------------------------- ADD COMMENTS -------------------------------------------------------------------><!------------------------------------------------------- ADD COMMENTS ------------------------------------------------------------------->
+	<input id="totalCompleted0" type="hidden" value="0" name="totalCompleted0">
+	<table border="1" width="96%">
+		<tr>
+			<td width="209">&nbsp;</td>
+			<td>
+			<table border="1" width="100%">
+				<tr>
+					<td width="112" align="center" bgcolor="#FF9933">Not Applicable</td>
+					<td width="112" align="center" bgcolor="#FF9933">Very Poor</td>
+					<td width="115" align="center" bgcolor="#FF9933">Poor</td>
+					<td width="114" align="center" bgcolor="#FF9933">Fair</td>
+					<td width="115" align="center" bgcolor="#FF9933">Good</td>
+					<td align="center" bgcolor="#FF9933">Very Good</td>
+				</tr>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td width="209">&nbsp;</td>
+			<td>
+	<strong>
+			<table border="1" width="100%">
+				<tr>
+					<td width="112" bgcolor="#FF9933">
+					<p align="center">N/A</td>
+					<td width="50" bgcolor="#FF9933">
+					<p align="center">1</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">2</td>
+					<td width="56" bgcolor="#FF9933">
+					<p align="center">3</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">4</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">5</td>
+					<td bgcolor="#FF9933">
+					<p align="center">6</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">7</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">8</td>
+					<td width="53" bgcolor="#FF9933">
+					<p align="center">9</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">10</td>
+				</tr>
+			</table>
+	</strong>
+			</td>
+		</tr>
+		<tr>
+			<td width="209" bgcolor="#FF9933">
+			<p align="center"><b>Current Proficiency</b></td>
+			<td bgcolor="#FFCC99">
+	<strong>
+			<table border="1" width="100%">
+				<tr>
+					<td width="110">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="311" checked /></strong></td>
+					<td width="52">
+					<p align="center"><input type="radio" name value="312" /></td>
+					<td>
+					<p align="center">
+	<strong>
+					<input type="radio" name value="132" /></strong></td>
+					<td>
+					<p align="center">
+	<strong>
+					<input type="radio" name value="233" /></strong></td>
+					<td width="53">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="313" /></strong></td>
+					<td>
+					<p align="center">
+	<strong>
+					<input type="radio" name value="41" /></strong></td>
+					<td width="52">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="51" /></strong></td>
+					<td width="54">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="61" /></strong></td>
+					<td width="55">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="71" /></strong></td>
+					<td width="53">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="81" /></strong></td>
+					<td width="52">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="91" /></strong></td>
+				</tr>
+			</table>
+	</strong>
+			</td>
+		</tr>
+		<tr>
+			<td width="209" bgcolor="#FF9933">
+			<p align="center"><b>Current Proficiency Required</b></td>
+			<td bgcolor="#FFCC99">
+	<strong>
+			<table border="1" width="100%">
+				<tr>
+					<td>
+					<p align="center">
+	<strong>
+					<input type="radio" name value="314" /></strong></td>
+					<td width="48">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="234" /></strong></td>
+					<td width="56">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="235" /></strong></td>
+					<td width="59">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="236" /></strong></td>
+					<td width="52">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="237" /></strong></td>
+					<td width="57">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="238" /></strong></td>
+					<td width="52">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="133" /></strong></td>
+					<td width="55">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="134" /></strong></td>
+					<td width="55">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="135" /></strong></td>
+					<td width="51">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="136" /></strong></td>
+					<td width="53">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="137" /></strong></td>
+				</tr>
+			</table>
+	</strong>
+			</td>
+		</tr>
+		</table>
+	<p align="center">&nbsp;</p>
+	<table border="1" width="96%">
+		<tr>
+			<td width="209">&nbsp;</td>
+			<td>
+			<table border="1" width="100%">
+				<tr>
+					<td width="112" align="center" bgcolor="#FF9933">Not Applicable</td>
+					<td width="112" align="center" bgcolor="#FF9933">Very Low 
+					Importance</td>
+					<td width="115" align="center" bgcolor="#FF9933">Low 
+					Importance</td>
+					<td width="114" align="center" bgcolor="#FF9933">Somewhat 
+					Important</td>
+					<td width="115" align="center" bgcolor="#FF9933">Important</td>
+					<td align="center" bgcolor="#FF9933">Extremely Important</td>
+				</tr>
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td width="209">&nbsp;</td>
+			<td>
+	<strong>
+			<table border="1" width="100%">
+				<tr>
+					<td width="112" bgcolor="#FF9933">
+					<p align="center">N/A</td>
+					<td width="50" bgcolor="#FF9933">
+					<p align="center">1</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">2</td>
+					<td width="56" bgcolor="#FF9933">
+					<p align="center">3</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">4</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">5</td>
+					<td bgcolor="#FF9933">
+					<p align="center">6</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">7</td>
+					<td width="55" bgcolor="#FF9933">
+					<p align="center">8</td>
+					<td width="53" bgcolor="#FF9933">
+					<p align="center">9</td>
+					<td width="54" bgcolor="#FF9933">
+					<p align="center">10</td>
+				</tr>
+			</table>
+	</strong>
+			</td>
+		</tr>
+		<tr>
+			<td width="209" bgcolor="#FF9933">
+			<p align="center"><b>Current Importance (now)</b></td>
+			<td bgcolor="#FFCC99">
+	<strong>
+			<table border="1" width="100%">
+				<tr>
+					<td>
+					<p align="center">
+	<strong>
+					<input type="radio" name value="315" /></strong></td>
+					<td width="53">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="239" /></strong></td>
+					<td width="56">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="240" /></strong></td>
+					<td width="56">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="241" /></strong></td>
+					<td width="51">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="242" /></strong></td>
+					<td width="59">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="243" /></strong></td>
+					<td width="54">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="138" /></strong></td>
+					<td width="55">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="139" /></strong></td>
+					<td width="54">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="140" /></strong></td>
+					<td width="51">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="141" /></strong></td>
+					<td width="53">
+					<p align="center">
+	<strong>
+					<input type="radio" name value="142" /></strong></td>
+				</tr>
+			</table>
+	</strong>
+			</td>
+		</tr>
+	</table>
+	<p>&nbsp;</p>
+	<p>&nbsp;</p>
+	<table align="center" border="1" width="53%">
+		<tr>
+			<td width="179" bgcolor="#FF9933">
+			<p align="center"><font color="#FFFFFF" size="4">Question 1 of 6</font></td>
+			<td bgcolor="#FF9933"><div align="center">
+				<table border="0" width="42%" bgcolor="#FF9933">
+				<tr>
+					<td width="35">
+					<input type=button value="Save"></td>
+					<td width="35">
+					<strong><input type=button value="Finish"></strong></td>
+					<td>
+					<strong><input type=button value="Exit"></strong></td>
+				</tr>
+			</table>
+			</td>
+			<td bgcolor="#FF9933">
+			<div align="center">
+			<table border="0" width="42%" bgcolor="#FF9933">
+				<tr>
+					<td width="35"><input type=button value="<<<"></td>
+					<td><input type=button value=">>>"></td>
+				</tr>
+			</table>
+			</div>
+			</td>
+		</tr>
+	</table>
+	<p>&nbsp;</p>
+	</strong>
+</form>
+
+		</body>
+
+	</html>

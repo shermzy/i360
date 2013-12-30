@@ -1,0 +1,153 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Questionnaire</title>
+<style>
+<!--
+.style1 {
+	color: #CCFFCC;
+	font-weight: bold;
+}
+-->
+</style>
+</head>
+
+<body style="text-align: center">
+
+<table border="1" width="100%">
+	<tr>
+		<td bgcolor="#FF9933">
+		<p align="center"><font color="#FFFFFF"><b>Questionnaire</b></font></td>
+	</tr>
+</table>
+<p align="center">&nbsp;</p>
+<table border="0" width="100%">
+	<tr>
+		<td width="113">Target Name : </td>
+		<td width="731">&nbsp;Jessica Chan</td>
+	</tr>
+	<tr>
+		<td width="113">Job Position :</td>
+		<td width="731">&nbsp;NA</td>
+	</tr>
+	<tr>
+		<td width="113">Competency Statement:</td>
+		<td width="731">
+		<table border="1" width="100%">
+			<tr>
+				<td>Maintaining work effectiveness when faced with major changes 
+				in work conditions, roles, tasks, structures, processes or 
+				cultures</td>
+			</tr>
+		</table>
+		</td>
+	</tr>
+	<tr>
+		<td width="113">Key Behaviour :</td>
+		<td width="731">
+		<table border="1" width="100%">
+			<tr>
+				<td>Understand the need for change</td>
+			</tr>
+		</table>
+		</td>
+	</tr>
+</table>
+
+<p><b><font size="4">Please fill in the rating based on the scale described below.</font></b></p>
+<table border="1" width="61%">
+	<tr>
+		<td>
+		<table style="FONT-SIZE: 10pt; FONT-FAMILY: Arial" width="610" border="0" font>
+			<tr align="middle" height="5">
+				<td align="middle" width="80" bgColor="#FFCC99" height="10"><b>
+				Not applicable</b></td>
+				<td align="middle" width="80" bgColor="#FFCC99" colSpan="2" height="10">
+				<b>Very poor</b></td>
+				<td align="middle" width="80" bgColor="#FFCC99" colSpan="2" height="10">
+				<b>Poor</b></td>
+				<td align="middle" width="80" bgColor="#FFCC99" colSpan="2" height="10">
+				<b>Fair</b></td>
+				<td align="middle" width="80" bgColor="#FFCC99" colSpan="2" height="10">
+				<b>Good</b></td>
+				<td align="middle" width="80" bgColor="#FFCC99" colSpan="2" height="10">
+				<b>Very good</b></td>
+			</tr>
+			<tr align="middle">
+				<td>&nbsp;N/A </td>
+				<td>&nbsp;1 </td>
+				<td>&nbsp;2 </td>
+				<td>&nbsp;3 </td>
+				<td>&nbsp;4 </td>
+				<td>&nbsp;5 </td>
+				<td>&nbsp;6 </td>
+				<td>&nbsp;7 </td>
+				<td>&nbsp;8 </td>
+				<td>&nbsp;9 </td>
+				<td>&nbsp;10 </td>
+			</tr>
+		</table>
+		</td>
+	</tr>
+</table>
+<p>&nbsp;</p>
+<form name="Questionnaire" method="post">
+	<strong><!------------------------------------------------------- ADD COMMENTS -------------------------------------------------------------------><!------------------------------------------------------- ADD COMMENTS ------------------------------------------------------------------->
+	<input id="totalCompleted" type="hidden" value="0" name="totalCompleted">
+	<p>&nbsp;</p>
+	<table border="1" width="38%">
+		<tr>
+			<td width="284" bgcolor="#FFCC99"><strong>Current Proficiency </strong></td>
+			<td bgcolor="#FFCC99"><input type="text" size="10"></td>
+		</tr>
+		<tr>
+			<td width="284" bgcolor="#FFCC99"><strong>Current Proficiency Required</strong></td>
+			<td bgcolor="#FFCC99">
+	<strong><input type="text" size="10" name="T1"></strong></td>
+		</tr>
+		<tr>
+			<td width="284" height="29" bgcolor="#FFCC99"><strong>Current Importance (Low)</strong></td>
+			<td height="29" bgcolor="#FFCC99">
+	<strong><input type="text" size="10" name="T2"></strong></td>
+		</tr>
+	</table>
+	<p>&nbsp;</p>
+	<table border="1" width="53%">
+		<tr>
+			<td width="179" bgcolor="#FF9933">
+			<p align="center"><font color="#FFFFFF" size="4">Question 1 of 6</font></td>
+			<td bgcolor="#FF9933"><div align="center">
+				<table border="1" width="42%" bgcolor="#FF9933">
+				<tr>
+					<td width="35">
+					<p><input type=button value="Save"></td>
+					<td width="35">
+					<p>
+	<strong><input type=button value="Finish"></strong></td>
+					<td>
+					<p>
+	<strong><input type=button value="Exit"></strong></td>
+				</tr>
+			</table>
+			</td>
+			<td bgcolor="#FF9933">
+			<div align="center">
+			<table border="1" width="42%" bgcolor="#FF9933">
+				<tr>
+					<td width="35"><input type=button value="<<<"></td>
+					<td><input type=button value=">>>"></td>
+				</tr>
+			</table>
+			</div>
+			</td>
+		</tr>
+	</table>
+	<p>&nbsp;</p>
+	</strong>
+</form>
+
+</body>
+
+</html>

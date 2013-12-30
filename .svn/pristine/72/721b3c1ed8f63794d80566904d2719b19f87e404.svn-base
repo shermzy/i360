@@ -1,0 +1,403 @@
+<%@ page import="java.sql.*"%>
+<%@ page import="java.io.*"%>
+<%@ page import="java.util.*"%>
+<%@ page import="CP_Classes.vo.*"%>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+
+<title>User Assignment</title>
+<%@ page pageEncoding="UTF-8"%>
+<meta http-equiv="Content-Type" content="text/html">
+<style type="text/css">
+<!--
+body {
+	
+}
+-->
+</style>
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session" />
+	<jsp:useBean id="Database" class="CP_Classes.Database" scope="session" />
+	<jsp:useBean id="CoachOrganization" class="Coach.CoachOrganization" scope="session" />
+	<jsp:useBean id="SessionSetup" class="Coach.SessionSetup" scope="session" />
+	<jsp:useBean id="CoachDateGroup" class="Coach.CoachDateGroup" scope="session" />
+	<jsp:useBean id="CoachSlotGroup" class="Coach.CoachSlotGroup" scope="session" />
+	<jsp:useBean id="User" class="CP_Classes.User" scope="session" />
+	<jsp:useBean id="setting" class="CP_Classes.Setting" scope="session"/>
+	<jsp:useBean id="Venue" class="Coach.CoachVenue" scope="session" />
+	<script type="text/javascript">
+	var x = parseInt(window.screen.width) / 2 - 240;  // the number 250 is the exact half of the width of the pop-up and so should be changed according to the size of the pop-up
+	var y = parseInt(window.screen.height) / 2 - 115;  // the number 125 is the exact half of the height of the pop-up and so should be changed according to the size of the pop-up
+
+		function proceed(form) {
+			
+		}
+		function check(field)
+		{
+			var isValid = 0;
+			var clickedValue = 0;
+			//check whether any checkbox selected
+			if( field == null ) {
+				isValid = 2;
+			
+			} else {
+
+				if(isNaN(field.length) == false) {
+					for (i = 0; i < field.length; i++)
+						if(field[i].checked) {
+							clickedValue = field[i].value;
+							isValid = 1;
+						}
+				}else {		
+					if(field.checked) {
+						clickedValue = field.value;
+						isValid = 1;
+					}
+						
+				}
+			}
+			
+			if(isValid == 1)
+				return clickedValue;
+			else if(isValid == 0)
+				alert("No record selected");
+			else if(isValid == 2)
+				alert("No record available");
+			
+			isValid = 0;
+
+		}
+		function signUp(form,field) {
+			var value = check(field);
+			if (value) {
+					form.action = "CandidateSignUp.jsp?signUp=" + value;
+					form.method = "post";
+					form.submit();
+			}
+			
+		}
+		function unSignUp(form,field) {
+			var value = check(field);
+			if (value) {
+					form.action = "CandidateSignUp.jsp?unSignUp=" + value;
+					form.method = "post";
+					form.submit();
+			}
+			
+		}
+		
+		
+		function setSessionName(form) {
+			
+			if (form.selSession.value == "0") {
+				alert("Please select Session");
+			}else{
+				form.action = "CandidateSignUp.jsp?setSession=1";
+				form.method = "post";
+				form.submit();
+			}
+			
+		}
+		function newPopup(url) {
+		popupWindow = window.open(
+		url,'popUpWindow','height=x,width=y,left=400,top=400,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,directories=no,status=yes')
+}
+	</script>
+</head>
+
+<body>
+	
+	<!-- select Session -->
+
+
+	<%
+		String username = (String) session.getAttribute("username");
+		Vector userAssignments=new Vector();
+		int userPK=logchk.getPKUser();
+
+		if (!logchk.isUsable(username)) {
+	%>
+	<font size="2"> <script>
+		parent.location.href = "../index.jsp";
+	</script> <%
+ 	} else {
+		Vector sessionlist=SessionSetup.getSessionAllNamesUsedbyCandidate(logchk.getOrg());
+		userAssignments=SessionSetup.getUserAssignmentBYCandidate();
+ 		if (request.getParameter("setSession") != null) {
+ 			//set up the org
+ 				int sessionPK=Integer.parseInt(request.getParameter("selSession"));
+ 				SessionSetup.setSelectedSession(sessionPK);
+ 				System.out.println("Selected Session:"+sessionPK);
+ 				// get the data using session PK
+ 				userAssignments=SessionSetup.getUserAssignmentBYCandidate();
+ 		}
+ 		if (request.getParameter("signUp") != null) {
+ 			int selAssignmentPK=Integer.parseInt(request.getParameter("selAssignment"));
+ 			voCoachUserAssignment selectedUserAssignment=SessionSetup.getSelectedvoUserAssignment(selAssignmentPK);
+ 			//System.out.println(selectedUserAssignment.getUserFK());
+ 			//validate whether the user has sign up already and only sign one
+ 			if(SessionSetup.reachMax(userPK)){
+ 				%>
+ 				<script type="text/javascript">
+ 					alert("Sorry, you have already booked all your coaching slots!");
+ 				</script>
+ 				<% 
+ 				
+ 			}else if(selectedUserAssignment.getUserFK()!=0){
+ 				%>
+ 				<script type="text/javascript">
+ 					alert("Sorry, this session has been booked already!");
+ 				</script>
+ 				<% 
+ 			}else{
+ 				SessionSetup.updateUserByCandidate(selAssignmentPK, userPK);
+ 				userAssignments=SessionSetup.getUserAssignmentBYCandidate();
+ 				%>
+ 				<script type="text/javascript">
+ 					alert("Book successfully");
+ 				</script>
+ 				<% 
+ 			}
+ 			
+ 		}
+ 		if (request.getParameter("unSignUp") != null) {
+ 			int selAssignmentPK=Integer.parseInt(request.getParameter("selAssignment"));
+ 			//validate whether the user has sign up already and only sign one
+ 			if(!SessionSetup.checkUserHasSigned(selAssignmentPK, userPK)){
+ 				%>
+ 				<script type="text/javascript">
+ 					alert("Sorry, you did not book the slot");
+ 				</script>
+ 				<% 
+ 				
+ 			}else{
+ 				SessionSetup.unSignByCandidate(selAssignmentPK, userPK);
+ 				userAssignments=SessionSetup.getUserAssignmentBYCandidate();
+ 				%>
+ 				<script type="text/javascript">
+ 					alert("Delete booking successfully");
+ 				</script>
+ 				<% 
+ 			}
+ 		}
+ 		// validate the users, if the users are not on the list, they should not see the assigments
+ 		System.out.println("User login: "+userPK);
+ 		if(!SessionSetup.validateUser(logchk.getOrg(), userPK)){
+ 			userAssignments=new Vector();
+ 			System.out.println("User not authorized");
+ 			%>
+				<script type="text/javascript">
+					alert("Sorry, you have no coaching to book!");
+				</script>
+				<% 
+ 		}
+ 		/************************************************** ADDING TOGGLE FOR SORTING PURPOSE *************************************************/
+
+	int toggle = SessionSetup.getToggle();	//0=asc, 1=desc
+	int type = 1; //1=date, 2=starting time 3= coach 4= status
+			
+	if(request.getParameter("name") != null)
+	{	 
+		if(toggle == 0)
+			toggle = 1;
+		else
+			toggle = 0;
+		
+		SessionSetup.setToggle(toggle);
+		
+		type = Integer.parseInt(request.getParameter("name"));			 
+		SessionSetup.setSortType(type);									
+	} 
+	
+/************************************************** ADDING TOGGLE FOR SORTING PURPOSE *************************************************/
+ 		
+ %>
+
+		<form name="AddSlot" method="post">
+			<p>
+				<b><font color="#000080" size="2" face="Arial">Coaching Session Name:</font></b>
+			</p>
+			<table>
+				<tr>
+					<td width="500" colspan="1"><select size="1"
+						name="selSession" onChange="setSessionName(this.form)">
+						<option value=0>Select a Session Name</option>
+							<%
+								for (int i = 0; i < sessionlist.size(); i++) {
+
+									voCoachSession sessionDistic = (voCoachSession) sessionlist.elementAt(i);
+										int sessionPK = sessionDistic.getPK();
+										String sessionName = sessionDistic.getName();
+										String sessionCode = sessionDistic.getDescription();
+
+										if (SessionSetup.getSelectedSession() == sessionPK) {
+							%>
+							<option value=<%=sessionPK%> selected><%=sessionName%>
+								<%
+									} else {
+								%>
+							
+							<option value=<%=sessionPK%>><%=sessionName%>
+								<%
+									}
+										}
+								%>
+							
+					</select></td>
+				</tr>
+			</table>
+			<p> Tips: Can sort the table by clicking the column name</p>
+			<br>
+			<table>
+			
+			
+			<th width="30" bgcolor="navy" bordercolor="#3399FF" align="center"><b>
+					<font style='color: white'>&nbsp;</font>
+			</b></th>
+			<th width="30" bgcolor="navy" bordercolor="#3399FF" align="center"><b>
+					<font style='color: white'>No</font>
+			</b></th>
+			<th width="130" bgcolor="navy" bordercolor="#3399FF" align="center"><a href="CandidateSignUp.jsp?name=1"><b>
+					<font style='color: white'>Date</font>
+			</b></th>
+			<th width="70" bgcolor="navy" bordercolor="#3399FF" align="center"><a href="CandidateSignUp.jsp?name=2"><b>
+					<font style='color: white'>Starting</font>
+			</b></th>
+			<th width="70" bgcolor="navy" bordercolor="#3399FF" align="center"><a href="CandidateSignUp.jsp?name=5"><b>
+					<font style='color: white'>Ending</font>
+			</b></th>
+			<th width="150" bgcolor="navy" bordercolor="#3399FF" align="center"><a href="CandidateSignUp.jsp?name=3"><b>
+					<font style='color: white'>Coach</font>
+			</b></th>
+			<th width="150" bgcolor="navy" bordercolor="#3399FF" align="center"><b>
+					<font style='color: white'>Venue</font>
+			</b></th>
+			<th width="60" bgcolor="navy" bordercolor="#3399FF" align="center"><b>
+					<font style='color: white'>Link</font>
+			</b></th>
+			<th width="60" bgcolor="navy" bordercolor="#3399FF" align="center"><b>
+					<font style='color: white'>Profile</font>
+			</b></th>
+			</b></th>
+			<th width="200" bgcolor="navy" bordercolor="#3399FF" align="center"><b>
+					<font style='color: white'>Booked By</font>
+			</b></th>
+
+			<%
+				int DisplayNo = 1;
+				
+				for (int i = 0; i < userAssignments.size(); i++) {
+					voCoachUserAssignment userAssignment = new voCoachUserAssignment();
+					userAssignment = (voCoachUserAssignment) userAssignments.elementAt(i);
+
+					int AssignmentPK = userAssignment.getAssignmentPK();
+					int StartingTime =userAssignment.getStartingTime();
+					int EndingTime = userAssignment.getEndingTime();
+					String CoachName=userAssignment.getCoachName();
+					String sessionVenue=userAssignment.getSessionVenue();
+					String Date=userAssignment.getDate();
+					String OrganizationName=userAssignment.getOrganizationName();
+					int Status=userAssignment.getStatus();
+					int UserFK=userAssignment.getUserFK();
+					int venueFK=userAssignment.getVenueFK();
+					String userNameInAssignment=SessionSetup.getUserNamebyID(UserFK);
+					String fullName=User.getUserInfo(UserFK).getFamilyName()+" "+User.getUserInfo(UserFK).getGivenName();
+					String link=userAssignment.getCoachLink();
+					String fileName=userAssignment.getCoachFileName();
+					String startingTime4Digits;
+					String endingTime4Digits;
+					voCoachVenue venue=Venue.getSelectedCoachVenue(venueFK);
+					String address1=venue.getVenue1();
+				if (StartingTime < 1000) {
+					startingTime4Digits="0"+StartingTime;
+				} else {
+					startingTime4Digits=""+StartingTime;
+				}
+				if (EndingTime < 1000) {
+					endingTime4Digits="0"+EndingTime;
+				} else {
+					endingTime4Digits=""+EndingTime;
+				}
+			
+					
+
+			%>
+				<tr onMouseOver="this.bgColor = '#99ccff'"
+					onMouseOut="this.bgColor = '#FFFFCC'">
+					<td style="border-width: 1px"><font size="2"> <input
+							type="radio" name="selAssignment" value=<%=AssignmentPK%>>
+					</font>
+					</td>
+					<td align="center"><%=DisplayNo%></td>
+					<td align="center"><%=Date%></td>
+					<td align="center"><%=startingTime4Digits%></td>
+					<td align="center"><%=endingTime4Digits%></td>
+					<td align="center"><%=CoachName%></td>
+					<!-- address1 column -->
+					<%
+						if (address1 == null || "".equalsIgnoreCase(address1)) {
+					%><td align="center">&nbsp;</td>
+					<%
+						} else {
+					%>
+					<td align="center">
+					<a href="JavaScript:newPopup('ViewCandidateAssignmentVenue.jsp?ViewDayGroup=<%=venueFK%>');"><%=address1%></a></td>
+					<%
+						}
+					%>
+				<!-- address1 column -->
+						
+					<!-- Link column -->
+					<%
+						if (link == null || "".equalsIgnoreCase(link)) {
+					%><td align="center">&nbsp;</td>
+					<%
+						} else {
+
+									//System.out.println(filePath);
+					%>
+					<td align="center"><a href=<%=link%> target="_blank">View</a>
+					</td>
+					<%
+						}
+					%>
+					<!-- Link column -->
+					<!-- fileName column -->
+					<%
+						if (fileName == null || "".equalsIgnoreCase(fileName)) {
+					%><td align="center">&nbsp;</td>
+					<%
+						} else {
+									String filePath = "" + "../CoachFilePath/" + fileName;
+
+									//System.out.println(filePath);
+					%>
+					<td align="center"><a href="<%=filePath.replace("\\", "/")%>"
+						target="_blank">View</a></td>
+					<%
+						}
+					%>
+					<!-- fileName column -->
+					<td align="center"><%=fullName%></td>
+
+				</tr>
+				<%
+				DisplayNo++;
+				}
+			%>
+		</table>
+		<br>
+		<br>
+		<br>
+			
+			<!-- select coach -->
+			<input type="button" name="sign" value="Book" onclick="signUp(this.form,this.form.selAssignment)">
+			<input type="button" name="unsign" value="Delete Booking" onclick="unSignUp(this.form,this.form.selAssignment)">
+		</form> <%
+ 	}
+ %>
+</body>
+</html>
+</body>
+</html>

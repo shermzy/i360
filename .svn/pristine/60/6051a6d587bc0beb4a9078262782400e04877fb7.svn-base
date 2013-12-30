@@ -1,0 +1,32 @@
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>CoachSetup</title>
+
+<script>
+	function goToNewPage() {
+		if (document.getElementById("target").value) {
+			window.location.href = document.getElementById("target").value;
+		}
+	}
+</script>
+</head>
+<body>
+	<form>
+		<label>Coach Setup</label> 
+		<select id="target" onchange="goToNewPage()">
+			<option selected>Please select one</option>
+			<option value="Coach.jsp">Coach Management</option>
+			<option value="Venue.jsp">Venue Management</option>
+			<option value="SlotGroup.jsp">Coaching Daily Schedule</option>
+			<option value="DateGroup.jsp">Coaching Period</option>
+			<option value="SessionManagement.jsp">Coaching Session Management</option>
+			<option value="UserAssignment.jsp">Candidate Assignment</option>
+		</select>
+	</form>
+
+</body>
+</html>

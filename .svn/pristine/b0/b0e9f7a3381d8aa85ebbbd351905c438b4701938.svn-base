@@ -1,0 +1,605 @@
+<%@ page import="java.sql.*"%>
+<%@ page errorPage="" %>
+<%@ page import="java.io.*%>
+<%@ page import="java.lang.String"%>
+<%@ page import="java.lang.Object"%>
+<%@ page import="java.util.* "%>  
+<%@ page pageEncoding="UTF-8"%>
+<%//by Yiting 19/09/2008 Fix jsp files to support Thai Language%>  
+<html>
+<head>
+<jsp:useBean id="Database" class="CP_Classes.Database" scope="session"/>
+<jsp:useBean id="RDE" class="CP_Classes.RatersDataEntry" scope="session"/> 
+<jsp:useBean id="Questionnaire" class="CP_Classes.Questionnaire" scope="session"/>
+<jsp:useBean id="SurveyResult" class="CP_Classes.SurveyResult" scope="session"/>
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/> 
+<jsp:useBean id="User" class="CP_Classes.User_Jenty" scope="session"/> 
+<jsp:useBean id="KB" class="CP_Classes.KeyBehaviour" scope="session"/>
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+
+<%@ page import="CP_Classes.vo.voCompetency"%>
+<%@ page import="CP_Classes.vo.voKeyBehaviour"%>
+<%@ page import="CP_Classes.vo.voRatingTask"%>
+
+<link REL="stylesheet" TYPE="text/css" href="Settings\Settings.css">
+<script language="javascript" src="script/ajax.js"></script>
+<title>Questionnaire</title>
+<meta http-equiv="Content-Type" content="text/html">
+<style type="text/css">
+<!--
+.style1 {
+	color: #CCFFCC;
+	font-weight: bold;
+}
+.style2 {font-size: 14pt}
+body {
+	background-color: #FFFFFF;
+}
+.style3 {color: #FFCCCC}
+-->
+</style>
+
+</head>
+
+<body>
+
+<script language="javascript">
+function confirmFinish(form, type)
+{
+	//type 1=save, 2=finish
+	var clicked = false;
+	
+	if(type == 1) {			
+		if(confirm("<%=trans.tslt("If you are finished and do not wish to change the rating any further, click CANCEL here and click on the FINISH button instead. If you simply want to save your rating for now, click OK here")%>."))
+			clicked = true;
+		else 
+		{
+			return false;				
+		}
+	}
+	else if(type == 2)
+		clicked = true;
+	else {
+		if(confirm("<%=trans.tslt("Your rating will be saved and your assignment status for this target will be set to incomplete")%>."))
+			clicked = true;
+		else 
+		{
+			return false;				
+		}				
+	}
+					
+	if(clicked == true) {
+		form.action = "Questionnaires.jsp?go=3&finish=" + type;
+		form.method = "post";
+		form.submit();
+	}
+	
+	return true;
+}
+
+if (!document.layers&&!document.all&&!document.getElementById)
+	event="test"
+
+function showtip(current,e,text){
+
+	if (document.all||document.getElementById){
+		thetitle=text.split('<br>')
+	
+		if (thetitle.length>1){
+			thetitles=''
+
+			for (i=0;i<thetitle.length;i++)
+				thetitles+=thetitle[i]
+				current.title=thetitles
+		} else
+			current.title=text
+	
+	} else if (document.layers){
+		document.tooltip.document.write('<layer bgColor="white" style="border:1px solid black;font-size:12px;">'+text+'</layer>')
+		document.tooltip.document.close()
+		document.tooltip.left=e.pageX+5
+		document.tooltip.top=e.pageY+5
+		document.tooltip.visibility="show"
+	}
+}
+
+function hidetip(){
+	if (document.layers)
+		document.tooltip.visibility="hidden"
+}
+
+</script>
+
+<%
+	String username=(String)session.getAttribute("username");
+
+	if (!logchk.isUsable(username)) 
+	{
+%> 
+		<script>
+			parent.location.href = "index.jsp";
+		</script>
+<%  
+	} 
+
+	int pkUser = logchk.getPKUser();
+	int userType = logchk.getUserType();
+	int compID = logchk.getCompany();
+	int orgID = logchk.getOrg();
+	
+	
+	//---get survey, target and rater ID.
+	int surveyID = RDE.getSurveyID();		
+	int targetLoginID = RDE.getTargetID();
+	int raterLoginID = RDE.getRaterID();
+	
+	
+	//---beans which are set from Questionnaire.jsp
+	int start = Questionnaire.getStartID();
+	int assignmentID = Questionnaire.getAssignmentID();
+	String name = Questionnaire.getName();
+	String jobPost = Questionnaire.getJobPost();
+	String timeFrame = Questionnaire.getTimeFrame();
+	String futureJob = Questionnaire.getFutureJob();
+	
+	if(futureJob == null)
+		futureJob = "";
+	if(timeFrame == null)
+		timeFrame = "";
+
+	int RSID[] = Questionnaire.getSurveyRatingScale(surveyID); //RatingScale ID
+	int RTID[] = Questionnaire.getRT();
+	//int RSID[] = Questionnaire.getRS();
+	
+	//---check if comment needs to be included
+	int included = Questionnaire.commentIncluded(surveyID);
+	int selfIncluded = Questionnaire.SelfCommentIncluded(surveyID);
+	
+	
+	//---check if it is self
+	String rCode = SurveyResult.RaterCode(assignmentID);
+	
+	
+	//---query database in Questionnaire.java
+	int surveyLevel = Questionnaire.getSurveyLevel();
+	String [] UserInfo = User.getUserDetail(pkUser);
+
+	int pk = Questionnaire.getCurrID();	
+	
+	
+	String surveyName = Questionnaire.getSurveyInfo(surveyID); //get surveyName
+		
+	String raterName = Questionnaire.UserName(orgID, raterLoginID);
+
+	int totalRatingTask = Questionnaire.getTotalSurveyRating(surveyID); // count total number of rating task.
+	int totalAll = 0;
+	
+	if(surveyLevel == 0)
+		totalAll = Questionnaire.TotalList(surveyID, 0);
+	else
+		totalAll = Questionnaire.TotalList(surveyID, 1);
+
+	
+	if(request.getParameter("finishall") != null) {
+
+		String temp = surveyName + "(S); " + name + "(T); " + raterName + "(R); Complete";
+		/*try {
+			EV.addRecord("Finish", "Questionnaire", temp, UserInfo[2], UserInfo[11], UserInfo[10]);
+		}catch(SQLException SE) {}*/
+	
+		Questionnaire.SetRaterStatus(assignmentID, 1);
+		SurveyResult.Calculate(assignmentID, 0);		// calculation part, 0=not include/exclude rater				
+		
+%>
+<script language="javascript">
+alert("<%=trans.tslt("Thank You for your participation")%>");
+</script>
+<%								
+			if(userType == 1 || userType == 2) {
+%>
+<script language="javascript">
+		window.location.href = "SurveyList_Process.jsp";
+</script>
+<%						
+			} else if(userType == 3) {
+%>
+<script language="javascript">
+		window.location.href = "RatersDataEntry.jsp";
+</script>
+<%						
+			} else if(userType == 4) {		// raters
+%>
+<script language="javascript">
+		window.location.href = "RatersToDoList.jsp";
+</script>
+<%
+		}
+	}
+	
+	//---get the list of competency assigned to the survey.
+	
+	
+	int iPKComp = 0;
+	int iPKKB = 0;
+	
+	String sCompDef = "";
+	String sKBDef = "";
+	Vector vKBList = new Vector();
+	int totalCurrComp = Questionnaire.getTotalCurrComp();	// to mantain the total current competency
+	int totalComp = Questionnaire.getTotalComp();
+
+
+	int totalCompleted = Questionnaire.TotalResult(assignmentID);
+	
+	int complete = 0;
+	if(totalCompleted == (totalAll * totalRatingTask))
+		complete = 1;
+
+	Vector vComp = Questionnaire.getCompetency(surveyID);
+	voCompetency voComp = new voCompetency();
+		
+	if(vComp.size() > 0)
+		voComp = (voCompetency)vComp.elementAt(0);
+	
+	if (voComp != null) {
+
+		iPKComp = voComp.getCompetencyID();
+		sCompDef = voComp.getCompetencyDefinition();
+
+		if(surveyLevel == 0)
+			vKBList = KB.getKBList(iPKComp, 0, compID, orgID);
+		else 
+			vKBList = Questionnaire.getKBSurvey(surveyID, iPKComp);
+	}
+	else 
+	{
+		if(userType == 1 || userType == 2) {
+%>			<script language="javascript">
+				window.location.href = "SurveyList_Process.jsp";
+			</script>
+<%						
+		} else if(userType == 3) {
+%>			<script language="javascript">
+				window.location.href = "RatersDataEntry.jsp";
+			</script>
+<%						
+		} else if(userType == 4) {
+%>			<script language="javascript">
+				window.location.href = "RatersToDoList.jsp";
+			</script>
+<%		}
+	}
+	
+	if(totalCurrComp == 0) {
+	
+		Questionnaire.setCurrID(iPKComp);
+		
+	}
+
+	if(totalCurrComp == 0 && start == 1) {	
+		
+		int total = Questionnaire.TotalResult(assignmentID, iPKComp);
+	
+		int counter = 1;
+		int totalRating = 0;
+		
+		if(surveyLevel == 1)
+			totalRating = vKBList.size() * totalRatingTask;
+		else 
+			totalRating = totalRatingTask;
+		
+		while(total == totalRating && counter < totalComp && counter < vComp.size()) 
+		{
+		
+			voComp = (voCompetency)vComp.elementAt(counter);
+			
+			totalCurrComp++;
+			iPKComp = voComp.getCompetencyID();
+			sCompDef = voComp.getCompetencyDefinition();
+			Questionnaire.setCurrID(iPKComp);
+							
+			if(surveyLevel == 0)
+				vKBList = KB.getKBList(iPKComp, 0, compID, orgID);
+			else 
+				vKBList = Questionnaire.getKBSurvey(surveyID, iPKComp);
+				
+			//Questionnaire.setTotalCurrComp(totalCurrComp);	
+			
+			//System.out.println("========>" + totalCurrComp); 
+			
+			total = Questionnaire.TotalResult(assignmentID, iPKComp);
+			
+			if(surveyLevel == 1)
+				totalRating = vKBList.size() * totalRatingTask;
+			
+			System.out.println(assignmentID + "---" + iPKComp+ "---" + iPKKB + "----" + total + "---" + totalRating);
+
+			counter ++;
+		}
+	}
+	
+	
+	if(request.getParameter("go") != null) 
+	{
+		int go = Integer.parseInt(request.getParameter("go"));
+	
+		pk = Questionnaire.getCurrID();
+		
+		//System.out.println("------>" + pk);
+		int arrPK[] = new int[1];
+	    
+	    if(surveyLevel == 1) {
+			vKBList = Questionnaire.getKBSurvey(surveyID, pk);
+			arrPK = new int[vKBList.size()];
+			
+			for(int i=0; i<vKBList.size(); i++) {
+				voKeyBehaviour voKB = (voKeyBehaviour)vKBList.elementAt(i);
+				arrPK[i] = voKB.getKeyBehaviourID();
+				//System.out.println("----"+arrPK[i]);
+			}
+			
+
+		} else {
+			arrPK[0] = pk;
+		}	
+				
+	
+		if( (go == 1 && totalCurrComp < totalComp) || (go == 2 && totalCurrComp >= 0) || go == 3 ) {
+		
+			//System.out.println("OKKKKKKKK");
+			
+			for(int rs=0; rs<totalRatingTask; rs++) 
+			{
+				int RTStatus = Questionnaire.RTSetupStatus(RTID[rs], surveyID);
+				
+				if(RTStatus != 0) 
+				{
+					for(int i=0; i<arrPK.length; i++) {
+						float oldResult = Questionnaire.CheckOldResultExist(assignmentID, arrPK[i], RTID[rs]);
+						
+						if(oldResult <= 0) {
+							try {
+								float score = 0;
+								
+								if (surveyLevel == 0) 
+									score = Questionnaire.RTScore(RTID[rs], surveyID, arrPK[i]);
+								 else 
+									score = Questionnaire.RTScoreBehv(RTID[rs], surveyID, arrPK[i]);
+	
+								Questionnaire.addResult(assignmentID, arrPK[i], RTID[rs], score); 
+							}catch(SQLException SE) {}
+						}
+					}
+					
+				} else {
+					for(int i=0; i<arrPK.length; i++) {	
+							
+						String [] scaleValue = request.getParameterValues("rbtnScale" + arrPK[i] + RTID[rs]);
+						if(scaleValue != null)
+						{
+							System.out.println("scaleValue is not null");
+							for(int j=0; j<scaleValue.length; j++) {
+								if(scaleValue[j] != null){
+									float value = Float.parseFloat(scaleValue[j]);
+									float oldResult = Questionnaire.CheckOldResultExist(assignmentID, arrPK[i], RTID[rs]);
+									
+									//System.out.println("*************************"+oldResult);
+									if(oldResult < 0) {
+										try {
+											Questionnaire.addResult(assignmentID, arrPK[i], RTID[rs], value); //add date
+										}catch(SQLException SE) {}
+									}								
+									else if(oldResult >= 0 && oldResult != value)
+										Questionnaire.updateOldResult(assignmentID, arrPK[i], RTID[rs], value);
+								}
+							}
+						} else {
+							System.out.println("scaleValue is null");
+						}// end if scaleValue is not null				
+					} // end for loop				
+				}
+			}
+		
+			if((rCode.equals("SELF") && selfIncluded == 1) || included == 1) 
+			{
+			    for(int i=0; i<arrPK.length; i++) {	
+
+					int competency = arrPK[0];
+					int keybehaviour = 0;
+					
+					if(surveyLevel == 1) {
+						competency = Questionnaire.CompetencyID(arrPK[i]);
+						keybehaviour = arrPK[i];
+					}
+					
+					String commentName = "comments" + competency + keybehaviour;
+					if(request.getParameter(commentName) != null) {
+						
+						String value = request.getParameter(commentName);
+						//System.out.println(pk+ "======" + value);
+						value = value.trim();
+						value = Database.SQLFixer(value);
+							
+						String oldResult = Questionnaire.checkCommentExist(assignmentID, competency, keybehaviour);
+						if(oldResult == null) {
+							//System.out.println("OK");
+							try {
+								Questionnaire.addComment(assignmentID, competency, keybehaviour, value); 
+							}catch(SQLException SE) {}
+						}								
+						else if(oldResult != null && !oldResult.equals(value)) {
+							Questionnaire.updateComment(assignmentID, competency, keybehaviour, value);
+							//System.out.println("OK2");
+
+						}
+					}
+				}
+			}
+		
+		}
+		
+		//go == 1 is next and go == 2 is prev
+		
+		if(go == 2 && (totalCurrComp-1) >= 0 )  {
+			totalCurrComp--; 
+		} else if(go == 1 && (totalCurrComp+1) < totalComp) {
+			totalCurrComp++;
+			System.gc();
+		}
+			
+		if(go == 1 || go == 2) {		
+			Questionnaire.setTotalCurrComp(totalCurrComp);			
+			
+			if(totalCurrComp >= 0 && totalCurrComp < totalComp && totalCurrComp < vComp.size()) 
+			{
+				voComp = (voCompetency)vComp.elementAt(totalCurrComp);
+				iPKComp = voComp.getCompetencyID();
+				sCompDef = voComp.getCompetencyDefinition();
+				
+				Questionnaire.setCurrID(iPKComp);
+				
+				if(surveyLevel == 0)
+					vKBList = KB.getKBList(iPKComp, 0, compID, orgID);
+				else 
+					vKBList = Questionnaire.getKBSurvey(surveyID, iPKComp);
+	
+				}
+		}
+		
+		
+		if(request.getParameter("finish") != null) {
+			/*************if finish == 3 which indicates exit*******************************/
+			if(Integer.parseInt(request.getParameter("finish")) == 3) {
+				String temp = surveyName + "(S); " + name + "(T); " + raterName + "(R); Incomplete";
+				/*try{
+					EV.addRecord("Exit", "Questionnaire", temp, UserInfo[2], UserInfo[11], UserInfo[10]);
+				}catch(SQLException SE) {}*/
+				
+				if(userType == 1 || userType == 2) {
+					%>
+					<script language="javascript">
+							window.location.href = "SurveyList_Process.jsp";
+					</script>
+					<%						
+				} else if(userType == 3) {
+					%>
+					<script language="javascript">
+							window.location.href = "RatersDataEntry.jsp";
+					</script>
+					<%						
+				} else if(userType == 4) {
+					%>
+					<script language="javascript">
+							window.location.href = "RatersToDoList.jsp";
+					</script>
+					<%						
+				}
+			}
+			
+			/*************if finish == 2 which indicates finish the questionnaire*******************************/
+			
+			if(Integer.parseInt(request.getParameter("finish")) == 2) { 
+				totalCompleted = Questionnaire.TotalResult(assignmentID);
+				//System.out.println(totalCompleted + "-------" + totalAll * totalRatingTask);
+				//System.out.println("totalCompleted = " + totalCompleted + ", totalAll = " + totalAll + ", totalRatingTask = " + totalRatingTask);
+					
+				if(totalCompleted == (totalAll * totalRatingTask)) {
+					int commentIncluded = Questionnaire.commentIncluded(surveyID);
+						
+					int commentInput = 1;
+					
+					if(targetLoginID == raterLoginID)
+						commentIncluded = Questionnaire.SelfCommentIncluded(surveyID);
+					
+					if(commentIncluded == 1)
+						commentInput = Questionnaire.checkCommentInput(assignmentID);
+						
+				
+					if(commentInput == 0) {
+						%>
+						<script>
+							if(confirm("<%=trans.tslt("No comments included. Do you want to finish")%>?"))
+								window.location.href = "Questionnaires.jsp?finishall=1";
+						</script>
+						<%				
+					}else {		
+						%>
+						<script>
+							if(confirm("<%=trans.tslt("Once you click FINISH, no more ammendment can be done")%>."))
+								window.location.href = "Questionnaires.jsp?finishall=1";
+						</script>
+						<%		
+					}
+				} else {
+					String temp = surveyName + "(S); " + name + "(T); " + raterName + "(R); Incomplete";
+					//EV.addRecord("Finish", "Questionnaire", temp, UserInfo[2], UserInfo[11], UserInfo[10]);
+					Questionnaire.setStartID(1);
+					%>
+					<script language="javascript">
+					alert("<%=trans.tslt("You have not completed the questionnaire. Your rating will be saved and your assignment status for this target will be set to incomplete")%>.");
+					</script>
+					<!----------------------------------------Incomplete Questionnaire------------------------------------------->
+					<%								
+					
+					if(userType == 1 || userType == 2) {
+						%>
+						<script language="javascript">
+								window.location.href = "Questionnaire.jsp";
+						</script>
+						<%						
+					} else if(userType == 3) {
+						%>
+						<script language="javascript">
+								window.location.href = "Questionnaire.jsp";
+						</script>
+						<%						
+					} else if(userType == 4) {
+						%>
+						<script language="javascript">
+								window.location.href = "Questionnaire.jsp";
+						</script>
+						<%						
+					}			
+				}
+				
+			
+			} else {
+				if(totalCurrComp >= 0 && totalCurrComp < totalComp && totalCurrComp < vComp.size()) {
+					voComp = (voCompetency)vComp.elementAt(totalCurrComp);
+					iPKComp = voComp.getCompetencyID();
+					sCompDef = voComp.getCompetencyDefinition();
+					
+					Questionnaire.setCurrID(iPKComp);
+					
+					if(surveyLevel == 0)
+						vKBList = KB.getKBList(iPKComp, 0, compID, orgID);
+					else 
+						vKBList = Questionnaire.getKBSurvey(surveyID, iPKComp);
+		
+				}
+			}
+		}
+	}	// end request.getParameter("go")
+
+%>
+
+
+<form name = "Questionnaire" method="post">
+
+<div id="txtHint">
+</div>
+
+</form>
+</body>
+<p></p>
+<%@ include file="Footer.jsp"%></html>
+
+<%
+	// If it is the first request, retrieve the initial record
+	//if(request.getParameter("go") == null && request.getParameter("finishall") == null)
+	//{
+%>
+		<SCRIPT LANGUAGE="JavaScript">showQuestionaires()</script>
+<%
+	//}
+%>

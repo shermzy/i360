@@ -1,0 +1,748 @@
+package CP_Classes;
+
+import java.sql.*;
+import java.util.Vector;
+
+
+import CP_Classes.common.ConnectionBean;
+import CP_Classes.vo.votblEvent;
+/**
+ * This class implements all the operations for Event Viewer.
+ * This is used to capture all actions done by application users in term of tracking, billing, and security wise.
+ * 
+ * Change Log
+ * ==========
+ *
+ * Date        By                Method(s)            Change(s) 
+ * =====================================================================================================
+ * 22/09/11    Gwen Oh			getAllRecords()		Changed method parameters and codes to include dates
+ * 			   										
+ * 22/09/11    Gwen Oh			getAllRecords()		Change the SQL statement according to the filters selected
+ */
+
+public class EventViewer
+{
+	/**
+	 * Declaration of new object of class Database.
+	 */
+	//private Database db;
+	
+	/**
+	 * Declaration of total records limit.
+	 */
+	private final static int limit = 50000;
+	
+	
+	/**
+	 * Bean Variable for sorting purposes. Total Array depends on total SortType.
+	 * 0 = ASC
+	 * 1 = DESC
+	 */
+	private int Toggle [];	// 0=asc, 1=desc
+	
+	/**
+	 * Bean Variable to store the Sorting type.
+	 */
+	public int SortType;
+	
+	/**
+	 * Bean Variable to store the Company Name.
+	 */
+	private String CompName;
+	
+	/**
+	 * Bean Variable to store the Organization Name.
+	 */
+	private String OrgName;
+	
+	
+	/**
+	 * Create new instance of EventViewer object.
+	 */
+	public EventViewer(){
+		//db = new Database();
+		
+		Toggle = new int [7];		
+		
+		for(int i=0; i<7; i++)
+			Toggle[i] = 0;
+			
+		Toggle[6] = 1;
+			
+		SortType = 7;
+		CompName = "All";
+		OrgName = "All";
+	}
+	
+	
+	/**
+	 * Store Bean Variable toggle either 1 or 0.
+	 */	
+	public void setToggle(int toggle) {
+		Toggle[SortType - 1] = toggle;
+	}
+
+	/**
+	 * Get Bean Variable toggle.
+	 */
+	public int getToggle() {
+		return Toggle [SortType - 1];
+	}	
+	
+	/**
+	 * Store Bean Variable Sort Type.
+	 */
+	public void setSortType(int SortType) {
+		this.SortType = SortType;
+	}
+
+	/**
+	 * Get Bean Variable SortType.
+	 */
+	public int getSortType() {
+		return SortType;
+	}	
+	
+	/**
+	 * Store Bean Variable CompanyName.
+	 */
+	public void setCompName(String CompName) {
+		this.CompName = CompName;
+	}
+
+	/**
+	 * Get Bean Variable CompanyName.
+	 */
+	public String getCompName() {
+		return CompName;
+	}	
+
+	/**
+	  * Retrieves the company name based on the company id
+	  * @param compID
+	  * @author Sebastian
+	  * @since v.1.3.12.87 (29 July 2010)
+	**/
+	public String getCompNameByCompID(int compID){
+		String tmpCompName = "";
+		String query = "";
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		
+		query = "SELECT CompanyName FROM tblConsultingCompany WHERE CompanyID = "+compID;
+		
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			
+			if (rs.next())
+			{
+				tmpCompName = rs.getString("CompanyName");
+			}
+
+		}catch(SQLException SE){
+			System.out.println("EventViewer.java - getOrganization - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		
+		return tmpCompName;
+	}
+	
+	/**
+	 * Store Bean Variable OrganizationName.
+	 */
+	public void setOrgName(String OrgName) {
+		this.OrgName = OrgName;
+	}
+
+	/**
+	 * Get Bean Variable OrganizationName.
+	 */
+	public String getOrgName() {
+		return OrgName;
+	}	
+
+
+	
+	/**
+	 * Add a new record to the Event table.
+	 *
+	 * Parameters:
+	 *		action 	  - insert, update, delete.
+	 *		item   	  - competency, keybehaviour, survey, rater, etc.
+	 *		desc   	  - competency name, survey name, etc.
+	 *		loginName - login name of the person who took the action.
+	 *		compName  - company name.
+	 *		orgName   - organization name.
+	 */
+	public boolean addRecord(String action, String item, String desc, String loginName, String compName, String orgName) throws SQLException, Exception {											
+		String sql = "";
+		
+		//checkTotal();
+		Connection con = null;
+		Statement st = null;
+
+		sql = sql + "Insert into tblEvent(EventAction, Item, Description, LoginName, CompanyName, ";
+		sql = sql + "OrganizationName) values ('" + action + "', '" + item + "', '" + desc + "', '";
+		sql = sql + loginName + "', '" + compName + "', '" + orgName + "')";
+		
+		boolean bIsAdded = false;
+
+		try
+		{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			int iSuccess=st.executeUpdate(sql);
+			if(iSuccess!=0)
+			bIsAdded=true;
+
+		}
+		catch(Exception E)
+		{
+            System.err.println("EventViewer.java - addRecord - " + E);
+		}
+		finally
+        {
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+
+        }
+			
+		/*db.openDB();		
+		PreparedStatement ps = db.con.prepareStatement(sql);
+			
+		ps.executeUpdate();
+			
+		//if(db.con != null)
+		ps.close();*/
+		//db.closeDB();
+		return bIsAdded;
+	}
+	
+	/**
+	 * Delete an existing record from the Event table.
+	 *
+	 * Parameters:
+	 *		EventID - the primary key of Event to determine which record to be deleted.
+	 */
+	public boolean deleteRecord(int eventID) throws SQLException, Exception {
+		String sql = "Delete from tblEvent where EventID = " + eventID;
+		Connection con = null;
+		Statement st = null;
+		
+		/*db.openDB();
+		PreparedStatement ps = db.con.prepareStatement(sql);
+		ps.executeUpdate();
+		db.closeDB();*/
+		boolean bIsDeleted = false;
+		try
+		{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			int iSuccess = st.executeUpdate(sql);
+			if(iSuccess!=0)
+			bIsDeleted=true;
+
+		} 
+		catch (Exception E)
+		{
+			System.err.println("EventViewer.java - deleteRecord - " + E);
+		}
+		finally
+		{
+
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return bIsDeleted;
+	}
+	
+	/**
+	 * Delete the longest existance records from the Event table.
+	 * This method is used only if total records exceeds the limit specified.
+	 * 
+	 */
+	public boolean deleteRecord() throws SQLException, Exception {
+		String sql = "Delete from tblEvent where EventID = (Select MIN(EventID) from tblEvent)";
+		Connection con = null;
+		Statement st = null;
+
+	
+		/*db.openDB();
+		PreparedStatement ps = db.con.prepareStatement(sql);
+		ps.executeUpdate();
+		db.closeDB();*/
+		boolean bIsDeleted = false;
+		try
+		{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			int iSuccess = st.executeUpdate(sql);
+			if(iSuccess!=0)
+			bIsDeleted=true;
+
+		} 
+		catch (Exception E)
+		{
+			System.err.println("EventViewer.java - deleteRecord - " + E);
+		}
+		finally
+		{
+
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return bIsDeleted;
+	}
+	
+	/**
+	 * Retrieves all events from tblEvent, default order by DeletedDate.
+	 */
+	
+	//@karen not complete
+	//Gwen Oh - 22/09/2011: Comment out previous method that does to take in dates
+	/*
+	public Vector getAllRecords(String compName, String orgName, int userType) throws SQLException, Exception {		
+		Vector v=new Vector();
+		String query = "";
+		
+		query = query + "Select * from tblEvent";
+		
+		if(!compName.equals("All") && orgName.equals("All")) 	
+			query = query + " where CompanyName = '" + compName + "'";
+
+		else if(!orgName.equals("All")) 
+			query = query + " where OrganizationName = '" + orgName + "'";
+
+		if(userType != 1)
+			query = query + " and LoginName != 'sa'";
+		
+		query = query + " order by ";
+		
+		if(SortType == 1)
+			query = query + "EventAction";
+		else if(SortType == 2)
+			query = query + "Item";
+		else if(SortType == 3)
+			query = query + "Description";
+			else if(SortType == 4)
+			query = query + "LoginName";
+		else if(SortType == 5)
+			query = query + "CompanyName";
+		else if(SortType == 6)
+			query = query + "OrganizationName";
+		else if(SortType == 7)
+			query = query + "DeletedDate";
+
+		if(Toggle[SortType - 1] == 1)
+			query = query + " DESC";
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				votblEvent vo=new votblEvent();
+				vo.setCompanyName(rs.getString("CompanyName"));
+				vo.setDescription(rs.getString("Description"));
+				vo.setEventAction(rs.getString("EventAction"));
+				vo.setEventID(rs.getInt("EventID"));
+				vo.setItem(rs.getString("Item"));
+				vo.setLoginName(rs.getString("LoginName"));
+				vo.setOrganizationName(rs.getString("OrganizationName"));
+				
+				Date deletedDate = rs.getDate("DeletedDate");
+			    vo.setDeletedDate(deletedDate);
+				v.add(vo);
+			
+			}
+
+		}catch(SQLException SE){
+			System.out.println("EventViewer.java - getAllRecords - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close Resultset
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return v;
+	}
+	*/
+	
+	/*
+	 * Change(s) : Changed method parameters and codes to include dates
+	 * Reason(s) : To retrieve events that are within specified dates
+	 * Updated By: Gwen Oh
+	 * Updated On: 22 Sep 2011
+	 */
+	public Vector getAllRecords(String compName, String orgName, String fromDate, String toDate, int userType) throws SQLException, Exception {		
+		
+		//Get the date which is a day after the toDate
+		if (!toDate.equals("")) {
+			int day = Integer.parseInt(toDate.substring(0,2));
+			int mth = Integer.parseInt(toDate.substring(3, 5));
+			int yr = Integer.parseInt(toDate.substring(6));
+			
+			day+=1;
+			
+			//months with 31 days
+			if (mth==1 || mth==3 || mth==5 || mth==7 || mth==8 || mth==10) {
+				if (day == 32) {
+					mth += 1;
+					day = 1;
+				}
+			}
+			//months with 30 days
+			else if (mth==4 || mth==6 || mth==9 || mth==11) {
+				if (day == 31) {
+					mth += 1;
+					day = 1;
+				}
+			}
+			//check if toDate refers to the last day of dec
+			else if (mth==12 && day==32) {
+				mth = 1;
+				day = 1;
+				yr += 1;
+			}
+			//february
+			else if (mth==2) {
+				if (day==29) {
+					//not leap year
+					if (yr%4 != 0) {
+						day = 1;
+						mth += 1;
+					}
+				}
+				else if (day==30) {
+					day = 1;
+					mth += 1;
+				}
+			}
+			
+			//set toDate to the american date format: mth/day/year
+			toDate = mth + "/" + day + "/" + yr;
+		}
+		
+		//set fromDate to the american date format: mth/day/year
+		if (!fromDate.equals("")) {
+			fromDate = fromDate.substring(3,5) + "/" + fromDate.substring(0, 2) + "/" + fromDate.substring(6);
+		}
+		
+		Vector v=new Vector();
+		String query = "";
+		
+		query = query + "Select * from tblEvent";
+		
+		if(!compName.equals("All") && orgName.equals("All")) 	
+			query = query + " where CompanyName = '" + compName + "'";
+
+		else if(!orgName.equals("All")) 
+			query = query + " where OrganizationName = '" + orgName + "'";
+
+		//Gwen Oh - 20/10/2011: Check if there is a company or organization name and dates
+		if ((!compName.equals("All") || !orgName.equals("All")) && (!toDate.equals("") || !fromDate.equals("")))
+			query = query + " and";
+		//If there is no co. or org name, but there are dates(s)
+		else if ((compName.equals("All") && orgName.equals("All")) && (!toDate.equals("") || !fromDate.equals("")))
+			query = query + " where";
+		
+		//Get events within the specified dates
+		if (!toDate.equals("") && !fromDate.equals(""))
+			query = query + " DeletedDate >= '" + fromDate + "' AND DeletedDate < '" + toDate + "'";
+		//Get events from a specified date
+		else if (!fromDate.equals(""))
+			query = query + " DeletedDate >= '" + fromDate + "'";
+		//Get events up till a specified date
+		else if (!toDate.equals(""))
+			query = query + " DeletedDate < '" + toDate + "'";
+		
+		if(userType != 1)
+			query = query + " and LoginName != 'sa'";
+		
+		query = query + " order by ";
+		
+		if(SortType == 1)
+			query = query + "EventAction";
+		else if(SortType == 2)
+			query = query + "Item";
+		else if(SortType == 3)
+			query = query + "Description";
+			else if(SortType == 4)
+			query = query + "LoginName";
+		else if(SortType == 5)
+			query = query + "CompanyName";
+		else if(SortType == 6)
+			query = query + "OrganizationName";
+		else if(SortType == 7)
+			query = query + "DeletedDate";
+
+		if(Toggle[SortType - 1] == 1)
+			query = query + " DESC";
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		/*
+		db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		*/
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				votblEvent vo=new votblEvent();
+				vo.setCompanyName(rs.getString("CompanyName"));
+				vo.setDescription(rs.getString("Description"));
+				vo.setEventAction(rs.getString("EventAction"));
+				vo.setEventID(rs.getInt("EventID"));
+				vo.setItem(rs.getString("Item"));
+				vo.setLoginName(rs.getString("LoginName"));
+				vo.setOrganizationName(rs.getString("OrganizationName"));
+				
+				Date deletedDate = rs.getDate("DeletedDate");
+			    vo.setDeletedDate(deletedDate);
+				v.add(vo);
+			
+			}
+			
+		}catch(SQLException SE){
+			System.out.println("EventViewer.java - getAllRecords - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close Resultset
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return v;
+	}
+
+	/**
+	 * Retrieves all Consulting Companies based on Organization.
+	 */
+	
+	//@karen not complete
+	public Vector getCompanies(String orgName) throws SQLException, Exception {		
+		String query = "";
+		Vector v=new Vector();
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		//Removed the IF condition to determine query statement to just return a single query statement that returns all companies regardless whether have events, Sebastian 29 July 2010
+		query = "Select distinct(CompanyName) from tblConsultingCompany order by CompanyName";
+		
+		/*
+		db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		*/
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				votblEvent vo=new votblEvent();
+				vo.setCompanyName(rs.getString("CompanyName"));
+				
+				v.add(vo);
+			}
+
+		}catch(SQLException SE){
+			System.out.println("EventViewer.java - getCompanies - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return v;
+	}
+	
+
+	/**
+	 * Retrieves all Organizations based on Company.
+	 */
+	//@karen not complete
+	public Vector getOrganization(String compName) throws SQLException, Exception {		
+		String query = "";
+		Vector v=new Vector();
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		if(!compName.equals("All")) {
+		
+			query = query + "Select distinct(OrganizationName) from tblEvent where CompanyName = '" + compName + "'";
+			query = query + " order by OrganizationName";
+		}else{
+			query = "Select distinct(OrganizationName) from tblEvent order by OrganizationName";
+		}
+
+		/*
+		db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		*/
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				votblEvent vo=new votblEvent();
+				vo.setOrganizationName(rs.getString("OrganizationName"));
+				v.add(vo);
+			}
+
+		}catch(SQLException SE){
+			System.out.println("EventViewer.java - getOrganization - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		
+		return v;
+	}
+	
+	
+	/**
+	 * Retrieves company Name based on User ID.
+	 */
+	public String companyName(int pkUser) throws SQLException, Exception {		
+		String query = "";
+		String name = "";
+		
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+
+		query = query + "SELECT tblConsultingCompany.CompanyID, tblConsultingCompany.CompanyName ";
+		query = query + "FROM tblConsultingCompany INNER JOIN [User] ON ";
+		query = query + "tblConsultingCompany.CompanyID = [User].FKCompanyID ";
+		query = query + "WHERE [User].PKUser = " + pkUser;
+		
+		/*db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+			
+		if(rs.next())
+			name = rs.getString(2);*/
+		
+		try
+        {          
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+
+                        
+            if(rs.next())
+            {
+            	name = rs.getString(2);
+            }
+           
+       
+        }
+        catch(Exception E) 
+        {
+            System.err.println("EventViewer.java - companyName - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+
+
+        }
+
+			
+		return name;
+	}
+	
+	
+	/**
+	 * Retrieves total records in table Event, delete the longest records in database if exceds limit.
+	 */
+	public void checkTotal() throws SQLException, Exception {		
+		String query = "";
+		int total = 0;
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		query = query + "SELECT count(*) from tblEvent";
+		
+		/*db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+	
+		if(rs!=null && rs.next())
+			total = rs.getInt(1);
+		
+		if(total > limit) {
+			int exceeds = total - limit;
+			
+			for(int i=0; i<exceeds; i++)
+				deleteRecord();
+			
+		}			
+		
+		rs.close();
+		stmt.close();
+		db.closeDB();*/
+		
+		try
+        {          
+
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+                        
+            if(rs.next())
+            {
+            	total = rs.getInt(1);
+            }
+            
+         
+       
+        }
+        catch(Exception E) 
+        {
+            System.err.println("EventViewer.java - checkTotal - " + E);
+        }
+        finally
+        {
+        ConnectionBean.closeRset(rs); //Close ResultSet
+        ConnectionBean.closeStmt(st); //Close statement
+        ConnectionBean.close(con); //Close connection
+
+
+        }
+
+	}
+	
+	public static void main(String [] args) throws Exception{
+		EventViewer EV = new EventViewer();
+		
+		EV.getOrganization("PCC");
+	}
+
+}

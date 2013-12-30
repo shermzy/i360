@@ -1,0 +1,165 @@
+<%// Author: Dai Yong in June 2013%>
+<%@ page import = "java.sql.*" %>
+<%@ page import = "java.io.*" %>
+<%@ page import = "java.util.*" %>
+<%@ page import = "java.lang.*" %>
+<%@ page import = "CP_Classes.vo.*" %>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+
+<title>Edit Session</title>
+<%@ page pageEncoding="UTF-8"%>
+<meta http-equiv="Content-Type" content="text/html">
+<style type="text/css">
+<!--
+body {
+	background-color: #eaebf4;
+}
+-->
+</style></head>
+
+<body style="background-color: #DEE3EF">
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>    
+<jsp:useBean id="SessionSetup" class="Coach.SessionSetup" scope="session" />
+<jsp:useBean id="CoachSession" class="Coach.CoachSession" scope="session" />
+<jsp:useBean id="LoginStatus" class="Coach.LoginStatus" scope="session" />
+<script language = "javascript">
+function confirmEditSession(form)
+{
+		if((form.Name.value!= "")&&(form.MAXSessions.value != "")) {
+					form.action = "EditSession.jsp?edit=1";
+					form.method = "post";
+					form.submit();
+			} 
+		
+		else {
+			if(form.MAXSessions.value == "") {
+				alert("Please enter maximum session-signups");
+				form.MAXSessions.focus();
+			}
+			else if(form.Name.value == "") {
+				alert("Please enter session name");
+				form.Name.focus();
+			}
+		}
+	}
+	
+	function cancelEdit() {
+		window.close();
+	}
+</script>
+
+<%
+	String username = (String) session.getAttribute("username");
+	int sessionPK=0;
+	//init
+	if (request.getParameter("editedSession") != null) {
+		sessionPK = Integer.valueOf(request.getParameter("editedSession"));
+		LoginStatus.setSelectedSession(sessionPK);
+	} else {
+		sessionPK = LoginStatus.getSelectedSession();
+	}
+
+	if (!logchk.isUsable(username)) {
+%> 
+   
+<script>
+parent.location.href = "../index.jsp";
+</script>
+<%
+	} 
+  else 
+  { 
+	if(request.getParameter("edit") != null) {
+		if(!request.getParameter("Name").equalsIgnoreCase(""))	{
+  			String Name = request.getParameter("Name");
+  			String des="";
+  			int maxSession=0;
+  			
+  			if(!request.getParameter("Description").equalsIgnoreCase("")){
+  			 des = request.getParameter("Description");
+  			}
+  			if(!request.getParameter("MAXSessions").equalsIgnoreCase("")){
+  			 maxSession =Integer.parseInt(request.getParameter("MAXSessions"));
+			}  			
+					try {
+						
+						boolean editsuc =CoachSession.updateCoachingSession(LoginStatus.getSelectedSession(), Name, des, maxSession);
+						
+						//System.out.println("editsuc:"+editsuc);
+						
+						if (editsuc) {
+						%>
+						<script>
+						alert("Session edited successfully");
+						opener.location.href = 'SessionManagement.jsp';
+						window.close();
+						</script>
+						<% 
+					}
+					else{
+						
+					}
+				}catch(SQLException SE) {
+                     System.out.println(SE);
+				}
+
+	}
+	}
+%>	
+
+<form  method="post">
+<p>	
+		<b><font color="#000080" size="3" face="Arial">Edit Coaching Session</font></b>
+	<br>
+	</p>
+  <table border="0" width="480" height="141" font span style='font-size:10.0pt;font-family:Arial'>
+    <tr>
+      <td width="130" height="33">Session Name:</td>
+      <td width="5" height="33">&nbsp;</td>
+      <td width="300" height="33">
+    	<input name="Name" type="text"  style='font-size:10.0pt;font-family:Arial' id="Name" value="<%=CoachSession.getSelectedSession(LoginStatus.getSelectedSession()).getName()%>"size="30" maxlength="100">
+	  </td>
+    </tr>
+     <tr>
+      <td width="130" height="33">Session Description:</td>
+      <td width="5" height="33">&nbsp;</td>
+      <td width="300" height="33">
+    	<input name="Description" type="text"  style='font-size:10.0pt;font-family:Arial' id="Description" value="<%=CoachSession.getSelectedSession(LoginStatus.getSelectedSession()).getDescription()%>"size="30" maxlength="100">
+	  </td>
+    </tr>
+     <tr>
+      <td width="130" height="33">Maximum Sign-ups:</td>
+      <td width="5" height="33">&nbsp;</td>
+      <td width="300" height="33">
+    	<input name="MAXSessions" type="text"  style='font-size:10.0pt;font-family:Arial' id="MAXSessions" value="<%=CoachSession.getSelectedSession(LoginStatus.getSelectedSession()).getSessionMax()%>"size="30" maxlength="100">
+	  </td>
+    </tr>
+    
+    <tr>
+      <td width="82" height="12"></td>
+      <td width="10" height="12"></td>
+      <td width="303" height="12"></td>
+    </tr>
+   
+  </table>
+  <blockquote>
+    <blockquote>
+      <p>
+		<font face="Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</font>		<font face="Arial" span style="font-size: 10.0pt; font-family: Arial">		
+	        <input type="button" name="Submit" value="Submit" onClick="confirmEditSession(this.form)"></font><font span style='font-family:Arial'>
+		</font>
+			<font face="Arial">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </font>
+		<font face="Arial" span style="font-size: 10.0pt; font-family: Arial">
+			<input name="Cancel" type="button" id="Cancel" value="Cancel" onClick="cancelEdit()">
+			</font> </p>
+    </blockquote>
+  </blockquote>
+</form>
+<% } %>
+</body>
+</html>

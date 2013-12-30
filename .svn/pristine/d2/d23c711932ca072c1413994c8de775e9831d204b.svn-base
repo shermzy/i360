@@ -1,0 +1,13 @@
+SMAP
+_emailreminder__jsp.java
+JSP
+*S JSP
+*F
++ 1 EmailReminder.jsp
+Coach/EmailReminder.jsp
+*L
+1#1,5:56
+5#1:61
+10#1:62,2
+29#1:64
+*E

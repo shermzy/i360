@@ -1,0 +1,56 @@
+<%@ page import = "java.sql.*" %>
+<%@ page import = "java.io.*" %>
+<%@ page import = "java.util.*" %>
+<%@ page import = "java.lang.*" %>
+<%@ page pageEncoding="UTF-8"%>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+<jsp:useBean id="server" class="CP_Classes.Setting" scope="session"/>
+<jsp:useBean id="Org" class="CP_Classes.Organization" scope="session"/>
+<jsp:useBean id="CE_Survey" class="CP_Classes.Create_Edit_Survey" scope="session"/>
+<%
+	String username=(String)session.getAttribute("username");
+	if (!logchk.isUsable(username)){
+%> 
+	<script>
+		window.location.href = "index.jsp";
+	</script>
+<%}%>
+<html> 
+<head>
+	<link rel=apple-touch-icon href="icon.png" />
+	<link rel="shortcut icon" href="icon.png" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /> 
+	<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/> 
+	<title>3-Sixty Profiler - Welcome - iPhone Version</title>
+	<link rel="stylesheet" href="iui/iui.css" type="text/css" /> 
+	<link rel="stylesheet" href="iui/t/default/default-theme.css"  type="text/css"/> 
+	<script type="application/x-javascript" src="iui/iui.js"></script>
+</head> 
+
+<body>
+	<div class="toolbar"> 
+		<h1 id="pageTitle"></h1>
+		<a class="backButton" href="#" onclick="window.location.href='about.jsp'">&nbsp;About</a>
+		<a title="Log out" class="logoutButton" href="#" onclick="window.location.href='login.jsp?logout=1'">Exit</a>
+	</div>
+	<ul id="welcome" title="Welcome !" selected="true">
+		<li style='background-color:#6495ED;border-bottom:1px solid #483D8B;'><a href="#" onclick="javascript:window.location.href='RatersToDoList.jsp'">Rater's To-Do List</a></li>
+		
+		<li style='background-color:#6495ED;border-bottom:1px solid #483D8B;'><a href="#" onclick="javascript:window.location.href='CoachBookingSignUp.jsp'">Coaching Booking</a></li>
+		<li><p>As a rater, you are expected to provide vital feedback to your colleague(s) who are target(s) for this survey. 
+Your input will be used as performance or development feedback. Be honest. Your inputs will be anonymous as 
+only aggregated scores will be presented to the target. However, be accountable for your inputs.</p><p>	Surveys are best viewed with the phone tilted horizontally
+<img src="iphoneinst.jpg" style="display:block"/>
+</p>
+	
+</li>
+
+
+	</ul>
+	
+	
+
+</body> 
+</html>

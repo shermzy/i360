@@ -1,0 +1,237 @@
+<html>
+<head>
+	<meta name="KeyWords" content="Javascript, html, dhtml">
+	<meta name="Distribution" content="Global">
+	<meta name="Rating" content="General">
+	<meta name="Author" content="Ger Versluis">
+	<meta name="Copyright" content="(c) 2000">
+	<title>HV Menu installation guide for a frames page</title>
+    <style>
+body { color:black; font-size:12pt}
+
+.normtxt,.boldblack{font-size:12pt;color:black;font-weight:normal}
+
+.redtxt,.bigred,.notsobigred{color:red}
+
+.bluetxt,.bigblue,.bluewhite,.notsobigblue,.VeryBigBlue{color:blue}
+
+.bigtxt,.menutxt{font-size:20pt}
+
+.VeryBigTxt,.VeryBigBlue{font-size:36pt}
+
+.notsobig,.notsobigred,.notsobigblue{font-size:15pt}
+
+.bigblue,.bigred{font-size:18pt}
+
+.menutxt{background-color:yellow}
+
+.noline{text-decoration:none}
+
+.boldtxt,.boldblack,.redtxt,.bluetxt{font-weight:bold}
+
+.bluewhite{background-color:white}
+</style>
+</head>
+
+<body bgcolor='#FFFFFF' onload="javascript:{if(parent.frames[0]&&parent.frames['navig'].Go)parent.frames['navig'].Go()}">
+<p align="left">Below are installation instructions for inserting HVMenu in a
+frames page, where the main menu resides in one frame, and the resulting
+submenus drop down in another. For an example, see: <a href="http://www.burmees.nl/">http://www.burmees.nl/</a>
+<center>
+<div align="left">
+<table>
+	<tr><td><h1>Step 1: Create frameset</h1></td>
+	<td width='50'></td>
+	<td>
+      </td></tr>
+</table>
+</div>
+</center>
+<p align="left">
+<span class='bigred'>Create frameset with coloms</span>
+<table>
+	<tr><td width='30'></td>
+	<td>&lt;html&gt;<br>&lt;head&gt;<br>&lt;title&gt;Your Title&lt;/title&gt;<br>&lt;/head&gt;<br>
+		&lt;frameset <span class='redtxt'>cols</span>="<span class='bluetxt'>150</span>,*" framespacing='0' frameborder='0' border=0&gt;<br>
+		&lt;frame frameborder='0' framespacing='0' src="<span class='bluetxt'>MyNavigation.htm</span>" noresize scrolling='no' name="<span class='bluetxt'>MyFrameOne</span>"&gt;&lt;/frame&gt;<br>
+		&lt;frame frameborder='0' framespacing='0' src="<span class='bluetxt'>MyMain.htm</span>" name="<span class='bluetxt'>MyFrameTwo</span>"&gt;&lt;/frame&gt;<br>
+		&lt;/frameset&gt;<br>&lt;/html&gt;</td></tr></table>
+<p align="left">
+<span class='bigred'>Create frameset with rows</span>
+<table>
+	<tr><td width='30'></td>
+	<td>&lt;html&gt;<br>&lt;head&gt;<br>&lt;title&gt;Your Title&lt;/title&gt;<br>&lt;/head&gt;<br>
+		&lt;frameset <span class='redtxt'>rows</span>="<span class='bluetxt'>150</span>,*" framespacing='0' frameborder='0' border=0&gt;<br>
+		&lt;frame frameborder='0' framespacing='0' src="<span class='bluetxt'>MyNavigation.htm</span>" noresize scrolling='no' name="<span class='bluetxt'>MyFrameOne</span>"&gt;&lt;/frame&gt;<br>
+		&lt;frame frameborder='0' framespacing='0' src="<span class='bluetxt'>MyMain.htm</span>" name="<span class='bluetxt'>MyFrameTwo</span>"&gt;&lt;/frame&gt;<br>
+		&lt;/frameset&gt;<br>&lt;/html&gt;</td></tr></table>
+<h1>Step 2: Inserting necessary codes</h1>
+<p><b><font size="4">i) Add the below script in the &lt;BODY&gt; of MyframeOne,
+immediately following the tag:</font></b></p>
+<table cellSpacing="0" border="0">
+  <tbody>
+    <tr>
+      <td width="50" rowSpan="4"></td>
+      <td>&lt;html&gt;<br>
+        &lt;head&gt;your header html&lt;/head&gt;</td>
+    </tr>
+    <tr>
+      <td>&lt;body&gt;</td>
+    </tr>
+    <tr>
+      <td class="bluewhite">&lt;script type='text/javascript'&gt;<br>
+        //HV Menu- by Ger Versluis (http://www.burmees.nl/)<br>
+        //Submitted to Dynamic Drive (http://www.dynamicdrive.com)<br>
+        //Visit http://www.dynamicdrive.com for this script and more
+        <p>function
+        Go(){return}&lt;/script&gt;<br>
+        &lt;script type='text/javascript'
+        src='exmplmenu_var.js'&gt;&lt;/script&gt;<br>
+        &lt;script type='text/javascript' src='menu_com.js'&gt;&lt;/script&gt;</p>
+      </td>
+    </tr>
+    <tr>
+      <td>your html<br>
+        &lt;/body&gt;<br>
+        &lt;/html&gt;</td>
+    </tr>
+  </tbody>
+</table>
+(Where <span class="redtxt">MyFrameOne</span> is the name of the navigation
+frame.)
+<p><b><font size="4">ii) Then, add the below code inside the &lt;BODY&gt; tag
+itself of MyFrameTwo, as follows:</font></b></p>
+<table>
+  <tbody>
+    <tr>
+      <td width="50" rowSpan="3"></td>
+      <td>&lt;html&gt;<br>
+        &lt;head&gt;your header html&lt;/head&gt;</td>
+    </tr>
+    <tr>
+      <td class="bluewhite">&lt;body <b>onload=&quot;javascript:{if(parent.frames[0]&amp;&amp;parent.frames['<span class="redtxt">MyFrameOne</span>'].Go)parent.frames['<span class="redtxt">MyFrameOne</span>'].Go()}</b>&quot;&gt;</td>
+    </tr>
+    <tr>
+      <td>your html<br>
+        &lt;/body&gt;<br>
+        &lt;/html&gt;</td>
+    </tr>
+  </tbody>
+</table>
+(Where <span class="redtxt">MyFrameOne</span> is the name of the navigation
+frame.)
+<p>&nbsp;
+<table cellPadding="10" width="100%">
+  <tbody>
+    <tr>
+      <td class="redtxt" align="middle" width="50%">Two frames
+        <table borderColor="black" cellSpacing="0" width="100%" border="1">
+          <tbody>
+            <tr>
+              <td vAlign="top" align="right" width="20%" bgColor="yellow" height="300"><br>
+                <b>Menu frame</b><br>
+                &nbsp;<br>
+                &nbsp;<br>
+                &nbsp;<br>
+                <table borderColor="black" cellSpacing="0" border="1">
+                  <tbody>
+                    <tr>
+                      <td bgColor="red"><b>menu start</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu start</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu start</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu start</b></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+              <td vAlign="top" align="left" width="80%" bgColor="green"><br>
+                <b>Menu popup frame=document target frame.<br>
+                Each document needs loader in &lt;body&gt;-tag.</b>&nbsp;<br>
+                &nbsp;<br>
+                &nbsp;<br>
+                <table borderColor="black" cellSpacing="0" border="1">
+                  <tbody>
+                    <tr>
+                      <td bgColor="red"><b>menu rest</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu rest</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu rest</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu rest</b></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+      <td class="redtxt" align="middle" width="50%">Three frames
+        <table borderColor="black" cellSpacing="0" width="100%" border="1">
+          <tbody>
+            <tr>
+              <td vAlign="top" align="right" width="20%" bgColor="yellow" height="300"><br>
+                <b>Menu frame</b><br>
+                &nbsp;<br>
+                &nbsp;<br>
+                &nbsp;<br>
+                <table borderColor="black" cellSpacing="0" border="1">
+                  <tbody>
+                    <tr>
+                      <td bgColor="red"><b>menu start</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu start</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu start</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu start</b></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+              <td vAlign="top" align="left" width="20%" bgColor="green"><br>
+                <b>Menu popup frame</b>&nbsp;<br>
+                &nbsp;<br>
+                &nbsp;<br>
+                <table borderColor="black" cellSpacing="0" border="1">
+                  <tbody>
+                    <tr>
+                      <td bgColor="red"><b>menu rest</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu rest</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu rest</b></td>
+                    </tr>
+                    <tr>
+                      <td bgColor="red"><b>menu rest</b></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+              <td vAlign="top" width="60%" bgColor="blue"><br>
+                <b>Document target frame<br>
+                Documents don't need loader in &lt;body&gt;-tag.</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

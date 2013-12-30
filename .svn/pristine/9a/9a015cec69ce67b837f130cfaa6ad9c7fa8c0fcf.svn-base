@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<libraryInfos>
+<libraryInfo version="1.4.2_13" home="C:\j2sdk">
+<bootpath>
+<entry path="C:\j2sdk\jre\lib\rt.jar"/>
+<entry path="C:\j2sdk\jre\lib\i18n.jar"/>
+<entry path="C:\j2sdk\jre\lib\sunrsasign.jar"/>
+<entry path="C:\j2sdk\jre\lib\jsse.jar"/>
+<entry path="C:\j2sdk\jre\lib\jce.jar"/>
+<entry path="C:\j2sdk\jre\lib\charsets.jar"/>
+<entry path="C:\j2sdk\jre\classes"/>
+</bootpath>
+<extensionDirs>
+<entry path="C:\j2sdk\jre\lib\ext"/>
+</extensionDirs>
+<endorsedDirs>
+<entry path="C:\j2sdk\jre\lib\endorsed"/>
+</endorsedDirs>
+</libraryInfo>
+<libraryInfo version="1.4.2_13" home="C:\j2sdk\jre">
+<bootpath>
+<entry path="C:\j2sdk\jre\lib\rt.jar"/>
+<entry path="C:\j2sdk\jre\lib\i18n.jar"/>
+<entry path="C:\j2sdk\jre\lib\sunrsasign.jar"/>
+<entry path="C:\j2sdk\jre\lib\jsse.jar"/>
+<entry path="C:\j2sdk\jre\lib\jce.jar"/>
+<entry path="C:\j2sdk\jre\lib\charsets.jar"/>
+<entry path="C:\j2sdk\jre\classes"/>
+</bootpath>
+<extensionDirs>
+<entry path="C:\j2sdk\jre\lib\ext"/>
+</extensionDirs>
+<endorsedDirs>
+<entry path="C:\j2sdk\jre\lib\endorsed"/>
+</endorsedDirs>
+</libraryInfo>
+</libraryInfos>

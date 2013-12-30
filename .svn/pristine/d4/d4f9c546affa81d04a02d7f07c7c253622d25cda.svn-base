@@ -1,0 +1,459 @@
+<%@ page pageEncoding="UTF-8"%>
+<%// by lydia Date 05/09/2008 Fix jsp file to support Thai language %>
+
+<%@ page import="java.sql.*,
+                 java.io.*" %>  
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>  
+<jsp:useBean id="db" class="CP_Classes.Database" scope="session"/>
+<jsp:useBean id="ev" class="CP_Classes.EventViewer" scope="session"/>
+
+<jsp:useBean id="server" class="CP_Classes.Setting" scope="session"/>    
+<jsp:useBean id="user_jenty" class="CP_Classes.User_Jenty" scope="session"/>
+<jsp:useBean id="assignTR" class="CP_Classes.AssignTarget_Rater" scope="session"/>
+<jsp:useBean id="CE_Survey" class="CP_Classes.Create_Edit_Survey" scope="session"/>
+<jsp:useBean id="user" class="CP_Classes.User" scope="session"/>
+<jsp:useBean id="DG" class="CP_Classes.DevelopmentGuide" scope="session"/>
+<jsp:useBean id="RR" class="CP_Classes.RaterRelation" scope="session"/>
+
+<jsp:useBean id="C" class="CP_Classes.Calculation" scope="session"/>
+<jsp:useBean id="Comp" class="CP_Classes.Competency" scope="session"/>
+<jsp:useBean id="DRA" class="CP_Classes.DevelopmentActivities" scope="session"/>
+<jsp:useBean id="DRARes" class="CP_Classes.DevelopmentResources" scope="session"/>
+<jsp:useBean id="KB" class="CP_Classes.KeyBehaviour" scope="session"/>
+<jsp:useBean id="Q" class="CP_Classes.Questionnaire" scope="session"/>
+<jsp:useBean id="QR" class="CP_Classes.QuestionnaireReport" scope="session"/>
+<jsp:useBean id="RDE" class="CP_Classes.RatersDataEntry" scope="session"/>
+<jsp:useBean id="RS" class="CP_Classes.RatingScale" scope="session"/>
+<jsp:useBean id="SR" class="CP_Classes.SurveyResult" scope="session"/>
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+
+<HTML>
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+</head>
+<SCRIPT LANGUAGE="JavaScript">
+function logout(form)
+{
+	window.document.Top_Login.action = "Top_Login.jsp?logoff=1";
+	window.document.Top_Login.submit();
+}
+
+void function printAlert()
+{
+	alert("<%=trans.tslt("If you are using a pop-up blocker, please disable it in order for all the screens to be displayed correctly")%>.\n\nTo do this, navigate to Tools -> Internet Options. On the Privacy tab uncheck the 'Block pop-ups' option.");
+}
+
+function close()
+{
+	window.document.Top_Login.action = "Top_Login.jsp?logoff=1";
+	window.document.Top_Login.submit();
+}
+
+</script>
+<HEAD>
+<TITLE>360 interface revise</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html">
+<base target="_parent">
+</HEAD>
+<BODY BGCOLOR=#FFFFFF LEFTMARGIN=0 TOPMARGIN=0 MARGINWIDTH=0 MARGINHEIGHT=0 onLoad="printAlert()" onUnload="close()">
+
+<%
+
+response.setHeader("Pragma", "no-cache");
+response.setHeader("Cache-Control", "no-cache");
+response.setDateHeader("expires", 0);
+
+String username=(String)session.getAttribute("username");
+  //System.out.println(username);
+
+  if (!logchk.isUsable(username)) 
+  {%> <font size="2">
+   
+    	<script>
+	parent.location.href = "index.jsp";
+</script>
+<%  } 
+  else 
+  { 
+
+if(request.getParameter("logoff") != null)
+{	
+
+String [] UserInfo = user.getUserDetail(logchk.getPKUser(), 1);
+// add to tblEvent
+
+try {
+	ev.addRecord("Logout", "Logout", "Logout from i360", UserInfo[2], UserInfo[11], UserInfo[10]);
+}catch(SQLException SE) {}
+
+
+session.removeAttribute("username");  
+String value =" "; 
+
+logchk.setPKUser(0);
+logchk.setOrg(0);
+logchk.setCompany(0);
+logchk.setUserType(0);
+
+user.set_selectedUser(0);
+user.set_LoginName(value);
+
+// Added by Rianto 17-Feb-05
+// Truncate SQL DB Log every logout
+db.truncateSQLLog();
+
+assignTR.setGroupID(0);
+assignTR.setTargetID(0);
+assignTR.set_selectedTargetID(0);
+assignTR.set_selectedRaterID(0);
+assignTR.set_NameSequence(0);
+assignTR.set_selectedAssID(0);
+
+CE_Survey.setJobPos_ID(0);
+CE_Survey.setSurveyStatus(0);
+CE_Survey.setPurpose(0);
+CE_Survey.set_survOrg(0);
+CE_Survey.setSurvey_ID(0);
+CE_Survey.setCompetencyLevel(0);
+CE_Survey.set_SurvRating(0);
+CE_Survey.set_GroupID(0);
+CE_Survey.set_CompLevel(0);
+
+DG.setSurvey_ID(0);
+DG.setType(0);
+
+RR.setRelHigh(0);
+RR.setRelSpec(0);
+
+
+C.setSurveyID(0);
+C.setGroupSection(0);
+C.setTargetID(0);
+C.setRaterID(0);
+
+Comp.setComp("");
+Comp.setOrgID(0);
+Comp.setPKComp(0);
+
+DRA.setFKCom(0);
+DRARes.setFKComp(0);
+DRARes.setResType(0);
+
+ev.setSortType(0);
+ev.setCompName("");
+ev.setOrgName("");
+
+KB.setFKComp(0);
+KB.setIsComp(0);
+KB.setAdded(0);
+KB.setKBLevel(0);
+
+Q.setJobPost("");
+Q.setName("");
+Q.setTotalComp(0);
+Q.setTotalCurrComp(0);
+Q.setAssignmentID(0);
+Q.setFutureJob("");
+Q.setTimeFrame("");
+Q.setSurveyLevel(0);
+Q.setChecked(0);
+Q.setCurrID(0);
+
+QR.setSurveyID(0);
+QR.setJobPostID(0);
+QR.setDivisionID(0);
+QR.setDepartmentID(0);
+QR.setGroupID(0);
+QR.setTargetID(0);
+QR.setRaterID(0);
+QR.setPageLoad(0);
+
+RDE.setSurveyID(0);
+RDE.setGroupID(0);
+RDE.setTargetID(0);
+RDE.setJobPost("");
+RDE.setRaterID(0);
+RDE.setPageLoad(0);
+
+RS.setRS(0);
+RS.setScaleID(0);
+RS.setRSType("");
+
+SR.setSurveyID(0);
+SR.setGroupID(0);
+SR.setTargetID(0);
+SR.setRaterID(0);
+SR.setSurveyLevel(0);
+SR.setAssignmentID(0);
+	
+	%>
+	<jsp:forward page="index.jsp"/>
+<%	}	%>	
+
+<form name="Top_Login" action="Top_login.jsp" method="post">
+
+
+<TABLE WIDTH=800 BORDER=0 CELLPADDING=0 CELLSPACING=0>
+	<TR>
+		<TD width="10" ROWSPAN=19>
+			<IMG SRC="images/360_01.jpg" WIDTH=10 HEIGHT=581 ALT=""></TD>
+		
+	</TR>
+	<TR>
+		<TD COLSPAN=2>
+			<IMG SRC="images/360_03.jpg" WIDTH=156 HEIGHT=69 ALT=""></TD>
+		<TD width="37">
+			<IMG SRC="images/360_04.jpg" WIDTH=28 HEIGHT=69 ALT=""></TD>
+		<TD COLSPAN=4 ROWSPAN=8>
+		<%
+			/* TOYOTA ENV */
+			if(server.getCompanySetting() == 3)
+			{%>
+				<IMG SRC="images/360_05_TMT.jpg" WIDTH=399 HEIGHT=132 ALT=""></TD>
+			<%}
+			else
+			{%>
+				<IMG SRC="images/360_05.jpg" WIDTH=399 HEIGHT=132 ALT=""></TD>
+			<%}
+			/* END TOYOTA ENV */
+		%>
+		
+		<TD COLSPAN=3 ROWSPAN=6>
+		
+		<%
+			/* TOYOTA ENV */
+			if(server.getCompanySetting() == 3)
+			{%>
+				<IMG SRC="images/360_06_TMT.jpg" WIDTH=207 HEIGHT=120 ALT=""></TD>
+			<%}
+			else
+			{%>
+				<IMG SRC="images/360_06.jpg" WIDTH=207 HEIGHT=120 ALT=""></TD>
+			<%}
+			/* END TOYOTA ENV */
+		%>	
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=69 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=2>
+			<IMG SRC="images/360_07.jpg" WIDTH=156 HEIGHT=4 ALT=""></TD>
+		<TD ROWSPAN=3>
+			<IMG SRC="images/360_08.jpg" WIDTH=28 HEIGHT=31 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=4 ALT=""></TD>
+	</TR>
+	<TR>
+		
+    <TD COLSPAN=2 background="images/360_09.jpg"><table width="156" border="0" cellpadding="0" cellspacing="0" background="images/360_09.jpg">
+        <tr> 
+          <td width="57"><IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=25 ALT=""></td>
+          <td width="10"><img src="images/spacer.gif" width="5" height="5"> </td>
+          <td width="89"><IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=25 ALT=""></td>
+        </tr>
+      </table> </TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=25 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=2 ROWSPAN=2>
+			<IMG SRC="images/360_10.jpg" WIDTH=156 HEIGHT=5 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=2 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD ROWSPAN=4>
+			<IMG SRC="images/logout.jpg" style="cursor:hand" ALT="" WIDTH=28 HEIGHT=32 border="0" name="btnLogin" onclick="logout(this.form)"></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=3 ALT=""></TD>
+	</TR>
+	<TR>
+		
+    <TD COLSPAN=2 ROWSPAN=2 valign="top" background="images/360_12.jpg"><table width="156" border="0" cellpadding="0" cellspacing="0" background="images/360_12.jpg">
+        <tr> 
+          <td width="57"><div align="right"><font size="1" face="Verdana, Arial, Helvetica, sans-serif"><strong>
+			Log In:</strong></font></div></td>
+          <td width="10"><img src="images/spacer.gif" width="5" height="5"> </td>
+          <td width="89"><input type="text" name="txtUsername" size="10" value="<%=username.toLowerCase()%>" readonly></td>
+        </tr>
+      </table> </TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=17 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=3 ROWSPAN=2>
+		<%
+			/* TOYOTA ENV */
+			if(server.getCompanySetting() == 3)
+			{%>
+				<IMG SRC="images/360_13_TMT.jpg" WIDTH=207 HEIGHT=12 ALT=""></TD>
+			<%}
+			else
+			{%>
+				<IMG SRC="images/360_13.jpg" WIDTH=207 HEIGHT=12 ALT=""></TD>
+			<%}
+			/* END TOYOTA ENV */
+		%>	
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=8 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=2>
+			<IMG SRC="images/360_14.jpg" WIDTH=156 HEIGHT=4 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=4 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD COLSPAN=9>
+			<IMG SRC="images/360_15.jpg" WIDTH=789 HEIGHT=7 ALT=""></TD>
+		<TD width="1">
+			<IMG SRC="images/360_16.jpg" WIDTH=1 HEIGHT=7 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=7 ALT=""></TD>
+	</TR>
+	<TR>
+		
+    <TD COLSPAN=2 height="34">&nbsp; 
+  
+    </TD>
+		<TD COLSPAN=2 height="34">&nbsp;
+			</TD>
+		<TD width="108" height="34">&nbsp;
+			</TD>
+		<TD width="89" height="34">&nbsp;
+			</TD>
+		<TD width="87" height="34">&nbsp;
+			</TD>
+		<TD width="88" height="34">&nbsp;
+			</TD>
+		<TD COLSPAN=2 height="34">
+			<IMG SRC="images/360_23.jpg" WIDTH=119 HEIGHT=33 ALT=""></TD>
+		<TD height="34">
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=33 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=31 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=56 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=50 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=50 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=49 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=53 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=48 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=78 ALT=""></TD>
+	</TR>
+	<TR>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=10 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=129 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=27 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=28 HEIGHT=1 ALT=""></TD>
+		<TD width="115">
+			<IMG SRC="images/spacer.gif" WIDTH=115 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=108 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=89 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=87 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=88 HEIGHT=1 ALT=""></TD>
+		<TD width="118">
+			<IMG SRC="images/spacer.gif" WIDTH=118 HEIGHT=1 ALT=""></TD>
+		<TD>
+			<IMG SRC="images/spacer.gif" WIDTH=1 HEIGHT=1 ALT=""></TD>
+		<TD></TD>
+	</TR>
+</TABLE>
+
+<!-- End ImageReady Slices -->
+<!-- ImageReady Slices (360 interface revise.psd) -->
+<div id="Layer1" style="position:absolute; width:188px; height:79px; z-index:1; left: 48px; top: 179px; visibility: hidden; overflow: auto;"> 
+  <table width="211" border="0">
+    <tr> 
+      <td width="205" bgcolor="#00CCFF" class="style1"><font size="2" face="Verdana, Arial, Helvetica, sans-serif"><span class="style6">
+		Set up</span></font></td>
+    </tr>
+    <tr> 
+      <td bgcolor="#006699" class="style1"><font color="#FFFFFF" size="2" face="Verdana, Arial, Helvetica, sans-serif"><span class="style8">
+		System</span></font></td>
+    </tr>
+    <tr> 
+      <td bgcolor="#00CCFF" class="style1"><font size="2" face="Verdana, Arial, Helvetica, sans-serif"><span class="style6">
+		Rater's Demographic Entry </span></font></td>
+    </tr>
+    <tr> 
+      <td bgcolor="#006699" class="style1"><font color="#FFFFFF" size="2" face="Verdana, Arial, Helvetica, sans-serif"><span class="style8">
+		Event viewer </span></font></td>
+    </tr>
+  </table>
+</div>
+<map name="Map11">
+  <area shape="rect" coords="2,5,31,26" href="#">
+</map>
+<%		
+	//System.out.println(logchk.getUserType());
+	if(logchk.getUserType() == 1)
+	{	%>
+		<script type='text/javascript' src='exmplmenu_var.js'></script>
+		<script type='text/javascript' src='menu_com.js'></script>
+<%	}
+	else if(logchk.getUserType() == 2)
+	{	
+		//ADMIN
+		if(server.getCompanySetting() == 3)
+		{	//COMPANY = TOYOTA
+		%>
+			<script type='text/javascript' src='exmplmenu_var_Admin_TMT.js'></script>
+			<script type='text/javascript' src='menu_com_Admin.js'></script>
+	  <%}
+	    else
+	    {
+	    System.out.println("Nomination = " + server.getNomModule() + ", company = " + server.getCompanySetting());
+	    	//COMPANY <> TOYOTA
+			if(server.getNomModule() == 0)
+			{	//Nomination Module OFF
+			%>
+				<script type='text/javascript' src='exmplmenu_var_Admin.js'></script>
+				<script type='text/javascript' src='menu_com_Admin.js'></script>
+		  <%}
+		  	else
+		  	{	//Nomination Module ON
+		  		%>
+				<script type='text/javascript' src='exmplmenu_var_Admin_NOM.js'></script>
+				<script type='text/javascript' src='menu_com_Admin.js'></script>
+			  	<%
+		  	}
+	    }
+		
+}	%>
+<noscript>Your browser does not support script</noscript>
+</form>
+<%	}	%>
+</BODY>
+
+</HTML>

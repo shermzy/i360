@@ -1,0 +1,110 @@
+package Coach;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import CP_Classes.MailHTMLStd;
+import CP_Classes.User;
+import CP_Classes.common.ConnectionBean;
+import CP_Classes.vo.voCoachUserAssignment;
+import CP_Classes.vo.voUser;
+
+public class AssignmentChangeEmail {
+	static boolean emailSuc=false;
+	static String content="";
+	static String newline = System.getProperty("line.separator");
+	static voCoachUserAssignment userAssignment=new voCoachUserAssignment(); 
+	static User user=new User();
+	
+	public static boolean unSignAssignment(int AssignmentFK,int userPK) throws SQLException, Exception{
+		MailHTMLStd email=new MailHTMLStd();
+		userAssignment=getUserAssignment(AssignmentFK);
+		voUser userDetails=user.getUserInfo(userPK);
+		String[] DateInParts=userAssignment.getDate().split(" ");
+		String dateWithoutTime=DateInParts[0];
+		String[] DateWithoutTimeInParts=dateWithoutTime.split("-");
+		String finalDate=DateWithoutTimeInParts[2]+"-"+DateWithoutTimeInParts[1]+"-"+DateWithoutTimeInParts[0];
+		content="Dear Administrator,<br><br>";
+		content=content+"Please be informed that the following user "+userDetails.getFamilyName()+" "+userDetails.getGivenName()+" ";
+		content=content+"has just deleted a coach booking originally scheduled ";
+		content=content+"on the "+finalDate+" from "+userAssignment.getStartingTime()+" to "+userAssignment.getEndingTime()+" under coach "+userAssignment.getCoachName()+".<br><br>";
+		content=content+"<br>Booking Session Name: "+userAssignment.getSessionName()+".<br><br><br>";
+		content=content+"<br>Regards,<br>";
+		content=content+"3SixtyAdministrator<br>";
+		emailSuc=email.sendMail("3SixtyAdmin@pcc.com.sg", "3SixtyAdmin@pcc.com.sg", "Deletion of Coach Booking by user", content, 1);
+		return emailSuc;
+	}
+	public static boolean signAssignment(int AssignmentFK, int userPK) throws SQLException, Exception{
+		MailHTMLStd email=new MailHTMLStd();
+		userAssignment=getUserAssignment(AssignmentFK);
+		voUser userDetails=user.getUserInfo(userPK);
+		String[] DateInParts=userAssignment.getDate().split(" ");
+		String dateWithoutTime=DateInParts[0];
+		String[] DateWithoutTimeInParts=dateWithoutTime.split("-");
+		String finalDate=DateWithoutTimeInParts[2]+"-"+DateWithoutTimeInParts[1]+"-"+DateWithoutTimeInParts[0];
+		content="Dear Administrator,<br><br>";
+		content=content+"Please be informed that the following user "+userDetails.getFamilyName()+" "+userDetails.getGivenName()+" ";
+		content=content+"has just added a new coach booking ";
+		content=content+"on the "+finalDate+" from "+userAssignment.getStartingTime()+" to "+userAssignment.getEndingTime()+" under coach "+userAssignment.getCoachName()+".<br><br>";
+		content=content+"<br>Booking Session Name: "+userAssignment.getSessionName()+". <br><br><br>";
+		content=content+"Regards,<br>";
+		content=content+"3SixtyAdministrator<br>";
+		emailSuc=email.sendMail("3SixtyAdmin@pcc.com.sg", "3SixtyAdmin@pcc.com.sg", "Addition of New Coach Booking by user", content, 1);
+		return emailSuc;
+	}
+	
+	public static voCoachUserAssignment getUserAssignment(int AssignmentFK){
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		voCoachUserAssignment vo = new voCoachUserAssignment();
+		
+		String query="SELECT CoachAssignment.AssignmentPK, CoachAssignment.Status,CoachAssignment.VenueFK, CoachSession.SessionName,CoachDate.Date, Coach.CoachName, Coach.Link, Coach.UploadFile, tblOrganization.OrganizationName, CoachAssignment.OrgFK,"; 
+		query=query+ " CoachSlot.StartingTime, CoachSlot.EndingTime, CoachAssignment.UserFK";
+		query=query+" FROM  CoachAssignment INNER JOIN";
+		query=query+" CoachSession ON CoachSession.PKCoachSession = CoachAssignment.SessionFK INNER JOIN";
+		query=query+" CoachDate ON CoachDate.PKCoachDate = CoachAssignment.DateFK INNER JOIN";
+		query=query+" CoachSlot ON CoachSlot.CoachSlotPK = CoachAssignment.SlotFK INNER JOIN";
+		query=query+" Coach ON Coach.PKCoach = CoachAssignment.CoachFK INNER JOIN";
+		query=query+" tblOrganization ON tblOrganization.PKOrganization = CoachAssignment.OrgFK";
+		query=query+" WHERE (CoachAssignment.AssignmentPK = "+AssignmentFK+")";
+		//System.out.println(query);
+		
+		try
+		{ 
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+			while(rs.next())
+			{	
+				vo.setAssignmentPK(rs.getInt("AssignmentPK"));
+				vo.setCoachName(rs.getString("CoachName"));
+				vo.setDate(rs.getString("Date"));
+				vo.setEndingTime(rs.getInt("EndingTime"));
+				vo.setOrganizationName(rs.getString("OrganizationName"));
+				vo.setStartingTime(rs.getInt("StartingTime"));
+				vo.setStatus(rs.getInt("Status"));
+				vo.setUserFK(rs.getInt("UserFK"));
+				vo.setOrgID(rs.getInt("OrgFK"));
+				vo.setCoachLink(rs.getString("Link"));
+				vo.setCoachFileName(rs.getString("UploadFile"));
+				vo.setVenueFK(rs.getInt("VenueFK"));
+				vo.setSessionName(rs.getString("SessionName"));
+			}
+		}
+		catch(Exception E) 
+		{
+			System.err.println("AssignmentChangeEmail.java - getUserAssignment - " + E);
+		}
+		finally
+		{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+		}
+		return vo;
+	}
+	
+}

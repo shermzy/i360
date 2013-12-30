@@ -1,0 +1,426 @@
+<html>
+<head>
+<title>Tree Menu</title>
+</head>
+<body bgcolor="#ffffff">
+<center>
+
+<table border=0 cellpadding=8 cellspacing=0 width=550>
+<tr><td align=center colspan=2>
+<hr noshade>
+<font color="#cc6600" face="Arial,Helvetica" size=4><b>Tree Menu</b></font>
+<hr noshade>
+</td></tr>
+<tr>
+<td bgcolor="#cccccc" width=100>&nbsp;</td>
+<td width=450>
+<font face="Arial,Helvetica" size=2>
+The menu at left appears and acts very much like the Explorer menu on Windows
+machines. Clicking on an item loads an associated link. Clicking on a folder
+will also toggle it open or close it, revealing or hiding a submenu. To close
+all the folders, you can click on the root at top.
+<p>
+Some of the features:
+<p>
+<ul>
+  <li>Any number of items may be defined for a menu and folders can be nested
+  arbitrarily deep.
+  <li>The selected item or folder is highlighted when clicked.
+  <li>The page will automatically scroll to place the selected item in view.
+  <li>Folders may optionally include a link.
+  <li>The menu state is saved so when a visitor leaves and returns to your
+  page, the menu will appear exactly as it did when last viewed.
+  <li>You can customize the page colors, fonts and graphics to suite your needs.
+</ul>
+<p>
+<font color="#cc6600"><b>Using the Script</b></font>
+<p>
+This section describes how to set up and create your own tree menu.
+<p>
+<b>Files</b>
+<p>
+The main file defines the frameset and contains all the code. Below is a list
+of all the files used and their purpose:
+<p>
+<ul>
+  <li><b>tree.html</b> - defines the left and right frames and imports the
+  JavaScript code.
+  <li><b>treeMenuCode.js</b> - Contains all the JavaScript code needed to
+  build and display the menu and save it's state.
+  <li><b>myMenu.js</b> - Defines this particular tree menu.
+  <li><b>treeMenu.html</b> - Initially a blank page which is rebuilt
+  dynamically to display the menu whenever an item is clicked on.
+  <li><b>treeMain.html</b> - This page.
+</ul>
+<p>
+<b>Setting Up the Menu</b>
+<p>
+To create your menu, you need to build your own version of <b>myMenu.js.</b>
+Before you start defining the menu itself, you need to set some global
+variables:
+<p>
+<ul>
+  <li><b>treeMenu</b> - This is the top-level menu. See below on how to create
+  this.
+  <p>
+  <li><b>treeMenuName</b> - This should be set to some string which will be
+  used to uniquely identify this particular menu. It's used as the name of the
+  cookie which will store the menu state. If you update your menu, change the
+  name so the data will be recreated from scratch to match the new
+  configuration.
+  <p>
+  <li><b>treeMenuDays</b> - This value is used to set the expiration date for
+  the menu cookie. Use an integer to specify the number of days the cookie will
+  be valid for. If the user doesn't return to your page before then, the cookie
+  expires and the menu state is reset to where all folders are closed and no
+  item is selected.
+  <p>
+  <li><b>treeMenuFrame</b> - Set this to the name of the frame that will
+  contain the menu.
+  <p>
+  <li><b>treeMenuImgDir</b> - Specifies the path to the menu and icon images.
+  For example, if you put the images in a sub-directory called "graphics" set
+  this to "graphics/". If the images are in the same directory, set this to a
+  null string ("").
+  <p>
+  <li><b>treeMenuBackground</b> - URL of an image to use for the menu frame
+  background. Set to a null string ("") if you don't want a background image.
+  Note that <b>treeMenuImgDir</b> is not used for the image, you should
+  specify the same URL you would use in a &lt;BODY&gt; tag.
+  <p>
+  <li><b>treeMenuBgColor, treeMenuFgColor,treeMenuHiBg, treeMenuHiFg</b> -
+  color values used for the menu frame background, item text and selected item
+  background and text respectively. Standard RGB color values or color names
+  may be used, e.g. "#ffffff" or "white".
+  <p>
+  <li><b>treeMenuFont, treeMenuFontSize</b> - These values will be used for the
+  face and size paramters of the &lt;font&gt; tag for menu text. The menu at
+  left uses "MS Sans Serif,Arial,Helvetica" with a size of "1".
+  <p>
+  <li><b>treeMenuRoot</b> - This is the text that will be used for the menu
+  root. Here it's set to "Site Menu".
+  <p>
+  <li><b>treeMenuFolders</b> - Controls the display of the '+' and '-' icons
+  next to folders. If set to 1, the icon will always appear next to a folder.
+  When set to 0 the icon will only appear next to folders that contain one or
+  more sub-folders. Setting this to -1 means the icons will never appear.
+  <p>
+  <li><b>treeMenuAltText</b> - May be true or false. If set to true, images for
+  the menu icons will use the item text for the ALT parameter. Most current
+  browsers will display this as a tool tip when the icon is moused over. This
+  can be useful when the item text extends past the edge of menu frame.
+</ul>
+<p>
+Note that all the above variables should be defined and set with a value.
+There are no defaults so leaving any out may cause the menu to fail. Here's a
+look at the values used for the menu at left:
+<p>
+<pre>
+var treeMenu = new TreeMenu();
+var treeMenuName = "myMenu_1.0";
+var treeMenuDays = 7;
+var treeMenuFrame = "menuFrame";
+var treeMenuImgDir = "graphics/";
+var treeMenuBackground = "";
+var treeMenuBgColor = "#ffffff";
+var treeMenuFgColor = "#000000";
+var treeMenuHiBg = "#008080";
+var treeMenuHiFg = "#ffffff";
+var treeMenuFont = "MS Sans Serif,Arial,Helvetica";
+var treeMenuFontSize   = 1;
+var treeMenuRoot = "Site Menu";
+var treeMenuFolders = 0;
+var treeMenuAltText = true;
+</pre>
+<p>
+<b>Defining the Menu</b>
+<p>
+The file <b>treeMenuCode.js</b> defines two new JavaScript objects,
+<b>TreeMenu</b> and <b>TreeMenuItem</b> along with some methods to add an item
+to a menu or to make an item a submenu.
+<p>
+First, define the top-level menu using the <b>treeMenu</b> global variable:
+<p>
+<pre>
+var treeMenu = new TreeMenu();
+</pre>
+<p>
+Now create some items for it by defining some <b>TreeMenuItem()</b> objects.
+You specify one to four arguments for an item. The first is the text used in
+the menu display. The rest apply to the link for the item. They are:
+<ul>
+  <li><b>text</b> the text for the menu item.
+  <li><b>url</b> (optional) the URL address for a link.
+  <li><b>target</b> (optional) the name of the target window or frame for the
+  link.
+  <li><b>icon</b> (optional) the icon to use in the menu display if this is not
+  a folder.
+</ul>
+<p>
+Then you use the <b>addItem</b> method to attach an item to a menu. Here is the
+code to define and add the main menu items:
+<p>
+<pre>
+treeMenu.addItem(new TreeMenuItem("Active Server Pages"));
+treeMenu.addItem(new TreeMenuItem("Dynamic HTML"));
+treeMenu.addItem(new TreeMenuItem("Java"));
+treeMenu.addItem(new TreeMenuItem("JavaScript"));
+treeMenu.addItem(new TreeMenuItem("About This Site",
+  "/about.html", "_blank"));
+treeMenu.addItem(new TreeMenuItem("Contact Brain Jar",
+   "/contact.asp", "_blank"));
+treeMenu.addItem(new TreeMenuItem("What's New",
+   "/new.html", "_blank"));
+</pre>
+<p>
+Note that the items will be displayed in the order they are added. The first
+three items here will be submenus, so only the text is given (you could define
+a link for them as well, but in this case we won't). For links you can leave
+off the icon value if you wish to use the default images.
+<p>
+We can then reference each item in this menu using the <b>.items</b> array,
+where <i>treeMenu.items[0]</i> is 'Active Server Pages',
+<i>treeMenu.items[1]</i> is 'Dynamic HTML', etc.
+<p>
+<b>Defining and Attaching Submenus</b>
+<p>
+We create submenus just like the main menu, using new variables. Here we'll
+create the 'Active Server Pages' submenu:
+<p>
+<pre>
+var asp = new TreeMenu();
+asp.addItem(new TreeMenuItem("Code Examples"));
+asp.addItem(new TreeMenuItem("Sites"));
+</pre>
+<p>
+Now, to attach this submenu to the main menu, we first reference the main menu
+item we want to attach it to and use <b>.makeSubmenu()</b> passing the submenu
+variable as the argument:
+<p>
+<pre>
+treeMenu.items[0].makeSubmenu(asp);
+</pre>
+<p>
+This makes the first item in <i>treeMenu</i> a submenu which contains all the
+items defined in <i>asp.</i>
+<p>
+Each of the items on the 'asp' submenu is also a submenu so for each we
+create a new <b>TreeMenu</b>, add items to it and then attach it to the
+appropriate item in the <i>asp</i> submenu.
+<p>
+<pre>
+// Define ASP code examples submenu and
+// attach to first item of ASP submenu.
+
+var asp_ex = new TreeMenu();
+asp_ex.addItem(...);
+asp_ex.addItem(...);
+...
+asp.items[0].makeSubmenu(asp_ex);
+
+// Define ASP sites submenu and attach
+// to second item of ASP submenu.
+
+var asp_sites = new TreeMenu();
+asp_sites.addItem(...);
+asp_sites.addItem(...);
+...
+asp.items[2].makeSubmenu(asp_sites);
+</pre>
+<p>
+The creation of the DHTML submenus is similar.
+<p>
+Now for the 'Java Applets' submenu we add some items and attach it to the main
+menu. It has no submenus of it's own so this is all we need to do with it.
+<p>
+<pre>
+var java = new TreeMenu();
+java.addItem(...);
+java.addItem(...);
+
+...
+
+// Attach to second item of main menu.
+
+treeMenu.items[1].makeSubmenu(java);
+</pre>
+<p>
+The 'JavaScript' submenu is also similar to the 'Active Server Pages' and
+'DHTML' submenus so there's no need to repeat the code here.
+<p>
+For your own menus, you can define as many items as you want in each menu and
+you can nest submenus as deep as you want.
+<p>
+You can also change the graphics and icons used for each of the menu parts,
+see the list of images at the bottom of the page.
+<p>
+<font color="#cc6600"><b>How it Works</b></font>
+<p>
+Much of the code has been streamlined from the previous version. I've also
+changed the global variable and function names to begin with 'treeMenu' so that
+it won't interfere with any other JavaScript code you may add.
+<p>
+<b>The TreeMenu and TreeMenuItem Objects</b>
+<p>
+These are the the key to setting up and displaying the menu. The
+<b>TreeMenu</b> object consists simply of an array to store the items and a
+method to add them.
+<p>
+The <b>TreeMenuItem</b> object contains variables to store the item's display
+text, icon image source (if specified) and data for it's associated link
+(if any). It also has a pointer which can be set to a <b>TreeMenu</b> object
+if it is to be a folder. The <b>makeSubmenu()</b> method is used to assign this
+pointer. It also has an index variable which relates it to the proper value in
+the menu state cookie (see below) so we can track which folder items are open
+and which are closed.
+<p>
+Using these, the menu is built when the top-level page is first loaded,
+creating a hierarchical structure in the global <b>treeMenu</b> variable.
+<p>
+<b>Menu State Data</b>
+<p>
+One cookie is used to track which folders in the menu are open and which are
+closed. Every item has a boolean value associated with it in this cookie. The
+values are read in just before the menu is drawn and the values are updated
+every time the user clicks on an item.
+<p>
+A separate cookie is used to keep track of which item was last clicked,
+allowing it to be highlighted when drawn. It is also used to determine how far
+the window needs to be scrolled if that item falls outside of the menu frame's
+viewable region.
+<p>
+Note that if you update your menu, you should also change the value of
+<b>treeMenuName</b> so that new cookies will be created from scratch and the
+old cookie values won't conflict with the new menu structure.
+<p>
+If the user's browser does not support cookies, or if they have been disabled,
+the menu state will be lost when the user exits the page.
+<p>
+<b>Drawing the Menu</b>
+<p>
+The file <b>treeMenu.html</b> uses the <b>onload</b> event in the &lt;body&gt;
+tag to call the <b>treeMenuDisplay()</b> function located in the parent file.
+This function rewrites HTML code of the menu frame to build the menu display
+based on the current menu state. This new HTML also includes an <b>onload</b>
+call to run the <b>treeMenuScroll()</b> function, which will scroll the page
+if necessary for the selected item to be in view.
+<p>
+<b>treeMenuDisplay()</b> works as follows. First, it fetches the cookie data so
+we will know which folders are to be open and which item was selected last.
+Then some global variables are set to track where we are in the menu hierarchy
+and help with the graphics placement.
+<p>
+Then the menu frame document is cleared using the <b>document.open()</b>
+method. This allows it to completely rewrite the HTML code of the frame. It
+generates the proper HTML tags to define style sheets and set the page colors
+and background, if any. It also adds a call to <b>treeMenuScroll()</b> in the
+<b>onload</b> event of the body tag.
+<p>
+Then, we start the display with a &lt;table&gt; tag. The first row just
+contains the root icon and text. Each following row will contain a menu item.
+<p>
+Here, the recursive nature of the tree menu objects is what makes the display
+drawing work. We make a call to <b>treeMenuListItems()</b> passing it the top
+level menu (the <b>treeMenu</b> variable). When it returns, all the items will
+have been drawn and we just finish with the closing &lt;/table&gt; tag.
+<p>
+<b>treeMenuListItems()</b> is very simple, it just takes the given menu and
+loops thru each item making a call to <b>treeMenuDisplayItem()</b> to write it
+out. It also passes a flag to indicate whether the item being passed is the
+last one in the menu or not so the proper 'tee' or 'corner' graphic can be
+used.
+<p>
+<b>treeMenuDisplayItem()</b> is the workhorse. It writes out the proper images
+and text for the given item as a table row. Some global variables are used to
+track how far to indent the item and what images are needed to create the tree
+layout. Then, based on the properties of the menu item, it displays the proper
+icon (folder, file icon, custom icon, etc.) and it's text.
+<p>
+If an item happens to be a submenu it checks the cookie data to determine if it
+should be expanded or not. If so, it makes a recursive call to
+<b>treeMenuListItems()</b> passing it the item's submenu.
+<p>
+In this function, we also update the global scrolling values if the given item
+is the selected one.
+<p>
+Once the menu is finally drawn, some closing tags are output and the menu frame
+will now reflect the proper menu view.
+<p>
+<b>Making the Menu Interactive</b>
+<p>
+Each item is written as a hypertext link with a call to <b>treeMenuClick()</b>
+that will cause a redisplay of the menu if the item is clicked. The function is
+passed the item's index value, so we can update the cookie data and a couple
+of boolean flags letting it know if the item links to another page and if it is
+a folder.
+<p>
+The function updates the cookie values, toggling the folder open or closed if
+it's a submenu and marking the item as the selected one. It then makes a call
+to <b>treeMenuDisplay()</b> which results in an updated display of the menu.
+<p>
+For the menu root, we call <b>treeMenuRootClick()</b> instead which simply
+deletes the cookies and redraws the menu frame. This causes it to start with
+all folders closed and no item selected.
+<p>
+<font color="#cc6600"><b>Source</b></font>
+<p>
+The source for each file can be viewed using these links:
+<p>
+<ul>
+  <li><a href="tree.html"       onclick="location = 'view-source:' + this.href; return false;">tree.html</a>
+  <li><a href="treeMenu.html"   onclick="location = 'view-source:' + this.href; return false;">treeMenu.html</a>
+  <li><a href="treeMain.html"   onclick="location = 'view-source:' + this.href; return false;">treeMain.html</a>
+  <li><a href="treeMenuCode.js" onclick="location = 'view-source:' + this.href; return false;">treeMenuCode.js</a>
+  <li><a href="myMenu.js"       onclick="location = 'view-source:' + this.href; return false;">myMenu.js</a>
+</ul>
+<p>
+The images for the menu tree are shown below, all are 18x18 pixels in size:
+<p>
+<table border=0 cellpadding=4 cellspacing=0>
+<tr>
+  <td><img align="absmiddle" src="graphics/menu_root.gif"> <font face="Arial,Helvetica" size=1>menu_root.gif</font></td>
+  <td><img align="absmiddle" src="graphics/menu_tee.gif"> <font face="Arial,Helvetica" size=1>menu_tee.gif</font></td>
+</tr>
+<tr>
+  <td><img align="absmiddle" src="graphics/menu_bar.gif"> <font face="Arial,Helvetica" size=1>menu_bar.gif</font></td>
+  <td><img align="absmiddle" src="graphics/menu_tee_plus.gif"> <font face="Arial,Helvetica" size=1>menu_tee_plus.gif</font></td></tr>
+</tr>
+<tr>
+  <td><img align="absmiddle" src="graphics/menu_folder_closed.gif"> <font face="Arial,Helvetica" size=1>menu_folder_closed.gif</font></td>
+  <td><img align="absmiddle" src="graphics/menu_tee_minus.gif"> <font face="Arial,Helvetica" size=1>menu_tee_minus.gif</font></td>
+</tr>
+<tr>
+  <td><img align="absmiddle" src="graphics/menu_folder_open.gif"> <font face="Arial,Helvetica" size=1>menu_folder_open.gif</font></td>
+  <td><img align="absmiddle" src="graphics/menu_corner.gif"> <font face="Arial,Helvetica" size=1>menu_corner.gif</font></td>
+</tr>
+<tr>
+  <td><img align="absmiddle" src="graphics/menu_link_local.gif"> <font face="Arial,Helvetica" size=1>menu_link_local.gif (default)</font></td>
+  <td><img align="absmiddle" src="graphics/menu_corner_plus.gif"> <font face="Arial,Helvetica" size=1>menu_corner_plus.gif</font></td>
+</tr>
+<tr>
+  <td><img align="absmiddle" src="graphics/menu_link_external.gif"> <font face="Arial,Helvetica" size=1>menu_link_external.gif (default)</font></td>
+  <td><img align="absmiddle" src="graphics/menu_corner_minus.gif"> <font face="Arial,Helvetica" size=1>menu_corner_minus.gif</font></td>
+</tr>
+<tr>
+  <td><img align="absmiddle" src="graphics/menu_link_ref.gif"> <font face="Arial,Helvetica" size=1>menu_link_ref.gif (custom)</font></td>
+  <td><img align="absmiddle" src="graphics/menu_link_java.gif"> <font face="Arial,Helvetica" size=1>menu_link_java.gif (custom)</font></td>
+</tr>
+<tr>
+  <td colspan=2><img align="texttop" border=1 src="graphics/menu_spacer.gif" width=18 height=18> <font face="Arial,Helvetica" size=1>menu_spacer.gif (transparent, used for spacing)</font></td>
+</tr>
+</table>
+<p>
+You can also download <a href="treeMenu.zip">treeMenu.zip</a> (17K) which
+contains all the above files.
+</font>
+</td>
+</tr>
+<tr><td align=center colspan=2>
+<hr noshade size=1>
+<font face="Arial,Helvetica" size=2><a href="../index.html" target="_top">Home</a></font>
+</td></tr>
+</table>
+
+</center>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<%// Author: Dai Yong in June 2013%>
+<%@ page import="java.sql.*"%>
+<%@ page import="java.io.*"%>
+<%@ page import="java.util.*"%>
+<%@ page import="CP_Classes.vo.*"%>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+
+<title>Change User Assignment Venue</title>
+<%@ page pageEncoding="UTF-8"%>
+<meta http-equiv="Content-Type" content="text/html">
+<style type="text/css">
+<!--
+body {
+	
+}
+-->
+</style>
+	<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session" />
+	<jsp:useBean id="SessionSetup" class="Coach.SessionSetup" scope="session" />
+	<jsp:useBean id="CoachDateGroup" class="Coach.CoachDateGroup" scope="session" />
+	<jsp:useBean id="CoachDate" class="Coach.CoachDate" scope="session" />
+	<jsp:useBean id="CoachSlotGroup" class="Coach.CoachSlotGroup" scope="session" />
+	<jsp:useBean id="CoachVenue" class="Coach.CoachVenue" scope="session" />
+	<script type="text/javascript">
+	var x = parseInt(window.screen.width) / 2 - 240;  // the number 250 is the exact half of the width of the pop-up and so should be changed according to the size of the pop-up
+	var y = parseInt(window.screen.height) / 2 - 115;  // the number 125 is the exact half of the height of the pop-up and so should be changed according to the size of the pop-up
+	
+		function proceed(){
+			opener.location.href='SelectCoach.jsp';
+			opener.location.reload(true);
+			window.close();
+		}
+		function setVenue(form){
+			form.action = "EditUserAssignmentVenue.jsp?setVenue=1";
+			form.method = "post";
+			form.submit();
+		}
+		function saveVenue(form){
+			form.action = "EditUserAssignmentVenue.jsp?save=1";
+			form.method = "post";
+			form.submit();
+		}
+		function cancelAdd()
+		{	
+			opener.location.href="UserAssignment.jsp";
+			opener.location.reload(true);
+			window.close();
+		}	
+		function viewVenueDetail(form){
+			var value=form.selVenue.value;
+				if(value=="0"){
+				alert("Please select a venue");
+				}else{
+				var myWindow=window.open('ViewUserAssignmentVenue.jsp?ViewDayGroup='+ value,'windowRef','scrollbars=yes, width=480, height=250');
+				var query = "ViewUserAssignmentVenue.jsp?ViewDayGroup=" + value;
+				myWindow.moveTo(x,y);
+	    		myWindow.location.href = query;
+				}
+		}
+	</script>
+</head>
+<body>
+
+
+
+<%	
+	Vector venues=CoachVenue.getAllCoachVenue();
+	int userAssignmentPK = 0;
+	int venuePK;
+	if (request.getParameter("UserAssignment") != null) {
+		userAssignmentPK = Integer.parseInt(request.getParameter("UserAssignment"));
+		SessionSetup.setSelectedUserAssignment(userAssignmentPK);
+	} else {
+		userAssignmentPK = SessionSetup.getSelectedUserAssignment();
+	}
+	if (request.getParameter("setVenue") != null) {
+		venuePK = Integer.parseInt(request.getParameter("selVenue"));
+		SessionSetup.setSelectedVenue(venuePK);
+		System.out.println("venue set to: "+venuePK);
+	}else {
+		venuePK = SessionSetup.getSelectedVenue();
+	}
+	if (request.getParameter("save") != null) {	
+			SessionSetup.updateUserAssignmentVenue(userAssignmentPK, SessionSetup.getSelectedVenue());
+			System.out.println("update session venue");
+		
+		%>
+		<script type="text/javascript">
+			opener.location.href = "UserAssignment.jsp";
+			window.close();
+		</script>
+		<%
+	}
+	
+	%>
+	
+	<div align="center">
+	<form>
+		<table width="300">
+		<p>
+				<b><font color="#000080" size="2" face="Arial">User Assignment Venue Management</font></b>
+				</p>
+				<tr>
+					<td width="500" colspan="2"><select size="1"
+						name="selVenue" onChange="setVenue(this.form)">
+						<option value=0>Select a Coaching Venue</option>
+						<%
+							for (int i = 0; i < venues.size(); i++) {
+								voCoachVenue venue = (voCoachVenue) venues.elementAt(i);
+								int currentVenuePK = venue.getVenuePK();
+								String venueAddress1 = venue.getVenue1();
+								if (SessionSetup.getSelectedVenue() == currentVenuePK) {
+						%>
+						<option value=<%=currentVenuePK%> selected><%=venueAddress1%>
+							<%
+								} else {
+							%>
+						
+						<option value=<%=currentVenuePK%>><%=venueAddress1%>
+							<%
+								}
+							}
+							%>
+						
+				</select></td>
+					<td><input  type="button" name="viewVenueDetails" value="View Venue Details" onclick="viewVenueDetail(this.form)"></td>
+				</tr>
+			</table>
+		
+		<br>
+		<br>
+			<input  name="save" type="button" id="Save" value="Save" onClick="saveVenue(this.form)">
+			<input name="Cancel" type="button" id="Cancel" value="Close" onClick="cancelAdd()">		
+		</form>
+</div>
+</body>
+</html>

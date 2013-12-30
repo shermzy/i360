@@ -1,0 +1,25 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>HV Menu example</title>
+</head>
+
+<body>
+<script type='text/javascript'>
+
+//HV Menu- by Ger Versluis (http://www.burmees.nl/)
+//Submitted to Dynamic Drive (http://www.dynamicdrive.com)
+//Visit http://www.dynamicdrive.com for this script and more
+
+function Go(){return}
+
+</script>
+<script type='text/javascript' src='exmplmenu_var.js'></script>
+<script type='text/javascript' src='menu_com.js'></script>
+<noscript>Your browser does not support script</noscript>
+</body>
+
+</html>

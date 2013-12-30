@@ -1,0 +1,314 @@
+USE [360cp]
+GO
+/****** Object:  Table [dbo].[Coach]    Script Date: 06/21/2013 17:05:49 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[Coach](
+	[PKCoach] [int] IDENTITY(1,1) NOT NULL,
+	[CoachName] [varchar](100) NOT NULL,
+	[Link] [varchar](300) NULL,
+	[UploadFile] [varchar](200) NULL,
+ CONSTRAINT [PK_Coach] PRIMARY KEY CLUSTERED 
+(
+	[PKCoach] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+
+
+USE [360cp]
+GO
+/****** Object:  Table [dbo].[CoachVenue]    Script Date: 06/21/2013 17:06:08 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[CoachVenue](
+	[VenuePK] [int] IDENTITY(1,1) NOT NULL,
+	[Venue1] [varchar](100) NULL,
+	[Venue2] [varchar](100) NULL,
+	[Venue3] [varchar](100) NULL,
+ CONSTRAINT [PK_CoachVenue] PRIMARY KEY CLUSTERED 
+(
+	[VenuePK] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+
+
+USE [360cp]
+GO
+/****** Object:  Table [dbo].[CoachSlotGroup]    Script Date: 06/21/2013 17:06:23 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[CoachSlotGroup](
+	[PK_CoachSlotGroup] [int] IDENTITY(1,1) NOT NULL,
+	[SlotName] [varchar](200) NULL,
+ CONSTRAINT [PK_CoachSlotGroup] PRIMARY KEY CLUSTERED 
+(
+	[PK_CoachSlotGroup] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+
+USE [360cp]
+GO
+/****** Object:  Table [dbo].[CoachSlot]    Script Date: 06/21/2013 17:06:38 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[CoachSlot](
+	[CoachSlotPK] [int] IDENTITY(1,1) NOT NULL,
+	[FKCoachSlotGroup] [int] NULL,
+	[StartingTime] [int] NULL,
+	[EndingTime] [int] NULL,
+ CONSTRAINT [PK_CoaclSlot] PRIMARY KEY CLUSTERED 
+(
+	[CoachSlotPK] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+ALTER TABLE [dbo].[CoachSlot]  WITH CHECK ADD  CONSTRAINT [FK_CoachSlot_CoachSlotGroup] FOREIGN KEY([FKCoachSlotGroup])
+REFERENCES [dbo].[CoachSlotGroup] ([PK_CoachSlotGroup])
+GO
+ALTER TABLE [dbo].[CoachSlot] CHECK CONSTRAINT [FK_CoachSlot_CoachSlotGroup]
+
+
+USE [360cp]
+GO
+/****** Object:  Table [dbo].[CoachDateGroup]    Script Date: 06/21/2013 17:06:47 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[CoachDateGroup](
+	[PKDateGroup] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [varchar](200) NOT NULL,
+	[Description] [varchar](200) NULL,
+ CONSTRAINT [PK_CoachDateGroup] PRIMARY KEY CLUSTERED 
+(
+	[PKDateGroup] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+
+
+USE [360cp]
+GO
+/****** Object:  Table [dbo].[CoachDate]    Script Date: 06/21/2013 17:06:53 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[CoachDate](
+	[PKCoachDate] [int] IDENTITY(1,1) NOT NULL,
+	[FKCoachDateGroup] [int] NOT NULL,
+	[Date] [varchar](100) NOT NULL,
+ CONSTRAINT [PK_CoachDate] PRIMARY KEY CLUSTERED 
+(
+	[PKCoachDate] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+GO
+ALTER TABLE [dbo].[CoachDate]  WITH CHECK ADD  CONSTRAINT [FK_CoachDate_CoachDateGroup] FOREIGN KEY([FKCoachDateGroup])
+REFERENCES [dbo].[CoachDateGroup] ([PKDateGroup])
+GO
+ALTER TABLE [dbo].[CoachDate] CHECK CONSTRAINT [FK_CoachDate_CoachDateGroup]
+
+
+
+
+USE [360cp]
+GO
+/****** Object:  Table [dbo].[CoachSession]    Script Date: 06/21/2013 17:07:10 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_PADDING ON
+GO
+CREATE TABLE [dbo].[CoachSession](
+	[PKCoachSession] [int] IDENTITY(1,1) NOT NULL,
+	[SessionName] [varchar](200) NULL,
+	[SessionDescription] [varchar](200) NULL,
+	[SessionMax] [int] NULL,
+ CONSTRAINT [PK_CoachSession] PRIMARY KEY CLUSTERED 
+(
+	[PKCoachSession] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+SET ANSI_PADDING OFF
+
+USE [360cp]
+GO
+/****** Object:  Table [dbo].[CoachSessionDate]    Script Date: 06/21/2013 17:07:16 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[CoachSessionDate](
+	[PK] [int] IDENTITY(1,1) NOT NULL,
+	[SessionFK] [int] NOT NULL,
+	[DateFK] [int] NOT NULL,
+	[CoachFK] [int] NOT NULL,
+	[VenueFK] [int] NULL,
+ CONSTRAINT [PK_CoachSessionDate] PRIMARY KEY CLUSTERED 
+(
+	[PK] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+ALTER TABLE [dbo].[CoachSessionDate]  WITH CHECK ADD  CONSTRAINT [FK_Coach] FOREIGN KEY([CoachFK])
+REFERENCES [dbo].[Coach] ([PKCoach])
+GO
+ALTER TABLE [dbo].[CoachSessionDate] CHECK CONSTRAINT [FK_Coach]
+GO
+ALTER TABLE [dbo].[CoachSessionDate]  WITH CHECK ADD  CONSTRAINT [FK_Date] FOREIGN KEY([DateFK])
+REFERENCES [dbo].[CoachDate] ([PKCoachDate])
+GO
+ALTER TABLE [dbo].[CoachSessionDate] CHECK CONSTRAINT [FK_Date]
+GO
+ALTER TABLE [dbo].[CoachSessionDate]  WITH CHECK ADD  CONSTRAINT [FK_Session] FOREIGN KEY([SessionFK])
+REFERENCES [dbo].[CoachSession] ([PKCoachSession])
+GO
+ALTER TABLE [dbo].[CoachSessionDate] CHECK CONSTRAINT [FK_Session]
+GO
+ALTER TABLE [dbo].[CoachSessionDate]  WITH CHECK ADD  CONSTRAINT [FK_Venue] FOREIGN KEY([VenueFK])
+REFERENCES [dbo].[CoachVenue] ([VenuePK])
+GO
+ALTER TABLE [dbo].[CoachSessionDate] CHECK CONSTRAINT [FK_Venue]
+
+USE [360cp]
+GO
+/****** Object:  Table [dbo].[CoachSessionDateVenue]    Script Date: 06/21/2013 17:07:23 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[CoachSessionDateVenue](
+	[PKSessionDateVenue] [int] IDENTITY(1,1) NOT NULL,
+	[FKSession] [int] NOT NULL,
+	[FKDate] [int] NOT NULL,
+	[FKVenue] [int] NOT NULL,
+ CONSTRAINT [PK_CoachSessionDateVenue] PRIMARY KEY CLUSTERED 
+(
+	[PKSessionDateVenue] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+ALTER TABLE [dbo].[CoachSessionDateVenue]  WITH CHECK ADD  CONSTRAINT [Date] FOREIGN KEY([FKDate])
+REFERENCES [dbo].[CoachDate] ([PKCoachDate])
+GO
+ALTER TABLE [dbo].[CoachSessionDateVenue] CHECK CONSTRAINT [Date]
+GO
+ALTER TABLE [dbo].[CoachSessionDateVenue]  WITH CHECK ADD  CONSTRAINT [Session] FOREIGN KEY([FKSession])
+REFERENCES [dbo].[CoachSession] ([PKCoachSession])
+GO
+ALTER TABLE [dbo].[CoachSessionDateVenue] CHECK CONSTRAINT [Session]
+GO
+ALTER TABLE [dbo].[CoachSessionDateVenue]  WITH CHECK ADD  CONSTRAINT [Venue] FOREIGN KEY([FKVenue])
+REFERENCES [dbo].[CoachVenue] ([VenuePK])
+GO
+ALTER TABLE [dbo].[CoachSessionDateVenue] CHECK CONSTRAINT [Venue]
+
+
+USE [360cp]
+GO
+/****** Object:  Table [dbo].[CoachAssignment]    Script Date: 06/21/2013 17:07:31 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[CoachAssignment](
+	[AssignmentPK] [int] IDENTITY(1,1) NOT NULL,
+	[DateFK] [int] NOT NULL,
+	[SlotFK] [int] NOT NULL,
+	[CoachFK] [int] NOT NULL,
+	[OrgFK] [int] NOT NULL,
+	[UserFK] [int] NULL,
+	[Status] [int] NULL,
+	[SessionFK] [int] NOT NULL,
+	[SurveyFK] [int] NULL,
+	[VenueFK] [int] NULL,
+ CONSTRAINT [PK_CoachAssignment] PRIMARY KEY CLUSTERED 
+(
+	[AssignmentPK] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+ALTER TABLE [dbo].[CoachAssignment]  WITH CHECK ADD  CONSTRAINT [FK_CoachAssignment_Coach] FOREIGN KEY([CoachFK])
+REFERENCES [dbo].[Coach] ([PKCoach])
+GO
+ALTER TABLE [dbo].[CoachAssignment] CHECK CONSTRAINT [FK_CoachAssignment_Coach]
+GO
+ALTER TABLE [dbo].[CoachAssignment]  WITH CHECK ADD  CONSTRAINT [FK_CoachAssignment_CoachAssignment] FOREIGN KEY([AssignmentPK])
+REFERENCES [dbo].[CoachAssignment] ([AssignmentPK])
+GO
+ALTER TABLE [dbo].[CoachAssignment] CHECK CONSTRAINT [FK_CoachAssignment_CoachAssignment]
+GO
+ALTER TABLE [dbo].[CoachAssignment]  WITH CHECK ADD  CONSTRAINT [FK_CoachAssignment_CoachDate] FOREIGN KEY([DateFK])
+REFERENCES [dbo].[CoachDate] ([PKCoachDate])
+GO
+ALTER TABLE [dbo].[CoachAssignment] CHECK CONSTRAINT [FK_CoachAssignment_CoachDate]
+GO
+ALTER TABLE [dbo].[CoachAssignment]  WITH CHECK ADD  CONSTRAINT [FK_CoachAssignment_CoachSession] FOREIGN KEY([SessionFK])
+REFERENCES [dbo].[CoachSession] ([PKCoachSession])
+GO
+ALTER TABLE [dbo].[CoachAssignment] CHECK CONSTRAINT [FK_CoachAssignment_CoachSession]
+GO
+ALTER TABLE [dbo].[CoachAssignment]  WITH CHECK ADD  CONSTRAINT [FK_CoachAssignment_CoachSlot] FOREIGN KEY([SlotFK])
+REFERENCES [dbo].[CoachSlot] ([CoachSlotPK])
+GO
+ALTER TABLE [dbo].[CoachAssignment] CHECK CONSTRAINT [FK_CoachAssignment_CoachSlot]
+GO
+ALTER TABLE [dbo].[CoachAssignment]  WITH CHECK ADD  CONSTRAINT [FK_CoachAssignment_CoachVenue] FOREIGN KEY([VenueFK])
+REFERENCES [dbo].[CoachVenue] ([VenuePK])
+GO
+ALTER TABLE [dbo].[CoachAssignment] CHECK CONSTRAINT [FK_CoachAssignment_CoachVenue]
+GO
+ALTER TABLE [dbo].[CoachAssignment]  WITH CHECK ADD  CONSTRAINT [FK_CoachAssignment_ORG] FOREIGN KEY([OrgFK])
+REFERENCES [dbo].[tblOrganization] ([PKOrganization])
+GO
+ALTER TABLE [dbo].[CoachAssignment] CHECK CONSTRAINT [FK_CoachAssignment_ORG]
+GO
+ALTER TABLE [dbo].[CoachAssignment]  WITH CHECK ADD  CONSTRAINT [FK_CoachAssignment_tblSurvey] FOREIGN KEY([SurveyFK])
+REFERENCES [dbo].[tblSurvey] ([SurveyID])
+GO
+ALTER TABLE [dbo].[CoachAssignment] CHECK CONSTRAINT [FK_CoachAssignment_tblSurvey]
+GO
+ALTER TABLE [dbo].[CoachAssignment]  WITH CHECK ADD  CONSTRAINT [FK_CoachAssignment_Users] FOREIGN KEY([UserFK])
+REFERENCES [dbo].[User] ([PKUser])
+GO
+ALTER TABLE [dbo].[CoachAssignment] CHECK CONSTRAINT [FK_CoachAssignment_Users]

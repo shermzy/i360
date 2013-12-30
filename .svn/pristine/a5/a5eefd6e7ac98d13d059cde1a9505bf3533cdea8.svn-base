@@ -1,0 +1,59 @@
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>  
+<jsp:useBean id="db" class="CP_Classes.Database" scope="session"/>
+
+<jsp:useBean id="CE_Survey" class="CP_Classes.Create_Edit_Survey" scope="session"/>
+
+<jsp:useBean id="server" class="CP_Classes.Setting" scope="session"/>
+<HTML>
+
+<BODY BGCOLOR=#FFFFFF LEFTMARGIN=0 TOPMARGIN=0 MARGINWIDTH=0 MARGINHEIGHT=0>
+
+<%
+/*	String a = "hello";
+	String b = "hello";
+
+String c = "hello";
+String d = "hello";
+String e = "hello";
+String f = "hello";
+String g = "hello";
+String h = "hello";
+String i = "hello";
+String j = "hello";
+
+	System.out.println(a);
+	a = null;
+	b = null;
+	c = null;
+d = null;
+e = null;
+f = null;
+g = null;
+h = null;
+i = null;
+j = null;
+*/
+	for(int i=0; i<2000; i++) {
+		String a = "Hello";
+		String b = "hello";
+
+String c = "hello";
+String d = "hello";
+String e = "hello";
+String f = "hello";
+String g = "hello";
+String h = "hello";
+String k = "hello";
+String j = "hello";
+
+
+		out.println(a);	
+	}
+	
+	out.println("DONE");
+	System.gc();
+%>
+
+</BODY>
+
+</HTML>

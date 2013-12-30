@@ -1,0 +1,667 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+</head>
+<body>
+<div >
+<p  style="text-align: center;" align="center"><b style=""><span style="font-size: 24pt;" ><img src="Processing_image/image002.jpg"  height="116" width="115"> </span></b></p>
+
+<p  style="text-align: center;" align="center"><b style=""><span style="font-size: 26pt;" >3-Sixty Profiler<sup>&reg;</sup></span></b></p>
+
+<p  style="text-align: center;" align="center"><b style=""><span style="font-size: 26pt;" >Administrator Guide</span></b></p>
+
+<p  style="text-align: center;" align="center"><b style=""><span style="font-size: 26pt;" >Processing</span></b></p>
+<br style="page-break-before: always;" clear="all">
+
+<p  style="text-align: center;" align="center"><b><span style="font-size: 20pt;" >TABLE OF CONTENTS</span></b><span > 
+</span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132886">1.<span style="color: windowtext; text-decoration: none;"><span style="">&nbsp;&nbsp;&nbsp;&nbsp; </span></span>Setup Wizard<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132887">2.<span style="color: windowtext; text-decoration: none;"><span style="">&nbsp;&nbsp;&nbsp;&nbsp; </span></span>Create/ Edit 
+Survey</a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132888">Survey Detail<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132889">Competency<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132890">Key Behaviour<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span>&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132891">Demographics<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132892">Rating Task<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132893">Advance Settings<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132894">3.<span style="color: windowtext; text-decoration: none;"><span style="">&nbsp;&nbsp;&nbsp;&nbsp; </span></span>Assign Target/Rater<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span></span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132895">4.<span style="color: windowtext; text-decoration: none;"><span style="">&nbsp;&nbsp;&nbsp;&nbsp; </span></span>Generating a Paper/Word Document 
+Survey Questionnaire<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132896">5.<span style="color: windowtext; text-decoration: none;"><span style="">&nbsp;&nbsp;&nbsp;&nbsp; </span></span>Analyse Survey<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span></a></span></span></p>
+
+<h1><span style="font-size: 14pt; font-family: 'Times New Roman';" >&nbsp;&nbsp;&nbsp;</span></h1>
+
+<p  style="text-align: center;" align="center"><b style=""><span style="font-size: 20pt;" >TABLE OF FIGURE </span></b></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132855">Figure 1. Create Survey 
+Wizard<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132856">Figure 2. Create/Edit 
+Survey<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132857">Figure 3. Create/Edit Survey 
+Options<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132858">Figure 4. Copy from existing 
+Survey<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132859">Figure 5. Survey Detail<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span></span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132860">Figure 6. Survey &ndash; Competency 
+Assignment<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span></span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132861">Figure 7. List of 
+Competencies<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132862">Figure 8. Survey &ndash; Key 
+Behaviour Assignment<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span></span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132863">Figure 9. List of Key 
+Behaviours<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132864">Figure 10. Survey - 
+Demographics<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132865">Figure 11. Survey &ndash; 
+Demographic Option<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132866">Figure 12. Survey &ndash; Rating 
+task<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132867">Figure 13. Survey &ndash; List of 
+Rating Tasks<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132868">Figure 14. Survey &ndash; Rating 
+Task, Future Proficiency<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132869">Figure 15. Advance 
+Settings<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132870">Figure 16. Survey &ndash; Date 
+setup<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132871">Figure 17. Rating Scale 
+Settings for individual Competency<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132872">Figure 18. Exclude 
+Self-Comment prompt<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span></span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132873">Figure 19. Development Map 
+breakdown prompt<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span></span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132874">Figure 20. Assign 
+Target/Rater &ndash; List of Surveys<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132875">Figure 21. Assign 
+Target/Rater &ndash; List of Targets and Raters<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132876">Figure 22. List of users<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132877">Figure 23. Add Rater/ Delete 
+Target option<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132878">Figure 24. Assign 
+Target/Rater &ndash; List of Raters<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132879">Figure 25. Delete Rater<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span></span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132880">Figure 26. Process Result for 
+Specific Survey<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132881">Figure 27. Process 
+Result<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span></span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132882">Figure 28. Survey 
+Options<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132883">Figure 29. Rater&rsquo;s input for 
+Target<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span></span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132884">Figure 30. Download 
+Prompt<span style="display: none; color: windowtext; text-decoration: none;"><span style=""> </span></span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<p ><span ><span style="" ><a href="#_Toc201132885">Figure 31. Calculation 
+confirmation<span style="display: none; color: windowtext; text-decoration: none;"> 
+</span><span style="display: none; color: windowtext; text-decoration: none;">&nbsp;</span></a></span></span></p>
+
+<h1><span style="font-weight: normal; font-size: 12pt; font-family: 'Times New Roman';" >&nbsp;</span></h1>
+</div>
+
+<div >
+<h1 style=""><a name="_Toc201132886"></a><a name="_Toc142477835"><span style=""><span style="font-size: 14pt; font-family: 'Times New Roman';" ><span style="">1.<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><span style="font-size: 14pt; font-family: 'Times New Roman';" >Setup 
+Wizard</span></span></span></a></h1>
+
+<p  style="text-align: justify;"><span style="" >For step-by step guidance, the Administration 
+can opt to create jobs using the <b style="">Setup 
+Wizard</b>, which is available on the navigation bar on the left side of the 
+screen. Administrators who are new to the system are encouraged to use this 
+option.</span></p>
+
+<p ><span style="" >Click on the <b>Create Survey Wizard</b> 
+shortcut on the left side menu of the screen, the following window will 
+pop-up.</span></p>
+
+<p ><span style="" >Click on each of the boxes to go to the 
+relevant screen.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132855"><img src="Processing_image/image004.jpg" height="337" width="384"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >1. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Create 
+Survey Wizard</span></span></p>
+
+<h1 style=""><a name="_Toc201132887"><span style="font-size: 14pt; font-family: 'Times New Roman';" ><span style="">2.<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><span style="font-size: 14pt; font-family: 'Times New Roman';" >Create/ Edit 
+Survey</span></span></a></h1>
+
+<p  style="text-align: justify;"><span >Alternatively, 
+to setup a Survey, go to <b>Processing </b></span><b><span style="font-family: Wingdings;" ><span style="">&agrave;</span></span><span > Create/Edit Survey</span></b><span > or the <b>Create/Edit 
+Survey</b> shortcut that is located on the left side menu of the 
+screen.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132856"><img src="Processing_image/image006.jpg" height="335" width="616"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >2. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Create/Edit 
+Survey</span></span></p>
+
+<p ><span >Click on the <b>Add New Survey </b>button to 
+add a new survey, the screen below will pop-up with 3 different options for 
+survey setup. To edit Survey, click on the <b style="">View Survey Details</b> button. To delete, 
+select the survey by clicking on the radio button and click on the <b style="">Delete</b> button. </span></p>
+
+<p  align="center"><span ><a name="_Toc201132857"><img src="Processing_image/image008.jpg" height="338" width="615"> 
+</a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >3. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Create/Edit 
+Survey Options</span></span></p>
+
+<p  style="text-align: left;"><span style="font-family: Wingdings">v<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span><span dir="ltr"><b><span style="" >Copy from Job Category</span></b></span></p>
+
+<p  style="text-align: left;"><span style="" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+This option allows the copying of competencies from a Job Category. Once 
+a Job Category is selected, all the competencies assigned under that Job 
+Category will be automatically added to the new survey created. </span></p>
+
+<p  style="text-align: left;"><span style="font-family: Wingdings">v<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span><span dir="ltr"><b><span style="" >Copy from existing Survey</span></b></span></p>
+
+<p  style="text-align: left;"><span style="" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The 
+entire survey profile from an existing survey will be copied to the new survey 
+created. These include competencies, key behaviours, demographics and rating 
+tasks. When creating a new survey which has almost the same profile as an 
+existing survey, it is advisable to select this option and modify from there. 
+</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132858"><img src="Processing_image/Proces5.jpg" border="0" height="261" width="310"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >4. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Copy 
+from existing Survey</span></span></p>
+
+<p  style="text-align: left;"><span style="font-family: Wingdings">v<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span><span dir="ltr"><b><span style="" >Create Survey from 
+scratch</span></b></span></p>
+
+<p align="left" ><span style="" >This option 
+allows the Administrator to create the survey from scratch and allows the 
+Administrator to pick competencies and key behaviours from the system 
+libraries</span><span >.</span></p>
+
+<h2 style="" align="left"><a name="_Toc201132888"><span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</span>
+<span style="font-size: 12pt; font-style: normal; font-family: 'Times New Roman';" dir="ltr" >Survey 
+Detail</span></a></h2>
+
+<p  style="text-align: left;"><span >Fill in the name 
+of the Survey and the necessary fields that are shown on the screen below. Click 
+on the <b style="">Proceed</b> button to proceed to 
+the next stage. Or click on the <b style="">Save</b> 
+button to temporarily save the survey to come back to it later.</span></p>
+
+<p  align="center"><span ><a name="_Toc201132859"><img src="Processing_image/image012.jpg" height="363" width="568"> 
+</a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >5. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Survey 
+Detail</span></span></p>
+
+<h2 style="" align="left"><a name="_Toc201132889"><span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</span>
+<span style="font-size: 12pt; font-style: normal; font-family: 'Times New Roman';" dir="ltr" >Competency</span></a></h2>
+
+<p align="left" ><span style="" >The next 
+step is to assign the competencies to the survey. If the Administrator had 
+chosen to create the survey from scratch, there will be no competencies in the 
+list. If the Administrator had chosen the other options to create the survey, 
+the Administrator may modify the existing list of competencies assigned to the 
+survey using the screen below.&nbsp; 
+</span></p>
+
+<p  align="center"><span ><a name="_Toc201132860"><img src="Processing_image/image014.jpg" height="284" width="568"> 
+</a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >6. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Survey 
+&ndash; Competency Assignment</span></span></p>
+
+<p ><span >To assign competency, click on the <b style="">Add Competency</b> button. </span><span style="" >A new window containing competencies 
+will be displayed. Tick on the checkbox(es) corresponding to the competencies 
+that you want to assign to the Survey and click on the <b>Add</b> button. 
+</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132861"><img src="Processing_image/image016.jpg" height="420" width="456"> </a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >7. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >List of 
+Competencies</span></span></p>
+
+<p align="left" ><span >From Figure 6, Click on <b style="">Save &amp; Proceed</b> to go to the next 
+step of the survey creation. <br style="page-break-before: always;" clear="all">
+<span style="">&nbsp;</span></span></p>
+
+<h2 style="" align="left"><a name="_Toc201132890"><span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</span>
+<span style="font-size: 12pt; font-style: normal; font-family: 'Times New Roman';" dir="ltr" >Key 
+Behaviour</span></a></h2>
+
+<p align="left" ><span >If the survey is in Key Behaviour level, 
+administrator is required to assign Key Behaviours, otherwise proceed to choose 
+Demographics. </span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132862"><img src="Processing_image/image018.jpg" height="247" width="528"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >8. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Survey 
+&ndash; Key Behaviour Assignment</span></span></p>
+
+<p ><span >To assign key behaviour, click on the <b style="">Add Key Behaviour</b> button. </span><span style="" >A new window containing key 
+behaviours will be displayed. </span><span >Select the competency from 
+the drop down box to filter the key behvaiours by competency.</span><span style="" >Tick on the checkbox(es) 
+corresponding to the key behaviours that you want to assign to the Survey and 
+click on the <b>Add</b> button. </span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132863"><img src="Processing_image/image020.jpg" height="400" width="376"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >9. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >List of 
+Key Behaviours</span></span><b><i><br style="page-break-before: always;" clear="all">
+</i></b></p>
+
+<h2 style=""><a name="_Toc201132891"><span style="font-size: 12pt; font-style: normal; font-family: 'Times New Roman';" ><span style=""><span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><span style="font-size: 12pt; font-style: normal; font-family: 'Times New Roman';" >Demographics</span></span></a></h2>
+
+<p ><span >It is not compulsory to add demographics to 
+the survey.</span></p>
+
+<p ><span >To add Demographics click on the <b style="">Add Demographics </b>button.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132864"><img src="Processing_image/image022.jpg" height="289" width="576"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >10. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Survey 
+- Demographics</span></span></p>
+
+<p ><span >When the demographics selection window pops 
+up, administrator can include the demographics option into the survey by 
+selecting the checkbox(es) corresponding to the option and click on the <b style="">Add</b> button. </span></p>
+
+<p  align="center"><span ><span style="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><a name="_Toc201132865"><img src="Processing_image/image024.jpg" height="306" width="229"><span style="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</a></span>&nbsp;<span style="">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >11. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Survey 
+&ndash; Demographic Option</span></span></p>
+
+<p ><span >From Figure 10, click on <b style="">Save &amp; Proceed</b> to proceed to the 
+last step of the survey creation.</span></p>
+
+<h2 style=""><a name="_Toc201132892"><span style="font-size: 12pt; font-style: normal; font-family: 'Times New Roman';" ><span style=""><span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><span style="font-size: 12pt; font-style: normal; font-family: 'Times New Roman';" >Rating 
+Task</span></span></a></h2>
+
+<p ><span >This is the final step in creating the 
+survey. </span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132866"><img src="Processing_image/image026.jpg" height="390" width="640"> </a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >12. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Survey 
+&ndash; Rating task</span></span></p>
+
+<p ><span >To add Rating Task, firstly, select the 
+<st1:place w:st="on"><st1:City w:st="on">Scale <st1:PlaceType w:st="on">Range 
+from the drop down menu and then click on <b style="">Add Rating Task</b> button. A new window 
+will be displayed as shown below.</st1:PlaceType></st1:City></st1:place></span></p>
+
+<p ><span >To select the templates provided, choose the 
+template from the Purpose of Survey dropdown. Administrator may also choose the 
+Rating Task that he/she wants to include manually by selecting &ldquo;Select Rating 
+Task&rdquo; option for the Purpose of Survey dropdown. Tick on the checkbox(es) to 
+select the rating task(s)<span style="">&nbsp; </span>and click on 
+the <b style="">Add</b> button to assign the rating 
+tasks to the survey.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132867"><img src="Processing_image/image028.jpg" height="253" width="583"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >13. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Survey 
+&ndash; List of Rating Tasks</span></span></p>
+
+<p ><span >If Future Proficiency Required is selected, 
+the additional option will appear below the rating task table. </span></p>
+
+<p  align="center"><span ><a name="_Toc201132868"><img src="Processing_image/image030.jpg" height="340" width="560"> 
+</a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >14. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Survey 
+&ndash; Rating Task, Future Proficiency</span></span></p>
+
+<h2 style=""><a name="_Toc201132893"><span style="font-size: 12pt; font-style: normal; font-family: 'Times New Roman';" ><span style=""><span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><span style="font-size: 12pt; font-style: normal; font-family: 'Times New Roman';" >Advance 
+Settings</span></span></a></h2>
+
+<p  style="text-align: justify;"><span style="" >This section is optional and can be skipped if 
+you intend to use the default settings. </span><span >It allows 
+administrator to do the followings:</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132869"><img src="Processing_image/Proces6.jpg" border="0" height="338" width="813"> </a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style="font-weight: normal; font-size: 11pt;" >15. 
+Advance Settings</span></p>
+
+<p style="text-align: center;" align="center">&nbsp;</p>
+
+<p  style=""><span style="font-family: Wingdings;" >&Oslash;<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span dir="ltr"><b style=""><span >Set 
+Dates</span></b></span></p>
+
+<p ><span >This function allows administrator to 
+specify the Nomination Start and End Date</span></p>
+
+<p  align="center"><b style=""><span ><a name="_Toc201132870"><img src="Processing_image/image034.jpg" height="290" width="464"></a> </span></b></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >16. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Survey 
+&ndash; Date setup</span></span></p>
+
+<p  style=""><span style="font-family: Wingdings;" ><span style="">&Oslash;<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><b style=""><span >Fix Rating Task Scale</span></b></span></p>
+
+<p ><span >This function allows administrator to 
+manually specify the CPR (Current Proficiency Required) score for all the 
+Competencies under the selected survey. </span></p>
+
+<p ><span >Enter a value and click on the <b style="">Fix All</b> button to specify the score for 
+all competencies. Administrator may also specify different score for different 
+competencies by manually editing the entry. </span></p>
+
+<p ><span >The &ldquo;Tick to Hide&rdquo; option will hide the CPR 
+score in the Questionnaire page when ticked.</span></p>
+
+<p ><span >Click on the <b style="">Save</b> button to save any changes 
+made.</span></p>
+
+<p  align="center"><b style=""><span ><img border="0" src="Processing_image/Proces1.jpg"> </span></b></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >17. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Rating 
+Scale Settings for individual Competency</span></span></p>
+
+<p  style=""><span style="font-family: Wingdings;" ><span style="">&Oslash;<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><b style=""><span >Exclude Self Comment</span></b></span></p>
+
+<p ><span >This option will exclude the self comment 
+box in the Questionnaire page when enabled.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132872"><img src="Processing_image/image038.jpg" height="126" width="264"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >18. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Exclude 
+Self-Comment prompt</span></span></p>
+
+<p  style=""><span style="font-family: Wingdings;" ><span style="">&Oslash;<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><b style=""><span >Breakdown Development Map into sub-categories?</span></b></span></p>
+
+<p ><span >This function will display the break down 
+the Development Map into sub-categories when enables.</span></p>
+
+<p  align="center"><span ><a name="_Toc201132873"><img src="Processing_image/image040.jpg" height="126" width="413"> 
+</a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >19. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Development 
+Map breakdown prompt</span></span></p>
+
+<h1 style=""><a name="_Toc201132894"><span style="font-size: 14pt; font-family: 'Times New Roman';" ><span style="">3.<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><span style="font-size: 14pt; font-family: 'Times New Roman';" >Assign 
+Target/Rater</span></span></a></h1>
+
+<p  style="text-align: justify;"><span >To assign 
+Target/Rater, go to <b>Processing </b></span><b><span style="font-family: Wingdings;" ><span style="">&agrave;</span></span><span > Assign Target/Rater</span></b><span > or the <b>Assign 
+Target/Rater </b>shortcut that is located on the left side menu of the 
+screen.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132874"><img src="Processing_image/image042.jpg" height="290" width="542"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >20. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Assign 
+Target/Rater &ndash; List of Surveys</span></span></p>
+
+<p ><span >Choose the survey by clicking on the radio 
+button and click on the <b style="">Assign 
+Target/Rater</b> button.</span></p>
+
+<p  style="text-align: center;" align="center"><span >&nbsp;<a name="_Toc201132875"><img src="Processing_image/image044.jpg" height="468" width="640"></a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >21. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Assign 
+Target/Rater &ndash; List of Targets and Raters</span></span></p>
+
+<p ><span >To add Target, simply click on the <b style="">Add Target</b> button. Select from the 
+division, department and group and select Target(s) for the survey and click on 
+the <b style="">Add </b>button.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132876"><img src="Processing_image/Proces8.jpg" border="0" height="681" width="460"> </a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style="font-weight: normal; font-size: 11pt;" >22. 
+List of users</span></p>
+
+<p ><span >To add rater, select the target (please 
+refer to figure 20.) by clicking on the radio button corresponding to the 
+target. There will be a small pop up window which displays two 
+actions.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132877"><img src="Processing_image/image048.jpg" height="137" width="131"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >23. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Add 
+Rater/ Delete Target option</span></span></p>
+
+<p ><span >Click on <b style="">Add Rater</b> and the window below will be 
+displayed on the screen. Choose the rater(s) from the list by clicking on the 
+checkbox(es) and click on the Add button to assign the rater(s) to the 
+target.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132878"><img src="Processing_image/image050.jpg" height="457" width="640"> </a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >24. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Assign 
+Target/Rater &ndash; List of Raters</span></span></p>
+
+<p ><span >To delete a rater, select the rater (please 
+refer to figure 20.) by clicking on the radio button corresponding to the rater. 
+There will be a small pop up window which displays the delete action. 
+</span></p>
+
+<p ><span >Click on the<b style=""> Delete Rater </b>button to 
+delete.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132879"><img src="Processing_image/image052.jpg" height="134" width="130"></a> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >25. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Delete 
+Rater</span></span></p>
+
+<p ><span >Once assigned, the next step is for the 
+target and rater to enter data into the survey. </span></p>
+
+<h1 style=""><a name="_Toc201132895"><span style="font-size: 14pt; font-family: 'Times New Roman';" ><span style="">4.<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><span style="font-size: 14pt; font-family: 'Times New Roman';" >Generating 
+a Paper/Word Document Survey Questionnaire</span></span></a></h1>
+
+<p ><span >See section on Data Entry Staff</span></p>
+
+<h1 style=""><a name="_Toc201132896"><span style="font-size: 14pt; font-family: 'Times New Roman';" ><span style="">5.<span style="font-family: 'Times New Roman'; font-style: normal; font-variant: normal; font-weight: normal; font-size: 7pt; line-height: normal; font-size-adjust: none; font-stretch: normal;">&nbsp;&nbsp;&nbsp;&nbsp; 
+</span></span></span><span dir="ltr"><span style="font-size: 14pt; font-family: 'Times New Roman';" >Analyse 
+Survey</span></span></a></h1>
+
+<p  style="text-align: justify;"><span >To view the 
+rater&rsquo;s inputs or the target&rsquo;s results, go to <b>Processing </b></span><b><span style="font-family: Wingdings;" ><span style="">&agrave;</span></span><span > Process Result</span></b><span > or the <b>Process Result 
+</b>shortcut that is located on the left side menu of the screen.</span></p>
+
+<p  align="center"><span ><a name="_Toc201132880"><img src="Processing_image/image054.jpg" height="345" width="640"> 
+</a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >26. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Process 
+Result for Specific Survey</span></span></p>
+
+<p ><span >Select the Survey and click on the <b style="">Process Result</b> button.</span></p>
+
+<p  align="center"><span ><a name="_Toc201132881"><img src="Processing_image/image056.jpg" height="397" width="640"> 
+</a></span></p>
+
+<p  align="center"><span ><img src="Processing_image/image058.jpg" height="150" width="640"> 
+</span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >27. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Process 
+Result</span></span></p>
+
+<p ><span >To view the Target's result, simply click on 
+the radio button corresponding to the target and a window will pop up with a few 
+different options to choose.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132882"><img src="Processing_image/Proces9.jpg" border="0" height="281" width="260"> </a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >28. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Survey 
+Options</span></span></p>
+
+<p ><span >To view Rater's input, simply click on the 
+radio button corresponding to the rater and a window will pop up with an option 
+to choose.</span></p>
+
+<p ><span >The result presented is downloadable by 
+clicking on the <b style="">Download 
+</b>button.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132883"><img src="Processing_image/image062.jpg" height="301" width="640"> </a></span></p>
+
+<p  style="text-align: center;" align="center"><span ><img src="Processing_image/image064.jpg" height="206" width="639"> </span></p>
+
+<p  style="text-align: center;" align="center"><span >&nbsp;<img src="Processing_image/image066.jpg" height="331" width="640"></span></p>
+
+<p  style="text-align: center;" align="center"><span ><img src="Processing_image/image068.jpg" height="22" width="640"> </span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >29. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Rater&rsquo;s 
+input for Target</span></span></p>
+
+<p  style="text-align: justify;"><span >The download 
+prompt will appear. Click on the <b style=""><u>S</u>ave</b> button and select the 
+location where the file will be saved.</span></p>
+
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132884"><img src="Processing_image/image070.jpg" height="273" width="404"> </a></span></p>
+
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >30. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Download 
+Prompt</span></span></p>
+
+
+<p ><span >To calculate results from Figure 27, click 
+on <b style="">Calculate</b> and the following 
+prompt will appear:</span></p>
+<p  style="text-align: center;" align="center"><span ><a name="_Toc201132885"><img src="Processing_image/image072.jpg" height="126" width="584"></a></span></p>
+<p style="text-align: center;" align="center"><span style="font-weight: normal; font-size: 11pt;" >Figure 
+</span><span style=""><span style="font-weight: normal; font-size: 11pt;" >31. 
+</span></span><span style=""><span style="font-weight: normal; font-size: 11pt;" >Calculation 
+confirmation</span></span></p>
+<p  style="text-align: center;" align="center"><span ></span></p>
+</div>
+</body>
+</html>

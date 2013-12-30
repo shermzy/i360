@@ -1,0 +1,589 @@
+<%@ page import="java.sql.*"%>
+<%@ page import="java.io.*"%>
+<%@ page import="java.util.*"%>
+<%@ page import="java.text.*"%>
+<%@ page import="java.lang.String"%>  
+<%@ page pageEncoding="UTF-8"%>
+<%//by Yiting 19/09/2008 Fix jsp files to support Thai Language%>                 
+<jsp:useBean id="db" class="CP_Classes.Database" scope="session"/>
+<jsp:useBean id="assignTR" class="CP_Classes.AssignTarget_Rater" scope="session"/>
+<jsp:useBean id="CE_Survey" class="CP_Classes.Create_Edit_Survey" scope="session"/>
+<jsp:useBean id="user" class="CP_Classes.User" scope="session"/>
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>   
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+</head>
+<SCRIPT LANGUAGE=JAVASCRIPT>
+function closeME(form)
+{ 
+	form.action = "AssignTR_TargetMenu_AddRater.jsp?close=1";
+	form.method="post";
+	form.submit();
+}
+function refresh(form, field1, field2, field3)
+{
+	form.action="AssignTR_TargetMenu_AddRater.jsp?refresh="+field1.value + "&div=" + field2.value + "&dept=" + field3.value;
+	form.method="post";
+	form.submit();	
+}
+
+function add(form)
+{
+	form.action="AssignTR_TargetMenu_AddRater.jsp?add=1";
+	form.method="post";
+	form.submit();	
+}
+
+function raterChange(form,field)
+{
+	form.action="AssignTR_TargetMenu_AddRater.jsp?change="+field.value;
+	form.method="post";
+	form.submit();	
+}
+
+function checkedAll(form, field, checkAll)
+{	
+	if(checkAll.checked == true) 
+		for(var i=0; i<field.length; i++)
+			field[i].checked = true;
+	else 
+		for(var i=0; i<field.length; i++)
+			field[i].checked = false;	
+}
+
+void function populateDept(form, field)
+{
+	form.action = "AssignTR_TargetMenu_AddRater.jsp?div=" + field.value;
+	form.submit();
+}
+
+void function populateGrp(form, field1, field2)
+{
+	form.action = "AssignTR_TargetMenu_AddRater.jsp?div=" + field1.value + "&dept=" + field2.value;
+	form.submit();
+}
+
+
+</SCRIPT>
+<body>
+<%
+
+String username=(String)session.getAttribute("username");
+if (!logchk.isUsable(username)) 
+  {%> <font size="2">
+   
+    <script>
+	parent.location.href = "index.jsp";
+	</script>
+<%  } 
+
+
+if(request.getParameter("refresh") != null)
+{
+	String div_str = request.getParameter("selDivision");
+	String dept_str = request.getParameter("selDepartment");
+	String group_str = request.getParameter("refresh");
+
+	if(group_str != null && group_str.length() != 0)
+	{
+		int group = Integer.parseInt(group_str);
+		assignTR.setGroupID(group);
+	}
+	else
+	{
+		assignTR.setGroupID(0);
+	}
+	if(div_str != null && div_str.length() != 0)
+	{
+		int div = Integer.parseInt(div_str);
+		assignTR.setDivID(div);
+	}
+	else
+	{
+		assignTR.setDivID(0);
+	}
+	if(dept_str != null && dept_str.length() != 0)
+	{
+		int dept = Integer.parseInt(dept_str);
+		assignTR.setDeptID(dept);
+	}
+	else
+	{
+		assignTR.setDeptID(0);
+	}
+	
+	assignTR.set_selectedRaterID(0);
+}
+
+if(request.getParameter("change") != null)
+{
+	int var2 = new Integer(request.getParameter("change")).intValue();
+	assignTR.set_selectedRaterID(var2);
+}
+
+if(request.getParameter("add") != null)
+{
+		String [] chkUser = request.getParameterValues("chkUser");
+	 
+		if(chkUser != null)
+		{ 
+	   		for(int i=0; i<chkUser.length; i++)
+			{
+				String relation [] = request.getParameterValues("selRelation"+chkUser[i]);
+
+					for(int j=0; j<relation.length; j++)
+					{
+						int RelHigh=0;
+						int RelSpec=0;
+						String RaterCode=" ";
+						
+						int raterID = Integer.parseInt(chkUser[i]);
+						String Rel = relation[j];
+						
+						if(Rel.substring(0,4).equals("High"))
+							RelHigh = Integer.parseInt(Rel.substring(4)); 	
+						else if(Rel.substring(0,4).equals("Spec"))
+						{
+							RelSpec = Integer.parseInt(Rel.substring(4)); 
+							RelHigh = assignTR.getRelationHighID(RelSpec);		
+						}
+						
+						RaterCode = assignTR.RaterCode(CE_Survey.getSurvey_ID(), RelHigh, RelSpec,assignTR.get_selectedTargetID());
+									
+						assignTR.addRater(CE_Survey.getSurvey_ID(), assignTR.get_selectedTargetID(), raterID, RelHigh, RelSpec, RaterCode, logchk.getPKUser());
+					}
+			}
+		}
+		assignTR.set_selectedTargetID(0);
+		assignTR.set_selectedAssID(0);
+%>
+<script>
+location.href = "AssignTarget_Rater.jsp";
+
+</script>
+<%
+}
+
+if(request.getParameter("close") != null)
+{	
+	assignTR.set_selectedTargetID(0);
+	assignTR.set_selectedAssID(0);
+	%>
+	<script>
+		location.href ='AssignTarget_Rater.jsp';
+	</script>
+<%
+}
+
+if(request.getParameter("div") != null)
+{
+	if(request.getParameter("div").length() > 0)
+	{
+		int divID = Integer.parseInt(request.getParameter("div"));
+		assignTR.setDivID(divID);
+	}
+	else
+	{
+		assignTR.setDivID(0);
+	}
+}
+
+if(request.getParameter("dept") != null)
+{
+	if(request.getParameter("dept").length() > 0)
+	{
+		int deptID = Integer.parseInt(request.getParameter("dept"));
+		assignTR.setDeptID(deptID);
+	}
+	else
+	{
+		assignTR.setDeptID(0);
+	}
+}
+
+/************************************************** ADDING TOGGLE FOR SORTING PURPOSE *************************************************/
+
+	int toggle = assignTR.getToggle();	//0=asc, 1=desc
+	int type = 1; //1=name, 2=origin		
+			
+	if(request.getParameter("name") != null)
+	{	 
+		if(toggle == 0)
+			toggle = 1;
+		else
+			toggle = 0;
+		
+		assignTR.setToggle(toggle);
+		
+		type = Integer.parseInt(request.getParameter("name"));			 
+		assignTR.setSortType(type);									
+	} 
+
+	
+/*********************************************************END ADDING TOGGLE FOR SORTING PURPOSE *************************************/
+
+%>
+<form name="AssignTR_targetMenu_AddRater" action="AssignTR_targetMenu_AddRater.jsp" method="post">
+<table border="0" width="610">
+	<tr>
+		<td><b><font face="Arial" size="2"><font color="#000080"><%= trans.tslt("Add Rater") %></font>
+		</font></b></td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+	</tr>
+</table>
+<table border="1" width="610" bgcolor="#FFFFFF" bordercolor="#FFFFFF" style="border-left-width: 0px; border-right-width: 0px" cellspacing="1">
+	<tr>
+		<td width="174" style="border-right-style:solid; border-right-width:1px; border-bottom-style:solid; border-bottom-width:1px; border-top-style:solid; border-top-width:1px" height="22" align="left" bgcolor="#FFFFCC" bordercolor="#3399FF" colspan="2">
+		<font size="2">
+   
+    	<font face="Arial" style="font-weight:700" size="2">&nbsp;
+    	<%= trans.tslt("Selected Survey") %>:</font></td>
+		<td style="border-left-style:solid; border-left-width:1px; border-bottom-style:solid; border-bottom-width:1px; border-top-style:solid; border-top-width:1px" height="22" bgcolor="#FFFFCC" bordercolor="#3399FF" colspan="2" width="448">
+<font face="Arial" size="2">
+<%	
+	String SurveyName=" ";
+	int Org = 0;
+	ResultSet rs = CE_Survey.getSurveyDetail(CE_Survey.getSurvey_ID());
+	if(rs.next())
+	{
+		SurveyName = rs.getString("SurveyName");
+	}
+%>
+	&nbsp<%=SurveyName%>
+
+
+
+</font>
+
+</td>
+	</tr>
+	<tr>
+<%
+	String [] TargetDetail = new String[13];
+	TargetDetail = user.getUserDetail(assignTR.get_selectedTargetID(),assignTR.get_NameSequence());
+%>	
+		<td width="174" height="25" style="border-right-style:solid; border-right-width:1px; border-top-style:solid; border-top-width:1px; border-bottom-style:solid; border-bottom-width:1px" align="left" bgcolor="#FFFFCC" bordercolor="#3399FF" colspan="2">
+		<font size="2">
+   
+    	<font face="Arial" style="font-weight:700" size="2">
+		&nbsp;<%= trans.tslt("Target Family Name") %>:</font></td>
+		<td height="25" style="border-left-style:solid; border-left-width:1px; border-top-style:solid; border-top-width:1px; border-bottom-style:solid; border-bottom-width:1px" bgcolor="#FFFFCC" bordercolor="#3399FF" colspan="2" width="448">
+		<font face="Arial" size="2">&nbsp;<%=TargetDetail[0]%></font></td>
+	</tr>
+	<tr>
+		<td width="174" style="border-right-style:solid; border-right-width:1px; border-top-style:solid; border-top-width:1px; border-bottom-style:solid; border-bottom-width:1px" align="left" bgcolor="#FFFFCC" bordercolor="#3399FF" colspan="2">
+		&nbsp;<font face="Arial" style="font-weight:700" size="2">
+		<%= trans.tslt("Target Other Name") %>:</font></td>
+		<td style="border-left-style:solid; border-left-width:1px; border-top-style:solid; border-top-width:1px; border-bottom-style:solid; border-bottom-width:1px" bgcolor="#FFFFCC" bordercolor="#3399FF" colspan="2" width="448">
+		<font face="Arial" size="2">&nbsp;<%=TargetDetail[1]%></font></td>
+	</tr>
+</table>
+<p></p>
+<table width=610 bgcolor="#FFFFCC">
+	<tr>
+		<td style="border-right-style:solid; border-right-width:1px; border-top-style:solid; border-top-width:1px; border-bottom-style:solid; border-bottom-width:1px" align="left" bgcolor="#000080" bordercolor="#3399FF" colspan="4">
+		<font size="2">
+   
+    	<font color="#FFFFFF">
+   
+    	<font face="Arial" style="font-weight:700" size="2">&nbsp;</font><b><font face="Arial" size="2">
+    	<%= trans.tslt("Search Name Through") %>:</font></b></font><font face="Arial" size="2">&nbsp </font></td>
+	</tr>
+	<tr>
+		<td style="border-left-style:solid; border-left-width:1px; border-right-style:solid; border-right-width:1px; border-bottom-style:none; border-bottom-width:medium; border-top-style:none; border-top-width:medium" colspan="4" bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">&nbsp;</td>
+	</tr>
+	<tr>
+		<td width="9" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: solid; border-bottom-width: 1px" bordercolor="#FFFFCC" bgcolor="#FFFFCC" rowspan="7" bordercolorlight="#FFFFCC">&nbsp;
+		</td>
+		<td width="164" style="border-style:none; border-width:medium; " bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">
+		<b><font face="Arial" size="2">&nbsp;<%= trans.tslt("Division") %>:</font></b></td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium" colspan="2" bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">
+		<font size="2">	  <select size="1" name="selDivision" onChange="populateDept(this.form, this.form.selDivision)">
+          <%
+		  //System.out.println("DivisionID ff: " + ssignTR.getDivID());
+	if(assignTR.getDivID() == 0)%>
+          <option value='' selected>All Divisions</option>
+          <%
+	String sql3 = "SELECT * FROM Division WHERE FKOrganization ="+CE_Survey.get_survOrg()+" ORDER BY DivisionName";
+	ResultSet rs_command1 = db.getRecord(sql3);		
+	while(rs_command1.next())
+	{
+
+		int div_ID = rs_command1.getInt("PKDivision");
+		String div_Name = rs_command1.getString("DivisionName");
+
+	if(assignTR.getDivID() != 0 && assignTR.getDivID() == div_ID)
+	{
+	%>
+          <option value=<%=div_ID%> selected><%=div_Name%></option>
+          <%	}else{%>
+          <option value=<%=div_ID%>><%=div_Name%></option>
+          <%	}
+}	%>
+        </select></td>
+	</tr>
+	<tr>
+		<td width="164" style="border-style:none; border-width:medium; " bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">&nbsp;
+		</td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium" colspan="2" bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">&nbsp;
+		</td>
+	</tr>
+	<tr>
+		<td width="164" style="border-style:none; border-width:medium; " bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">
+		<b><font face="Arial" size="2">&nbsp;<%= trans.tslt("Department") %>:</font></b></td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium" colspan="2" bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">
+		<font size="2">
+   
+    	    	    	<select size="1" name="selDepartment" onChange="populateGrp(this.form, this.form.selDivision, this.form.selDepartment)">
+<%	
+	if(assignTR.getDeptID() == 0)%>
+				<option value='' selected>All Departments</option>
+<%
+	int divID = 0;
+	if(request.getParameter("div") != null)
+	{
+		if(request.getParameter("div").length() > 0)
+		{
+			divID = Integer.parseInt(request.getParameter("div")); 
+			assignTR.setDivID(divID);
+		}
+	}
+	String sql2 = "SELECT * FROM Department WHERE FKOrganization ="+CE_Survey.get_survOrg()+" AND FKDivision =" + divID + " ORDER BY DepartmentName";
+	ResultSet rs_command2 = db.getRecord(sql2);		
+	while(rs_command2.next())
+	{
+
+		int dep_ID = rs_command2.getInt("PKDepartment");
+		String dep_Name = rs_command2.getString("DepartmentName");
+
+	if(assignTR.getDeptID() != 0 &&assignTR.getDeptID() == dep_ID)
+	{
+	%>
+		<option value=<%=dep_ID%> selected><%=dep_Name%></option>
+<%	}else{%>		
+		<option value=<%=dep_ID%>><%=dep_Name%></option>
+
+<%	}
+}	%>			
+		</select>
+		</td>
+	</tr>
+	<tr>
+		<td width="164" style="border-style:none; border-width:medium; " bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">&nbsp;
+		</td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium" colspan="2" bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">&nbsp;</td>
+	</tr>
+	
+	<tr>
+		<td width="164" style="border-style:none; border-width:medium; " bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">
+		<b><font face="Arial" size="2">&nbsp;<%= trans.tslt("Group") + " / " + trans.tslt("Section") %>:</font></b></td>
+		<td style="border-style:none; border-width:medium; " width="328" bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC"><font face="Arial"><span style="font-size: 11pt">
+		<select size="1" name="GroupName">
+		<%
+if(assignTR.getGroupID() == 0)
+%>
+		<option value='' selected>All Groups</option>
+<%
+	int deptID = 0;
+	if(request.getParameter("dept") != null)
+	{
+		if(request.getParameter("dept").length() > 0)
+		{
+			deptID = Integer.parseInt(request.getParameter("dept"));
+			assignTR.setDeptID(deptID);
+		}
+	}
+	
+	String sqlx = "SELECT * FROM [Group] WHERE FKOrganization ="+CE_Survey.get_survOrg()+" AND FKDepartment = " + deptID + " ORDER BY GroupName";
+	ResultSet rs_Group = db.getRecord(sqlx);		
+	while(rs_Group.next())
+	{
+
+		int Group_ID = rs_Group.getInt("PKGroup");
+		String Group_Desc = rs_Group.getString("GroupName");
+		
+		if(assignTR.getGroupID() == Group_ID)
+		{
+%>			
+	<option value=<%=Group_ID%> selected><%=Group_Desc%></option>
+<%		}
+		else
+		{
+%>			<option value=<%=Group_ID%>><%=Group_Desc%></option>
+<%		}	
+		
+	}%>				
+		</select></span></font></td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium" width="75" bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC"> </td>
+	</tr>
+	<tr>
+		<td width="164" style="border-left-style:none; border-left-width:medium; border-right-style:none; border-right-width:medium; border-top-style:none; border-top-width:medium; border-bottom-style:solid; border-bottom-width:1px" bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">&nbsp;
+		</td>
+		<td style="border-left-style:none; border-left-width:medium; border-right-style:none; border-right-width:medium; border-top-style:none; border-top-width:medium; border-bottom-style:solid; border-bottom-width:1px" width="328" bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC"> <font size="2">
+   
+		<input type="button" value="<%= trans.tslt("Search") %>" name="btnSearch" style="float: left" onclick="refresh(this.form, this.form.GroupName, this.form.selDivision, this.form.selDepartment)"></td>
+		<td style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: solid; border-bottom-width: 1px" width="75" bordercolor="#FFFFCC" bgcolor="#FFFFCC" bordercolorlight="#FFFFCC">&nbsp; </td>
+	</tr>
+	</table>
+<p></p>
+<table border="1" width="610" bgcolor="#FFFFCC" bordercolor="#3399FF">
+	<tr>
+		<td colspan="5" bgcolor="#000080">
+		<p align="center">
+		<b><font face="Arial" size="2" color="#FFFFFF"><%= trans.tslt("Raters") %></font></b></td>
+	</tr>
+	<tr>
+		<td width="28" align="center" bgcolor="#000080">
+		<input type="checkbox" name="checkAll" onclick="checkedAll(this.form, this.form.chkUser,this.form.checkAll)">
+		
+		</td>
+		<td width="146" align="center" bgcolor="#000080">
+		<b>
+		<a href="AssignTR_TargetMenu_AddRater.jsp?name=1">
+		<font style='font-family:Arial;color:white' size="2">
+		<u><%= trans.tslt("Family Name") %></u></font></a></b></td>
+		<td width="171" align="center" bgcolor="#000080">
+		<b>
+		<a href="AssignTR_TargetMenu_AddRater.jsp?name=2"><font style='font-family:Arial;color:white' size="2">
+		<u><%= trans.tslt("Other Name") %></u></font></a></b></td>
+		<td width="165" align="center" bgcolor="#000080">
+		<b>
+		<a href="AssignTR_TargetMenu_AddRater.jsp?name=3"><font style='font-family:Arial;color:white' size="2">
+		<u><%= trans.tslt("Login Name") %></u></font></a></b></td>
+		<td width="165" align="center" bgcolor="#000080">
+		<b><font face="Arial" size="2" color="#FFFFFF"><%= trans.tslt("Relation") %></font></b></td>
+	</tr>
+<%
+	
+
+if(request.getParameter("refresh") != null)
+{
+	int PKUser=0;
+	boolean filtered = false;		// added by Jenty on 1 Dec 04
+	
+	String RaterDetail[] = new String[13];
+	String sql = "SELECT * FROM [User] WHERE (PKUser NOT IN (SELECT RaterLoginID FROM tblAssignment WHERE TargetLoginID = "+assignTR.get_selectedTargetID()+" AND SurveyID= "+CE_Survey.getSurvey_ID()+")) AND FKUserType360 != 1 ";
+	if(assignTR.getGroupID() != 0)
+	{
+	 	sql = sql + "AND Group_Section = "+assignTR.getGroupID();
+	 	filtered = true;
+	}
+	if(assignTR.getDeptID() != 0)
+	{
+	 	sql = sql + "AND FKDepartment = "+assignTR.getDeptID();
+	 	filtered = true;
+	}
+	if(assignTR.getDivID() != 0)
+	{
+	 	sql = sql + "AND FKDivision = "+assignTR.getDivID();
+	 	filtered = true;
+	}
+	sql = sql + "AND FKOrganization = "+CE_Survey.get_survOrg()+" ORDER BY ";
+	
+	if(assignTR.getSortType() == 1)
+			sql = sql + "FamilyName";
+		else if(assignTR.getSortType() == 2)
+			sql = sql + "GivenName";
+		else if(assignTR.getSortType() == 3)
+			sql = sql + "LoginName";
+
+		if(assignTR.getToggle() == 1)
+			sql = sql + " DESC";
+	
+	ResultSet rs_rater = null;
+	
+	if(filtered == true || (request.getParameter("refresh") != null)) {
+		rs_rater = db.getRecord(sql);	
+
+	while(rs_rater.next())
+	{
+		PKUser = rs_rater.getInt("PKUser");
+		RaterDetail = user.getUserDetail(PKUser, assignTR.get_NameSequence());
+	%>	
+	<tr onMouseOver = "this.bgColor = '#99ccff'"
+    	onMouseOut = "this.bgColor = '#FFFFcc'">
+		<td width="28" align="center">
+		<font face="Arial"><span style="font-size: 11pt">
+		<input type="checkbox" name="chkUser" value=<%=PKUser%>></span></font></td>
+		<td width="146" align="center">
+		<font face="Arial" size="2"><%=RaterDetail[1]%></font></td>
+		<td width="171" align="center">
+		<font face="Arial" size="2"><%=RaterDetail[0]%></font></td>
+		<td width="165" align="center">
+		<font face="Arial" size="2"><%=RaterDetail[2]%></font></td>
+		<td width="165" align="center">
+		<font face="Arial" size="2">
+
+		<select size="1" name=<%="selRelation"+PKUser%>>
+<%
+	String sqla = "SELECT * FROM tblRelationHigh";
+	String sql1 = "SELECT * FROM tblRelationSpecific WHERE FKOrganization="+CE_Survey.get_survOrg();
+	
+	if(assignTR.get_selectedTargetID() == PKUser)
+	{
+		sqla = sqla+" WHERE RelationID = 2";
+		sql1 = sql1+" AND RelationID = 2";
+	}
+	else
+	{
+		sqla = sqla+" WHERE RelationID != 2";
+		sql1 = sql1+" AND RelationID != 2";
+	}
+		sqla = sqla+" ORDER BY RelationHigh";
+		sql1 = sql1+" ORDER BY RelationSpecific";
+		ResultSet rs_relHigh = db.getRecord(sqla);		
+		while(rs_relHigh.next())
+		{
+			int RelID = rs_relHigh.getInt("RelationID");
+			String RelHigh = rs_relHigh.getString("RelationHigh");
+	%>		
+			<option value=<%="High"+RelID%>><%=RelHigh%></option>
+	<%	
+		//System.out.println("RIANTONEW 'High" + RelID + ", " + RelHigh + "'");
+		
+		}
+	
+		ResultSet rs_relSpec = db.getRecord(sql1);
+		while(rs_relSpec.next())
+		{
+			int SpecID = rs_relSpec.getInt("SpecificID");
+			String RelSpec = rs_relSpec.getString("RelationSpecific");
+	%>
+			%>		
+			<option value=<%="Spec"+SpecID%>><%=RelSpec%></option>
+	<%		
+	//System.out.println("RIANTONEW 'Spec" + SpecID + ", " + RelSpec + "'");
+		}
+	%>
+		
+		</select>
+		</font>
+	</td>
+</tr>
+<%	}
+}
+}
+%>
+</table>
+<p></p>
+<table width=610>
+	<tr>
+		<td width="538">&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td width="538">
+		<input type="button" value="<%= trans.tslt("Add") %>" name="btnAdd" style="float: right" onclick="add(this.form, this.form.chkUser)"></td>
+		<td>
+		<input type="button" value="<%= trans.tslt("Cancel") %>" name="btnCancel" style="float: right" onclick="closeME(this.form)"></td>
+	</tr>
+</table>
+</form>
+
+</body>
+</html>

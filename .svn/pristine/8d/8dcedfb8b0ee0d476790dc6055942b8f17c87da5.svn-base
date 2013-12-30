@@ -1,0 +1,64 @@
+/* CSS Document */
+
+BODY{
+	font-size: 10.0pt;
+	font-family: Arial;
+	font-family: arial;
+}
+
+.fontstyle {
+	font-size: 10.0pt;
+	font-family: Arial;
+	font-family: arial;
+}
+
+.PageHeader {
+	font-size: 10pt;
+	color: #000099;
+	font-weight:bold;
+}
+
+.header {
+	font-size: 10.0 pt;
+	font-style:normal;
+	font-family: arial;
+	color:white;
+	font-weight: bold;
+	text-align: center;
+	background-color:navy;
+}
+
+textarea {
+	font-size: 10.0 pt;
+	font-style: normal;
+	font-family: arial;
+}
+
+.tablesetting {
+	width: 593px;
+	font-size: 10.0pt;
+	font-family: Arial;
+	border: 0;
+	border-color: #3399FF;
+}
+
+.tablesetting1 {
+	width: 593px;
+	font-size: 10.0pt;
+	font-family: Arial;
+	border: 1;
+	border-color: #3399FF;
+	bgcolor : #FFFFCC;
+}
+
+.tdata {
+	border-style: solid;
+	border-width: 1px;
+	bordercolor : #3399FF;
+}
+
+fontstyle{
+    font-size: 10.0 pt;
+	font-family: arial;
+	
+}

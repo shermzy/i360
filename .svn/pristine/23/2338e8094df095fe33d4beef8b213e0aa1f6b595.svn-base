@@ -1,0 +1,647 @@
+<%@ page import="java.sql.*,
+                 java.io.*,
+                 javazoom.upload.*,
+                 java.lang.String,
+                 java.util.Vector,
+                 CP_Classes.vo.votblUserRelation,
+				 CP_Classes.vo.votblOrganization,
+				 CP_Classes.vo.votblSurvey,
+				 CP_Classes.AssignTarget_Rater,
+				 CP_Classes.vo.voUser"%>   
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>                   
+<jsp:useBean id="Rpt7" class="CP_Classes.Report_ListOfTarget" scope="session"/>
+<jsp:useBean id="setting" class="CP_Classes.Setting" scope="session"/>
+<jsp:useBean id="CE_Survey" class="CP_Classes.Create_Edit_Survey" scope="session"/>
+<jsp:useBean id="db" class="CP_Classes.Database" scope="session"/>
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+<jsp:useBean id="email" class="CP_Classes.ReminderCheck" scope="session"/>
+<jsp:useBean id="user_Jenty" class="CP_Classes.User_Jenty" scope="session"/>
+<jsp:useBean id="user" class="CP_Classes.User" scope="session"/>
+<% 	// added to check whether organisation is a consulting company
+// Mark Oei 09 Mar 2010 %>
+<jsp:useBean id="Org" class="CP_Classes.Organization" scope="session"/>
+<%
+//added by Xuehai 19 May 2011
+//Add attachment to nomination email
+//limit the upload attachment size to be 1MB maximum and only five types of file can be accepted: *.doc,*.docx,*.xls,*.xlsx,*.pdf
+%>
+<jsp:useBean id="upBean" scope="page" class="javazoom.upload.UploadBean" >
+    <jsp:setProperty name="upBean" property="folderstore"/>
+    <jsp:setProperty name="upBean" property="filesizelimit" value="1048576" />
+    <jsp:setProperty name="upBean" property="whitelist" value="*.doc,*.docx,*.xls,*.xlsx,*.pdf" />
+</jsp:useBean>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<%@ page pageEncoding="UTF-8"%>
+<%// by lydia Date 05/09/2008 Fix jsp file to support Thai language %>
+</head>
+<SCRIPT LANGUAGE="JavaScript">
+function proceed(form,field)
+{
+	form.action="SendNominationEmail.jsp?proceed="+field.value;
+	form.method="post";
+	form.submit();
+}
+
+function updateCboSup(form)
+{
+	form.action="SendNominationEmail.jsp";
+	form.method="post";
+	form.submit();
+}
+
+function preview(form, field)
+{
+	if(field.value != 0) {
+		// Edited by junwei on 3 March 2008
+		var getRadio = document.getElementsByName("optSend");
+		var selectedRadio;
+		
+		//Get the selected radio button
+		for(i = 0; i < getRadio.length; i++){
+			if(getRadio[i].checked){
+				selectedRadio = i;
+			}
+		}
+		
+		//Check whether supervisor has been assign
+		if((selectedRadio == 0)){
+			form.action="SendNominationEmail.jsp?preview=" + field.value;
+			form.method="post";
+			form.submit();
+		}
+		else{
+			if(SendNominationEmail.selSup.value != 0){
+				form.action="SendNominationEmail.jsp?preview=" + field.value;
+				form.method="post";
+				form.submit();
+			}
+			else{
+				//Edited by Xuehai 20 May 2011, change 'Supervisor' to 'Target'.
+				//alert("Please select Supervisor");
+				alert("Please select Target");
+			}
+		}
+		
+	} else {
+		alert("Please select Survey");
+	}
+}
+</script>
+
+
+
+<body>
+<%
+//Added by Xuehai, 19 May 2011.
+//To get multipart form data, create a MultipartFormDataRequest instead of http request.
+//However, for the data sent by get mode, still using request.getParameter, otherwise, MultipartFormDataRequest mrequest.getParameter();
+//Mutlipart Form Data Request
+MultipartFormDataRequest mrequest = null;
+//Multipart Form Data Request Check    
+if (MultipartFormDataRequest.isMultipartFormData(request)) {
+    //Get Multipart Form Data Request
+    mrequest = new MultipartFormDataRequest(request);
+    System.out.println("This is a multipartForm request.");
+}//End of Multipart Form Data Request Check
+
+boolean enableBtnPreview = false; //Added by ping yang on 30/7/08 to disable 'Preview" button when no supervisor
+String username=(String)session.getAttribute("username");
+
+  if (!logchk.isUsable(username)) 
+  {%> <font size="2">
+   
+	<script>
+	parent.location.href = "index.jsp";
+	</script>
+<%  } 
+  else 
+  {   
+if(request.getParameter("proceed") != null)
+{ 
+	int var2 = new Integer((mrequest==null?request.getParameter("selOrg"):mrequest.getParameter("selOrg"))).intValue();
+	CE_Survey.set_survOrg(var2);
+	//Added to change the display organization name
+	//Mark Oei 16 April 2010
+ 	logchk.setOrg(var2);
+}
+
+if(request.getParameter("preview") != null)
+{
+	int SurveyID = Integer.parseInt(request.getParameter("preview"));
+	int iReminder = 0;
+	int errorFlag = 0;
+	
+	if((mrequest==null?request.getParameter("chkReminder"):mrequest.getParameter("chkReminder")) != null)
+		iReminder = 1;
+	else
+		iReminder = 0;
+		
+	if((mrequest==null?request.getParameter("optSend"):mrequest.getParameter("optSend")) != null)
+	{
+		if((mrequest==null?request.getParameter("optSend"):mrequest.getParameter("optSend")).equals("1"))
+		{
+			//Added by Xuehai 20 May 2011 Check if have attachment
+			//If any, First store the file and then attach it to the email.
+			String sFileName=null;
+			boolean isFileNotFoundError=true;
+			if(mrequest != null)
+			{
+				//Start of Try-Catch
+				try{
+		            //Get Files Hashtable
+		            Hashtable files = mrequest.getFiles();
+		            upBean.setFolderstore(setting.getReport_Path());
+		            
+					//Files Null and Is Empty Check
+					if((files != null) && (!files.isEmpty())) {
+						//Get File 
+						UploadFile file = (UploadFile) files.get("uploadfile");
+		
+						//File Null Check
+						if(file != null) {
+							sFileName = file.getFileName();
+							//File Name Null Check
+							if(sFileName != null) {
+								upBean.store(mrequest, "uploadfile");
+							}
+						}//End of check and store file
+					}//End of Files Null and Is Empty Check
+				}catch(Exception ex) {
+					//Exception when uploading files
+					sFileName=null;
+					isFileNotFoundError = false;
+%>
+					<script>
+                        alert('<%=trans.tslt("Sorry, only DOC, EXCEL and PDF files can be accepted, within maximum size 1MB.")%>');
+                    </script>
+<%
+				}//End of try/catch
+			}
+			if(isFileNotFoundError){
+				//Added by Roger 30 June 2008
+				//Edited by Xuehai 20 May 2011, if have attachment
+				if(sFileName != null){
+					errorFlag = email.Sup_Nominate(SurveyID,iReminder, sFileName);
+				}else{
+					errorFlag = email.Sup_Nominate(SurveyID,iReminder);
+				}
+				String reminder = iReminder==1 ? reminder ="(Reminder)": "";
+				if (errorFlag == 1) {
+%>
+ 					<script>alert('You need to create a normination notification template <%=reminder %> before sending ')</script>  
+<%			
+				}
+				//End of Add
+			}
+		}
+		else
+		{
+			
+			if((mrequest==null?request.getParameter("selSup"):mrequest.getParameter("selSup")) != null)
+			{
+				int SupID = new Integer((mrequest==null?request.getParameter("selSup"):mrequest.getParameter("selSup"))).intValue();
+				//Edited By Su See
+				
+				votblUserRelation rs_Rel = user.getUserRelation(SupID, SurveyID);
+				boolean supExist = true;
+				int relType = 0;
+				int user1 = 0;
+
+				relType = rs_Rel.getRelationType();
+				user1 = rs_Rel.getUser1();
+					
+				if(relType == 0)
+				{
+					supExist = false;
+				}
+					
+				//Added by Xuehai 20 May 2011 Check if have attachment
+				//If any, First store the file and then attach it to the email.
+				String sFileName=null;
+				boolean isFileNotFoundError=true;
+				if(mrequest != null){
+					//Start of Try-Catch
+					try{
+			            //Get Files Hashtable
+			            Hashtable files = mrequest.getFiles();
+			            upBean.setFolderstore(setting.getReport_Path());
+			            
+						//Files Null and Is Empty Check
+						if((files != null) && (!files.isEmpty())) {
+							//Get File 
+							UploadFile file = (UploadFile) files.get("uploadfile");
+			
+							//File Null Check
+							if(file != null) {
+								sFileName = file.getFileName();
+								//File Name Null Check
+								if(sFileName != null) {
+									upBean.store(mrequest, "uploadfile");
+								}
+							}//End of check and store file
+						}//End of Files Null and Is Empty Check
+					}catch(Exception ex) {
+						//Exception when uploading files
+						sFileName=null;
+						isFileNotFoundError = false;
+						%>
+						<script>
+	                        alert('<%=trans.tslt("Sorry, only DOC, EXCEL and PDF files can be accepted, within maximum size 1M.")%>');
+	                    </script>
+						<%
+					}//End of try/catch
+				}
+				
+				if(isFileNotFoundError){
+					if(supExist){
+						//Edited by Xuehai 20 May 2011, check if have attachment
+						if(sFileName != null){
+							errorFlag = email.Sup_Nominate(SurveyID,SupID, iReminder, sFileName);
+						}else{
+							errorFlag = email.Sup_Nominate(SurveyID,SupID, iReminder);
+						}
+						//Added by Roger 30 June 2008
+						String reminder = iReminder==1 ? reminder ="(Reminder)": "";
+						if (errorFlag == 1) {
+						%>
+							<script>alert('You need to create a normination notification template <%=reminder %> before sending ')</script>  
+						<%}//-- End of Add
+					}else{
+					%>
+					<script>
+					var answer=confirm("No Supervisor for this User. Send email to Target?")
+					if(answer)
+					{
+						//Send Email to User
+						var url=new Array();
+						url.push('SendNominationEmail.jsp?emailUser=1&SupID=');
+						url.push(<%=user1%>);
+						url.push('&SurveyID=');
+						url.push(<%=SurveyID%>);
+						url.push('&Rem=');
+						url.push(<%=iReminder%>);
+						url.push('&file=');
+						url.push(escape('<%=(sFileName==null?"":sFileName)%>'));
+						//window.location.href ="SendNominationEmail.jsp?emailUser=1&SupID=" + <%=user1%> + "&SurveyID=" + <%=SurveyID%> + "&Rem=" + <%=iReminder%>;
+						window.location.href=url.join('');
+					}
+					</script>
+					<%}
+				}//End of isFileNotFoundError
+			}
+			else
+			{
+			%>
+			<script language = javascript>
+				//Edited by Xuehai 20 May 2011, change 'Supervisor' to 'Target'.
+				//alert("Please select Supervisor");
+				alert("Please select Target");
+			</script>
+			<%
+			}
+		}
+	}
+	
+	if (errorFlag == 0){			
+	System.out.println(trans.tslt("Emails Seasfefnt") + "!");
+	%>Email sent!<%
+	}else if(errorFlag==100){
+		%>Email sent! But error(s) occurred. Please refer to <a href='SentFailedEmail.jsp'>View Sent Failed Emails</a><%
+	}
+}
+
+//Send emails to users without supervisor
+System.out.println("Starting...Send emails to targets");
+if((request.getParameter("emailUser") != null) 
+	&& (request.getParameter("SupID") != null) 
+	&& (request.getParameter("SurveyID") != null) 
+	&& (request.getParameter("Rem") != null)){
+	
+	System.out.println("Send emails to targets");
+	int surveyID = Integer.parseInt(request.getParameter("SurveyID"));
+	System.out.println("SurveyID: " + surveyID);
+	int supID = Integer.parseInt(request.getParameter("SupID"));
+	System.out.println("SupID: " + supID);
+	int reminder = Integer.parseInt(request.getParameter("Rem"));
+	System.out.println("Reminder: " + reminder);
+	
+	//Added by Xuehai 20 May 2011 Check if have attachment
+	//If any, First store the file and then attach it to the email.
+	String sFileName=request.getParameter("file");
+	//boolean isFileNotFoundError=true;
+	
+	//if(isFileNotFoundError){
+	int errorFlag = 0;
+	//Edited by Xuehai 20 May 2011, check if have attachment
+	if(sFileName != null){
+		errorFlag = email.Sup_Nominate(surveyID,supID, reminder, sFileName);
+	}else{
+		errorFlag = email.Sup_Nominate(surveyID,supID, reminder);
+	}
+	
+	//Added by Roger 30 June 2008
+	if (errorFlag == 1) {
+	%>
+		<script>alert('You need to create a normination notification template <%=(reminder==1 ? "(Reminder)": "") %> before sending ')</script>  
+	<%
+	}
+	//End of Add
+	//}//End of isFileNotFoundError
+	System.out.println("Ending... Send emails to targets");
+}
+
+%>
+<form name="SendNominationEmail" action="SendNominationEmail.jsp" method="post" enctype="multipart/form-data">
+<table border="0" width="483" cellspacing="0" cellpadding="0">
+	<tr>
+		<td><b>
+		<font face="Arial" size="2" color="#000080"><%=trans.tslt("Send Nomination Emails")%></font></b></td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+	</tr>
+</table>
+<table border="2" width="483" cellspacing="0" cellpadding="0" bgcolor="#FFFFCC" bordercolor="#3399FF">
+		<tr>
+		<td width="117" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: solid; border-top-width: 1px; border-bottom-style: none; border-bottom-width: medium">&nbsp;</td>
+		<td width="228" style="border-left-style: none; border-left-width: medium; border-right-style: none; border-right-width: medium; border-top-style: solid; border-top-width: 1px; border-bottom-style: none; border-bottom-width: medium">&nbsp;
+		</td>
+		<td width="154" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: solid; border-top-width: 1px; border-bottom-style: none; border-bottom-width: medium">&nbsp; </td>
+	</tr>
+		<tr>
+		<td width="117" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">
+		<b><font face="Arial" size="2">&nbsp;Organisation:</font></b></td>
+		<td width="228" style="border-style: none; border-width: medium">
+		<p align="left">		
+
+<%
+	/*************************************************
+	*The following was edited by clement at 9-jan-2007
+	*************************************************/ 
+// Added to check whether organisation is also a consulting company
+// if yes, will display a dropdown list of organisation managed by this company
+// else, it will display the current organisation only
+// Mark Oei 09 Mar 2010
+	String [] UserDetail = new String[14];
+	UserDetail = CE_Survey.getUserDetail(logchk.getPKUser());
+	boolean isConsulting = true;
+	isConsulting = Org.isConsulting(UserDetail[10]); // check whether organisation is a consulting company 
+	if (isConsulting){ %>
+		<select size="1" name="selOrg" onchange="proceed(this.form,this.form.selOrg)">
+		<option value="0" selected><%=trans.tslt("All")%></option>
+		<%
+		Vector vOrg = logchk.getOrgList(logchk.getCompany());
+
+		for(int i=0; i<vOrg.size(); i++)
+		{
+			votblOrganization vo = (votblOrganization)vOrg.elementAt(i);
+			int PKOrg = vo.getPKOrganization();
+			String OrgName = vo.getOrganizationName();
+
+			if(logchk.getOrg() == PKOrg)
+			{ %>
+				<option value=<%=PKOrg%> selected><%=OrgName%></option>
+			<% } else { %>
+				<option value=<%=PKOrg%>><%=OrgName%></option>
+			<%	}	
+		} 
+	} else { %>
+		<select size="1" name="selOrg" onchange="proceed(this.form,this.form.selOrg)">
+		<option value=<%=logchk.getSelfOrg()%>><%=UserDetail[10]%></option>
+	<% } // End of isConsulting %>
+</select><font size="2"> </font>
+</td>
+		<td width="154" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium"> </td>
+	</tr>
+	<tr>
+		<td width="117" align="center" height="25" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">&nbsp;</td>
+		<td width="851" height="25" colspan="2" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">&nbsp;</td>
+	</tr>
+	<tr>
+		<td width="117" align="center" height="25" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">
+		<p align="left"><b><font face="Arial" size="2">&nbsp;Survey:</font></b></td>
+		<td width="851" height="25" colspan="2" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium"> <font size="2">
+   
+    	<select size="1" name="selSurvey" onChange="updateCboSup(this.form)">
+    	<option selected value=0>Please select a survey</option>
+<%
+	int iSurveyID=0;
+	if((mrequest==null?request.getParameter("selSurvey"):mrequest.getParameter("selSurvey")) != null)
+	{	
+		//System.out.println("selSurvey = '" + request.getParameter("selSurvey") + "'");
+		
+		if ((mrequest==null?request.getParameter("selSurvey"):mrequest.getParameter("selSurvey")).equals(""))
+			iSurveyID = 0;
+		else
+		{
+			iSurveyID = Integer.parseInt((mrequest==null?request.getParameter("selSurvey"):mrequest.getParameter("selSurvey")));	
+		}
+	}
+	
+	/*************************************************
+	*The following was edited by clement at 9-jan-2007
+	*************************************************/ 
+
+	boolean anyRecord=false;
+	/*String query ="SELECT * FROM tblSurvey a, tblOrganization b WHERE a.FKOrganization = b.PKOrganization "; 
+	
+	
+	if(CE_Survey.get_survOrg() != 0)
+		query = query+" AND a.FKOrganization = "+CE_Survey.get_survOrg();
+	else
+		query = query+"	AND a.FKCompanyID = "+logchk.getCompany();
+	
+	query += " AND (a.SurveyStatus = 1 OR a.SurveyStatus = 3 ) order by SurveyName";
+	
+	ResultSet rs_SurveyDetail = db.getRecord(query);
+	*/
+		
+	Vector v = CE_Survey.getSurveys(logchk.getCompany(), CE_Survey.get_survOrg());
+		
+	for(int i=0; i<v.size(); i++)
+	{
+		votblSurvey vo = (votblSurvey)v.get(i);
+		
+		anyRecord=true;
+		int Surv_ID = vo.getSurveyID();
+		String Surv_Name = vo.getSurveyName();
+		
+			if(iSurveyID!= 0 && iSurveyID== Surv_ID)
+			{%>
+				<option value=<%=Surv_ID%> selected><%=Surv_Name%></option>	
+		<%	}else
+			{%>
+				<option value=<%=Surv_ID%>><%=Surv_Name%></option>
+			<%	}
+	}%>
+</select></td>
+	</tr>
+		<tr>
+		<td width="117" align="center" height="25" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">&nbsp;
+		</td>
+		<td width="851" height="25" colspan="2" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">&nbsp; </td>
+		</tr>
+		<tr>
+		<td width="117" align="center" height="25" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">
+		<b><font face="Arial" size="2">
+		<% if((mrequest==null?request.getParameter("chkReminder"):mrequest.getParameter("chkReminder")) != null) 
+		{	System.out.println("Setting chkReminder to checked");
+			
+		%>
+			<input type="checkbox" name="chkReminder" value="1" checked>
+		<%
+		} 
+		else 
+		{ 
+			%>
+			
+			<input type="checkbox" name="chkReminder" value="0">
+		<%}%>
+		
+		&nbsp;</font></b></td>
+		<td width="851" height="25" colspan="2" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium"> 
+   
+    	<b><font face="Arial" size="2">Is Reminder Emails</font></b></td>
+			</tr>
+		<tr>
+		<td width="117" align="center" height="25" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">
+		<input type="radio" value="1" name="optSend" checked></td>
+		<td width="851" height="25" colspan="2" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium"> 
+		<b><font face="Arial" size="2">Send Nomination Emails to all Targets</font></b>
+		</td>
+		</tr>
+		<tr>
+		<td width="117" align="center" height="25" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">
+		<font size="2">		<input type="radio" value="2" name="optSend"></td>
+		<td width="851" height="25" colspan="2" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium"> 
+		<b><font face="Arial" size="2">Send Nomination Email to Specific Target</font></b></td>
+		</tr>
+		<tr>
+		<td width="117" align="center" height="25" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">
+		<p></td>
+		<td width="851" height="25" colspan="2" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium"> <font size="2">
+   <font face="Arial" size="2">&nbsp;<%=trans.tslt("Target")%>:</font>
+    	<select size="1" name="selSup">
+    	<option selected value=' '>&nbsp</option>
+<%
+if((mrequest==null?request.getParameter("selSurvey"):mrequest.getParameter("selSurvey")) != null){
+	
+	/*************************************************
+	*The following was edited by clement at 9-jan-2007
+	*************************************************/
+	
+	int iNameSequence = user_Jenty.NameSequence(logchk.getOrg());
+	int surveyOrg = CE_Survey.get_survOrg();
+	int comp = logchk.getCompany();
+	String selSurvey = (mrequest==null?request.getParameter("selSurvey"):mrequest.getParameter("selSurvey"));
+	
+	AssignTarget_Rater targetRater = new AssignTarget_Rater();
+	Vector vec = targetRater.getUserList(iNameSequence , surveyOrg , comp , selSurvey);
+	
+	//System.out.println("selSurvey not null");
+	/*query ="SELECT DISTINCT  [User].PKUser, [User].GivenName AS GivenName, [User].FamilyName AS FamilyName, [User].FKOrganization ";
+	query = query + "FROM tblAssignment INNER JOIN tblSurvey ON tblAssignment.SurveyID = tblSurvey.SurveyID INNER JOIN ";
+	query = query + "[User] INNER JOIN tblUserRelation ON [User].PKUser = tblUserRelation.User2 ON tblAssignment.TargetLoginID = tblUserRelation.User1 ";
+	query = query + "WHERE ";
+
+	if(CE_Survey.get_survOrg() != 0)
+		query = query+"[User].FKOrganization = "+CE_Survey.get_survOrg();
+	else
+		query = query+"[User].FKCompanyID = "+logchk.getCompany();
+	
+	if(iNameSequence == 0)
+		query = query + " AND (tblSurvey.SurveyID = " + (mrequest==null?request.getParameter("selSurvey"):mrequest.getParameter("selSurvey")) + ") ORDER BY [User].FamilyName, [User].GivenName";
+	else
+		query = query + " AND (tblSurvey.SurveyID = " + (mrequest==null?request.getParameter("selSurvey"):mrequest.getParameter("selSurvey")) + ") ORDER BY [User].GivenName, [User].FamilyName";
+		
+	ResultSet rs_Sup = db.getRecord(query);	
+	*/
+	
+	for(int i=0; i<vec.size(); i++)
+	{
+		voUser vo = (voUser)vec.get(i);
+		
+		int iPKUser = vo.getPKUser();
+		String iGivenName = vo.getGivenName();
+		String iFamilyName = vo.getFamilyName();
+		
+		if(iNameSequence == 0)
+		{
+			//Family Name First
+			%>
+				<option value=<%=iPKUser%> ><%=iFamilyName + ", " + iGivenName%></option>
+			<%
+		}
+		else
+		{
+			//Given Name First
+			%>
+				<option value=<%=iPKUser%> ><%=iGivenName + ", " + iFamilyName%></option>
+			<%
+		}
+	}
+	if(vec.size() > 0){ //Added by ping yang on 30/7/08 to disable 'Preview" button when no supervisor
+		enableBtnPreview = true;
+	}else if(!(mrequest==null?request.getParameter("selSurvey"):mrequest.getParameter("selSurvey")).equals("0")){
+			%><script>alert("No Supervisor available")</script></p><%
+	}
+} //end if((mrequest==null?request.getParameter("selSurvey"):mrequest.getParameter("selSurvey")) != null)
+	%>
+</select></td>
+		</tr>
+	<!-- added by Xuehai 19 May 2011. Providing attachment for the email. -->
+	<tr>
+		<td width="967" align="center" colspan="3" style="border-left-style: solid; border-left-width: 1px; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">&nbsp;
+		</td>
+	</tr>
+	<tr>
+		<td width="117" align="center" height="25" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">
+			<b><font face="Arial" size="2">Attachment:</font></b><br/>&nbsp;
+		</td>
+		<td width="851" height="25" colspan="2" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium"> 
+	        <input name="uploadfile" type="file" onkeypress='return false;' onpaste="return false;" size="40"><br/>
+	        <b><font face="Arial" size="2">Please choose the file to be attached if needed (within 1MB)</font></b>
+		</td>
+	</tr>
+	<tr>
+		<td width="967" align="center" colspan="3" style="border-left-style: solid; border-left-width: 1px; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium">&nbsp;
+		</td>
+	</tr>
+	<tr>
+		<td width="116" align="center" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium"> <font size="2">
+   
+		<p align="right">
+		</td>
+		<td width="228" align="center" style="border-style: none; border-width: medium"> <font size="2">
+   
+		<p align="left"> </td>
+		<td width="155" align="center" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: none; border-bottom-width: medium"> <font size="2">
+   <%if(anyRecord)
+   	{%>
+<% if((logchk.getCompany() != 2 || logchk.getUserType() == 1)&& enableBtnPreview) {//Added by ping yang on 30/7/08 to disable 'Preview" button when no supervisor
+%>	
+		<input type="button" value="Send Emails" name="btnPreview" style="float: left" onClick="preview(this.form, this.form.selSurvey)">
+<% } else {
+%>	
+		<input type="button" value="Send Emails" name="btnPreview" style="float: left" onClick="preview(this.form, this.form.selSurvey)" disabled>
+<%
+} %>		
+<%	}%>		
+		</td>
+	</tr>
+	<tr>
+		<td width="116" align="center" style="border-left-style: solid; border-left-width: 1px; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: solid; border-bottom-width: 1px">&nbsp; </td>
+		<td width="228" align="center" style="border-left-style: none; border-left-width: medium; border-right-style: none; border-right-width: medium; border-top-style: none; border-top-width: medium; border-bottom-style: solid; border-bottom-width: 1px">&nbsp; </td>
+		<td width="155" align="center" style="border-left-style: none; border-left-width: medium; border-right-style: solid; border-right-width: 1px; border-top-style: none; border-top-width: medium; border-bottom-style: solid; border-bottom-width: 1px">&nbsp; </td>
+	</tr>
+</table>
+</form>
+<%	}	%>
+<p></p>
+<%@ include file="Footer.jsp"%>
+
+</body>
+</html>

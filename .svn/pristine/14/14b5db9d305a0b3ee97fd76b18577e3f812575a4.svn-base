@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="WEB-INF/src"/>
+	<classpathentry kind="src" output="work" path="work"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/PCCAPI"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Program Files/Java/jdk1.6.0_13/lib/tools.jar"/>
+	<classpathentry kind="output" path="WEB-INF/classes"/>
+</classpath>

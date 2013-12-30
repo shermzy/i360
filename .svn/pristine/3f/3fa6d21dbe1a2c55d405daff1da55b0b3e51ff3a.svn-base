@@ -1,0 +1,308 @@
+package CP_Classes.common;
+
+import java.io.*;
+import java.sql.*;
+import java.util.*;
+import java.util.Date;
+import com.microsoft.sqlserver.jdbc.SQLServerDriver;
+
+//import net.sourceforge.jtds.jdbc.Driver;
+
+public class DBConnectionManager {
+
+	static private DBConnectionManager instance;
+	static private int clients;
+
+	private Vector drivers = new Vector();
+	private PrintWriter log;
+	private Hashtable pools = new Hashtable();
+
+	static synchronized public DBConnectionManager getInstance() {
+		if (instance == null) {
+			instance = new DBConnectionManager();
+		}
+		clients++;
+		System.out.println("clients==========" + clients);
+		return instance;
+	}
+
+	private DBConnectionManager() {
+		init();
+	}
+
+	public void freeConnection(String name, Connection con) {
+		DBConnectionPool pool = (DBConnectionPool) pools.get(name);
+		if (pool != null) {
+			pool.freeConnection(con);
+		}
+	}
+
+	public Connection getConnection(String name) {
+		DBConnectionPool pool = (DBConnectionPool) pools.get(name);
+		if (pool != null) {
+			return pool.getConnection();
+		}
+		return null;
+	}
+
+	public Connection getConnection(String name, long time) {
+		DBConnectionPool pool = (DBConnectionPool) pools.get(name);
+		System.out.println("Size of connection pool " + pools.size());
+		System.out.println("Elements in pools in string " + pools.toString());
+		System.out.println("Value in pools " + pools.values());
+		System.out.println(pool);
+		if (pool != null) {
+			System.out.println(pool.getConnection(time));
+			return pool.getConnection(time);
+
+		}
+		return null;
+	}
+
+	public synchronized void release() {
+		if (--clients != 0) {
+			return;
+		}
+
+		Enumeration allPools = pools.elements();
+		while (allPools.hasMoreElements()) {
+			DBConnectionPool pool = (DBConnectionPool) allPools.nextElement();
+			pool.release();
+		}
+		Enumeration allDrivers = drivers.elements();
+		while (allDrivers.hasMoreElements()) {
+			Driver driver = (Driver) allDrivers.nextElement();
+			try {
+				DriverManager.deregisterDriver(driver);
+				// log("Deregistered JDBCdriver " +
+				// driver.getClass().getName());
+			} catch (SQLException e) {
+				// log(e, "Can not deregistered JDBC driver: " +
+				// driver.getClass().getName());
+			}
+		}
+	}
+
+	private void createPools(Properties props) {
+		Enumeration propNames = props.propertyNames();
+
+		while (propNames.hasMoreElements()) {
+			String name = (String) propNames.nextElement();
+
+			if (name.endsWith(".url")) {
+				String poolName = name.substring(0, name.lastIndexOf("."));
+				String url = props.getProperty(poolName + ".url");
+
+				if (url == null) {
+					// log("No URL specified for" + poolName);
+					System.out.println("No URL specified for : " + poolName
+							+ ".url");
+					continue;
+				}
+
+				String user = props.getProperty(poolName + ".user");
+				String password = props.getProperty(poolName + ".password");
+				String maxconn = props.getProperty(poolName + ".maxconn", "0");
+
+				// System.out.println("user : "+user);
+				// System.out.println("password : "+password);
+				System.out.println("maxconn : " + maxconn);
+				int max;
+				try {
+					max = Integer.valueOf(maxconn).intValue();
+				} catch (NumberFormatException e) {
+					// log("Invalid maxconn value: " + maxconn + " .for: " +
+					// poolName);
+					max = 0;
+				}
+
+				DBConnectionPool pool = new DBConnectionPool(poolName, url,
+						user, password, max);
+				pools.put(poolName, pool);
+
+			}
+		}
+	}
+
+	private void init() {
+		InputStream is = getClass().getResourceAsStream("db.properties");
+
+		Properties dbProps = new Properties();
+
+		try {
+			dbProps.load(is);
+			/*
+			 * drivers=com.microsoft.jdbc.sqlserver.SQLServerDriver
+			 * 
+			 * drivers是key ;
+			 * com.microsoft.jdbc.sqlserver.SQLServerDriver是与之对应的值
+			 */
+			System.out.println("db properties: " + is);
+		} catch (Exception e) {
+			System.err.println("Can not read the properties file; "
+					+ "Make sure db.properties is in the Classpath");
+			return;
+		}
+
+		String logFile = dbProps.getProperty("logfile",
+				"DBConnectionManager.log");
+
+		try {
+			log = new PrintWriter(new FileWriter(logFile, true), true);
+		} catch (IOException e) {
+			System.err.println("Can not open the log files: " + logFile);
+			log = new PrintWriter(System.err);
+		}
+
+		loadDrivers(dbProps);
+		createPools(dbProps);
+	}
+
+	private void loadDrivers(Properties props) {
+		String driverClasses = props.getProperty("drivers");
+		// com.microsoft.jdbc.sqlserver.SQLServerDriver
+
+		// System.out.println(driverClasses);
+		StringTokenizer st = new StringTokenizer(driverClasses);
+
+		while (st.hasMoreElements()) {
+			String driverClassName = st.nextToken().trim();
+			// System.out.println(driverClassName);
+			try {
+				Driver driver = (Driver) Class.forName(driverClassName)
+						.newInstance();
+				DriverManager.registerDriver(driver);
+				drivers.addElement(driver);
+				// log("Registered JDBC driver:" + driverClassName);
+			} catch (Exception e) {
+		
+				System.out.println("Can not register JDBC driver "
+						+ driverClassName + ",Exception:" + e);
+			}
+		}
+	}
+
+	private void log(String msg) {
+		log.println(new Date() + ": " + msg);
+	}
+
+	private void log(Throwable e, String msg) {
+		log.println(new Date() + ": " + msg);
+		e.printStackTrace(log);
+	}
+
+	class DBConnectionPool {
+		private int checkedOut;
+		private Vector freeConnections = new Vector();
+		private int maxConn;
+		private String name;
+		private String password;
+		private String URL;
+		private String user;
+
+		public DBConnectionPool(String name, String URL, String user,
+				String password, int maxConn) {
+			this.name = name;
+			this.URL = URL;
+			this.user = user;
+			this.password = password;
+			this.maxConn = maxConn;
+		}
+
+		public synchronized void freeConnection(Connection con) {
+			freeConnections.addElement(con);
+			checkedOut--;
+			notifyAll();
+
+		}
+
+		public synchronized Connection getConnection() {
+			Connection con = null;
+		
+			if (freeConnections.size() > 0) {
+				// System.out.println("有"+freeConnections.size()+"个空闲的可用连接！");
+
+				con = (Connection) freeConnections.firstElement();
+				System.out.println("Con 1st element " + con);
+				freeConnections.removeElementAt(0);
+
+				try {
+					/*
+					 * Connection 接口的 boolean isClosed() throws SQLException
+					 * 方法 判断Connection 对象是否被关闭。 当一个connection
+					 * 调用了close()方法 或者 本身发生了一些致命的错误的时候
+					 * 该连接会被关闭 而isClosed()方法 只能保证当 connection对象
+					 * 调用了 close()方法以后 返回true
+					 */
+					if (con.isClosed()) {
+						// log("Removed bad connection from " + name);
+						con = getConnection();
+					}
+				} catch (SQLException e) {
+					// log("Removed bad connection from " + name);
+					con = getConnection();
+				}
+			} else if (maxConn == 0 || checkedOut < maxConn) {
+				System.out.println("New Connection Created");
+				con = newConnection();
+			}
+
+			if (con != null)
+				checkedOut++;
+			else
+				con = newConnection();
+
+			return con;
+		}
+
+		public synchronized Connection getConnection(long timeout) {
+			System.out.println(timeout);
+			long startTime = new Date().getTime();
+			Connection con;
+			System.out.println("getting connection: " + getConnection());
+			while ((con = getConnection()) == null) {
+				try {
+					wait(timeout);
+				} catch (InterruptedException e) {
+				}
+				if ((new Date().getTime() - startTime) >= timeout) {
+					return null;
+				}
+			}
+			return con;
+		}
+
+		public synchronized void release() {
+			Enumeration allConnections = freeConnections.elements();
+			while (allConnections.hasMoreElements()) {
+				Connection con = (Connection) allConnections.nextElement();
+				try {
+					con.close();
+					// log("Closed connection for pool " + name);
+				} catch (SQLException e) {
+					// log(e, "Can not close connection for pool " + name);
+				}
+			}
+			freeConnections.removeAllElements();
+		}
+
+		private Connection newConnection() {
+			Connection con = null;
+			try {
+				if (user == null) {
+					
+					con = DriverManager.getConnection(URL);
+					
+				} else {
+					con = DriverManager.getConnection(URL, user, password);
+				
+				}
+
+			} catch (SQLException e) {
+				
+				return null;
+			}
+			return con;
+		}
+	}
+}

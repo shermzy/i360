@@ -1,0 +1,301 @@
+/*
+ * Author: Dai Yong
+ * June 2013
+ */
+package Coach;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Vector;
+
+import CP_Classes.ConsultingCompany;
+import CP_Classes.EventViewer;
+import CP_Classes.Organization;
+import CP_Classes.User;
+import CP_Classes.common.ConnectionBean;
+import CP_Classes.vo.voCoachDate;
+import CP_Classes.vo.voCoachDateGroup;
+import CP_Classes.vo.voUser;
+import CP_Classes.vo.votblConsultingCompany;
+import CP_Classes.vo.votblOrganization;
+
+public class CoachDateGroup  {
+//	Start of EventViewer
+	private EventViewer ev=new EventViewer();
+	private int UserPK;
+	private voUser userDetials;
+	private votblConsultingCompany companyDetail;
+	private votblOrganization votblOrganizationDetail;
+		
+	public int getUserPK() {
+		return UserPK;
+	}
+	public void setUserPK(int userPK) {
+		UserPK = userPK;
+		User user=new User();
+		ConsultingCompany consultingCompany=new ConsultingCompany();
+		Organization organization=new Organization();
+		userDetials=user.getUserInfo(UserPK);	
+		companyDetail=consultingCompany.getConsultingCompany(userDetials.getFKCompanyID());
+		votblOrganizationDetail=organization.getOrganization(userDetials.getFKOrganization());
+	}
+//	End of EventViewer
+	
+
+	public CoachDateGroup(){
+
+	}
+	public int getFirtDateGroupPK(){
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		int firstCoachDatePK=0;
+		String query="Select * from CoachDateGroup";
+		try
+		{ 
+
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+			while(rs.next())
+			{	
+				firstCoachDatePK=rs.getInt("PKDateGroup");
+				break;
+				
+			}
+		}
+		catch(Exception E) 
+		{
+			System.err.println("CoachDateGroup.java - getSelectedDateGroup - " + E);
+		}
+		finally
+		{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+		}
+		return firstCoachDatePK;
+	}
+	public voCoachDateGroup getSelectedDateGroup(int PKDateGroup){
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		voCoachDateGroup vo = new voCoachDateGroup();
+		String query="Select * from CoachDateGroup where PKDateGroup="+PKDateGroup;
+		try
+		{ 
+
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+			while(rs.next())
+			{	
+				vo.setPK(rs.getInt("PKDateGroup"));
+				vo.setName(rs.getString("Name"));
+				vo.setdescription(rs.getString("description"));
+			}
+		}
+		catch(Exception E) 
+		{
+			System.err.println("CoachDateGroup.java - getSelectedDateGroup - " + E);
+		}
+		finally
+		{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+		}
+		return vo;
+	}
+
+	public Vector<voCoachDateGroup> getAllDateGroup(){
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		Vector<voCoachDateGroup> v = new Vector<voCoachDateGroup>();
+		String query="Select * from CoachDateGroup order by Name";
+
+		try
+		{ 
+
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+//			System.out.println("CoachDateGroup list:");
+
+			while(rs.next())
+			{	
+				voCoachDateGroup vo = new voCoachDateGroup();
+				vo.setPK(rs.getInt("PKDateGroup"));
+				vo.setName(rs.getString("Name"));
+				vo.setdescription(rs.getString("description"));
+				v.add(vo);
+			}
+		}
+		catch(Exception E) 
+		{
+			System.err.println("CoachDateGroup.java - getAllDateGroup - " + E);
+		}
+		finally
+		{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+		}
+		return v;
+	}
+	
+	public Vector<voCoachDate> getSelectedDateGroupDetails(int FKCoachDateGroup){
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		Vector<voCoachDate> v = new Vector<voCoachDate>();
+		String query="Select * from CoachDate where FKCoachDateGroup="+FKCoachDateGroup+" order by Date";
+
+		try
+		{ 
+
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			//System.out.println("Date Details list for"+FKCoachDateGroup+": ");
+
+			while(rs.next())
+			{	
+				voCoachDate vo = new voCoachDate();
+				vo.setPK(rs.getInt("PKCoachDate"));
+				vo.setFKCoachDateGroup(rs.getInt("FKCoachDateGroup"));
+				vo.setDate(rs.getString("Date"));
+//				System.out.println("Date Detail:"+rs.getString("CoachDatePK")+", Starting time:"+rs.getInt("StartingTime")+",ending time"+rs.getInt("EndingTime"));
+				v.add(vo);
+			}
+		}
+		catch(Exception E) 
+		{
+			System.err.println("CoachDateGroup.java - getSelectedDateGroupDetails - " + E);
+		}
+		finally
+		{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+		}
+		return v;
+	}
+	public boolean addDateGroup(String name,String description){
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		boolean suc=false;
+		String query = "INSERT INTO CoachDateGroup (Name,description) VALUES ('"+ name+"', '"+ description+"')";
+		try
+		{ 
+
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			int iSuccess=st.executeUpdate(query);
+			if(iSuccess!=0){
+				suc=true;
+				ev.addRecord("Insert", "Add Coaching Period", "Add Coaching Period, Coaching Peiod Name:"+name, userDetials.getLoginName(), companyDetail.getCompanyName(), votblOrganizationDetail.getOrganizationName());				
+			}
+		
+		}
+		catch(Exception E) 
+		{
+			System.err.println("CoachDateGroup.java - addDateGroup - " + E);
+		}
+		finally
+		{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+		}
+		return suc;
+	}
+	public boolean deleteDateGroup(int PKDateGroup) throws SQLException, Exception
+	{
+		String sqlpre = "DELETE FROM CoachDate WHERE FKCoachDateGroup = " + PKDateGroup;
+		String sql = "DELETE FROM CoachDateGroup WHERE PKDateGroup = " + PKDateGroup;
+		
+		
+		Connection con = null;
+		Statement st = null;
+        boolean bIsDeleted = false;
+			
+			try
+			{
+
+				con=ConnectionBean.getConnection();
+				st=con.createStatement();
+				//delete foreign key table first
+				st.executeUpdate(sqlpre);
+				int iSuccess = st.executeUpdate(sql);
+				if(iSuccess!=0){
+					bIsDeleted=true;
+					ev.addRecord("Delete", "Delete Coaching Period", "Delete Coaching Period, Coaching Period PK:"+PKDateGroup, userDetials.getLoginName(), companyDetail.getCompanyName(), votblOrganizationDetail.getOrganizationName());					
+				}
+	  		
+			} 
+			catch (Exception E)
+			{
+				System.err.println("DateGroup.java - deleteDateGroup - " + E);
+				
+			}
+
+			finally
+			{
+
+				ConnectionBean.closeStmt(st); //Close statement
+				ConnectionBean.close(con); //Close connection
+
+
+			}
+		
+	
+		return bIsDeleted;
+	}
+	
+
+	public boolean updateDateGroup(int PKDateGroup,String name,String description)throws SQLException, Exception{
+	
+		String sql = "UPDATE CoachDateGroup SET Name = '" + name +"' , description = '" + description + "'WHERE PKDateGroup = " + PKDateGroup;
+		Connection con = null;
+		Statement st = null;
+        boolean bIsUpdated = false;
+			
+			try
+			{
+
+				con=ConnectionBean.getConnection();
+				st=con.createStatement();
+				int iSuccess = st.executeUpdate(sql);
+				if(iSuccess!=0){
+					bIsUpdated=true;
+					ev.addRecord("Update", "Update Coaching Period", "Update Coaching Period, Coaching Period PK:"+PKDateGroup, userDetials.getLoginName(), companyDetail.getCompanyName(), votblOrganizationDetail.getOrganizationName());					
+				}
+	  		
+			} 
+			catch (Exception E)
+			{
+				System.err.println("DateGroup.java - UpdateDateGroup - " + E);
+				
+			}
+
+			finally
+			{
+
+				ConnectionBean.closeStmt(st); //Close statement
+				ConnectionBean.close(con); //Close connection
+
+
+			}
+		
+		return bIsUpdated;
+		
+	}
+	
+}

@@ -1,0 +1,1185 @@
+package CP_Classes;
+
+import java.io.Writer;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.Vector;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Locale;
+
+import CP_Classes.common.ConnectionBean;
+/*
+ * Change Log
+ * ===================================================================================================================
+ * 	  Date	  Changed By			Method(s)										Change(s)
+ * 22/05/2013  Xukun				deleteQuestion, deleteAns						When delete qn, delete its ans as well
+ * 28/05/2013  Xukun				isPrelimRatingScaleUpdateable					newly created
+ * 									deleteRatingScale
+ * 									updateRatingSq
+ * 									updateRating
+ * 									updateRatingContent
+ * 									deleteRating									rating cannot be modified when it is in use
+ * 									addNewRating
+ *									checkHavingAns
+ * ===================================================================================================================
+ * 
+ * 
+ */
+public class PrelimQuestionController {	
+	
+	public PrelimQuestionController()
+	{	
+	}
+	
+	public String escapeInvalidChars(String s)
+	{
+		String validString = s.replace("'", "''");
+		
+		return validString;
+	}
+	
+	public void updatePrelimQnHeader(int fkSurveyId, String header)
+	{
+		Connection con = null;
+		Statement st = null;
+		String query ="Update tbl_PrelimQnHeader set PrelimQnHeaderContent='"+util.Utils.SQLFixer(header)+"' where FKSurveyID ='"+fkSurveyId+"'";
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			st.executeUpdate(query);
+			
+		}catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - updatePrelimQnHeader - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+	}
+	
+	public void savePrelimQnHeader(int fkSurveyId, String header)
+	{
+		Connection con = null;
+		Statement st = null;
+		String query ="Insert into tbl_PrelimQnHeader (FKSurveyID, PrelimQnHeaderContent) VALUES ('"+fkSurveyId+"', '"+util.Utils.SQLFixer(header)+"')";
+		//System.out.println(query);
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			st.executeUpdate(query);
+			
+		}catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - savePrelimQnHeader - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+		
+	}
+	
+	public String getPrelimQnHeader(int fkSurveyId)
+	{
+		String header = "";
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query="SELECT * FROM tbl_PrelimQnHeader where fkSurveyID='"+fkSurveyId+"'";
+		
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+		
+			while(rs != null && rs.next())
+			{
+				header= rs.getString("PrelimQnHeaderContent");
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getPrelimQnHeader - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		return header;
+	}
+
+	
+	public Vector<String> getReportAnswers(String raterCategory, int fkPrelimQnId, int targetID)
+	{
+		Vector<String> ansV = new Vector<String>();
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		
+		String query="SELECT * FROM tbl_PrelimQnAns " +
+		"INNER JOIN tblAssignment ON tbl_PrelimQnAns.FKAssignmentID = tblAssignment.AssignmentID " +
+		"WHERE FKPrelimQnID ='"+fkPrelimQnId+"' AND tblAssignment.TargetLoginID='"+targetID+"' AND RaterStatus='1' AND tblAssignment.RaterCode LIKE '"+raterCategory+"'";
+		
+			try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+		
+			while(rs != null && rs.next())
+			{
+				ansV.add(rs.getString("Answer"));
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getReportAnswers - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+		return ansV;
+	}
+	public double getReportAnswersScore(String raterCategory, int fkPrelimQnId, int targetID)
+	{
+		Vector<Integer> ansV = new Vector<Integer>();
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		double averageScore = 0;
+		
+		String query="SELECT * FROM tbl_PrelimQnAns " +
+		"INNER JOIN tblAssignment ON tbl_PrelimQnAns.FKAssignmentID = tblAssignment.AssignmentID " +
+		"WHERE FKPrelimQnID ='"+fkPrelimQnId+"' AND tblAssignment.TargetLoginID='"+targetID+"' AND RaterStatus='1' AND tblAssignment.RaterCode LIKE '"+raterCategory+"'";
+		
+			try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			double score =0;
+			int count = 0;
+			
+			while(rs != null && rs.next())
+			{
+				
+				String answer = rs.getString("PrelimAnswer");
+		
+				if(answer.equalsIgnoreCase("Severaltimesaday")|| answer.equalsIgnoreCase("Extremelywell")){
+					score+=5;
+				} else if(answer.equalsIgnoreCase("Atleastonceaday")|| answer.equalsIgnoreCase("Verywell")){
+					score+=4;
+				} else if (answer.equalsIgnoreCase("Severaltimesaweek")|| answer.equalsIgnoreCase("Prettywell")){
+					score+=3;
+				} else if(answer.equalsIgnoreCase("Atleastonceaweek")|| answer.equalsIgnoreCase("Nottoowell")){
+					score+=2;
+				} else if (answer.equalsIgnoreCase("Lessthanonceaweek")|| answer.equalsIgnoreCase("Notwellatall")){
+					score+=1;
+				}
+				count++;
+						
+			}
+			
+			averageScore = score/count;
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getReportAnswers - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+		return averageScore;
+	}
+	
+	public Vector<PrelimQuestionAns> getAnswers(int fkPrelimQnId, int fkAssignmentId, int fkRaterId)
+	{
+		Vector<PrelimQuestionAns> v = new Vector<PrelimQuestionAns>();
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="Select * from tbl_PrelimQnAns where FKPrelimQnID='"+fkPrelimQnId+"' and FKAssignmentId='"+fkAssignmentId+"'  Order by PrelimQnAnsID";
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+		
+			while(rs != null && rs.next())
+			{
+				PrelimQuestionAns pqa = new PrelimQuestionAns(rs.getInt("PrelimQnAnsID"), rs.getInt("FKPrelimQnID"), rs.getString("PrelimAnswer"), rs.getInt("FKAssignmentID"), rs.getInt("FKRaterID"));
+				v.add(pqa);
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getAnswers - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+		
+		return v;
+		
+	}
+	
+	public Vector getRatingAnswers(int fkPrelimQnId, int fkTargetID)
+	{
+		Vector v = new Vector();
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="Select * FROM tbl_PrelimQnAns INNER JOIN tblAssignment ON tbl_PrelimQnAns.FKAssignmentID = tblAssignment.AssignmentID ";
+		query += "WHERE FKPrelimQnID='"+fkPrelimQnId+"' and tblAssignment.TargetLoginID="+fkTargetID+" and tblAssignment.RaterLoginId<> " + fkTargetID+"ORDER BY PrelimAnswer";
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+		
+			while(rs != null && rs.next())
+			{
+				v.add(rs.getString("PrelimAnswer"));
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getRatingAnswers - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+		
+		return v;
+		
+	}
+	
+
+	public void saveAnswer(int fkPrelimQnId, String answer, int assignmentID, int raterID, String Date)
+	{
+		
+		Connection con = null;
+		Statement st = null;
+		String query ="Insert into tbl_PrelimQnAns (FKPrelimQnID, PrelimAnswer, FKAssignmentID, FKRaterID, EntryDate) VALUES ('"+fkPrelimQnId+"', N'"+answer+"','"+assignmentID+"', '"+raterID+"' , '"+Date+"')";
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			st.executeUpdate(query);
+						
+		}catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - saveAnswer - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+	}
+	
+	public void updateAnswer(int prelimQnAnsID, int fkAddQnID, String answer, int assignmentID, int raterID, String Date)
+	{
+		Connection con = null;
+		Statement st = null;
+		String query ="Update tbl_PrelimQnAns set PrelimAnswer= N'"+util.Utils.SQLFixer(answer)+"', EntryDate='"+Date+"' where PrelimQnAnsID ='"+prelimQnAnsID+"'";
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			st.executeUpdate(query);
+			
+		}catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - updateAnswer - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+	}
+
+	public void saveQuestion(int fkSurveyID, String question, int ratingScaleID)
+	{
+		Connection con = null;
+		Statement st = null;
+		String query ="Insert into tbl_PrelimQn (FKSurveyID, Question, PrelimRatingScaleID) VALUES ('"+fkSurveyID+"', '"+util.Utils.SQLFixer(question)+"',"+ratingScaleID+")";
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			st.executeUpdate(query);
+			
+		}catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - saveQuestion - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+	}
+	
+	public void updateQuestion(int prelimQnID, int fkSurveyID, String question, int ratingScaleID)
+	{
+		Connection con = null;
+		Statement st = null;
+		String query ="Update tbl_PrelimQn set FKSurveyID= '"+fkSurveyID+"', Question='"+util.Utils.SQLFixer(question)+"' , PrelimRatingScaleID ="+ ratingScaleID +" where PrelimQnID ='"+prelimQnID+"'";
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			st.executeUpdate(query);
+			
+		}catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - updateQuestion - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+	}
+	
+	public void deleteQuestion(int prelimQnID)
+	{
+		
+		Connection con = null;
+		Statement st = null;
+		String query ="delete from tbl_PrelimQn where PrelimQnID ='"+prelimQnID+"'";
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			st.executeUpdate(query);
+			
+		}catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - deleteQuestion - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+		// need to remove all the ans as well because these two table is not link properly in db
+		//deleteAns(prelimQnID);
+	}
+	
+	public void deleteAns(int prelimQnID){
+		Connection con = null;
+		Statement st = null;
+		String query = "delete from tbl_PrelimQnAns where FKPrelimQnID ='"+prelimQnID+"'";
+		try{
+			con = ConnectionBean.getConnection();
+			st = con.createStatement();
+			st.executeUpdate(query);
+		}catch(Exception E){
+			System.err.println("PrelimQuestionController.java - deleteAns -" + E);
+		}finally{
+			ConnectionBean.closeStmt(st);//Close statement
+			ConnectionBean.close(con);//Close connection
+		}
+	}
+	
+	public Vector<PrelimQuestion> getQuestions(int fkSurveyId)
+	{
+		Vector<PrelimQuestion> v = new Vector<PrelimQuestion>();
+		
+
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="Select * from tbl_PrelimQn where FKSurveyID="+fkSurveyId+"Order by PrelimQnID";
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+		
+			while(rs != null && rs.next())
+			{
+				PrelimQuestion pq = new PrelimQuestion(rs.getInt("PrelimQnID"), rs.getInt("FKSurveyID"), rs.getString("Question"), rs.getInt("PrelimRatingScaleID"));
+				v.add(pq);
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getQuestions- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		
+		
+		return v;
+	}
+	
+	public int getPrelimRatingID(int prelimQnId)
+	{
+		int scaleID = -1;
+		
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="Select PrelimRatingScaleID from tbl_PrelimQn where PrelimQnID="+prelimQnId;
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			if(rs.next()){
+				scaleID = rs.getInt("PrelimRatingScaleID");
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getPrelimRatingID- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }	
+		return scaleID;
+	}
+	
+	public Vector getAllRatingScale(){
+		Vector v = new Vector();
+		
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="Select PrelimQnRatingID from tbl_PrelimQnRatingSet";
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				v.add(rs.getInt("PrelimQnRatingID"));
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getAllRatingScale?- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }	
+		return v;
+	}
+
+
+
+	/**
+	 * @author xukun
+	 * @param scaleID
+	 * @return
+	 */
+	public Vector getAllRating(int scaleID){
+		Vector v = new Vector();
+		
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="Select RatingScale from tbl_PrelimQnRatingScale WHERE PrelimRatingScaleID="+scaleID ;
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				v.add(rs.getString("RatingScale"));
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getAllRating(int id)- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }	
+		return v;
+	}
+	/**
+	 * @author xukun
+	 * @param scaleID
+	 * @return
+	 */
+	public TreeMap<Integer,String> getAllRatingMap(int scaleID){
+		TreeMap<Integer, String> v = new TreeMap<Integer, String>();
+
+
+		
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="Select RatingScale, RatingSequence from tbl_PrelimQnRatingScale WHERE PrelimRatingScaleID="+scaleID +"order by RatingSequence";
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				v.put(rs.getInt("RatingSequence"),rs.getString("RatingScale"));
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getAllRating- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }	
+		return v;
+	}
+	/**
+	 * @author xukun
+	 * @param scaleID
+	 * @return
+	 *//*
+	public TreeMap<Integer,String> getAllRating(int scaleID){
+		TreeMap<Integer, String> v = new TreeMap<Integer, String>();
+=======
+	public Vector getAllRating(int scaleID){
+		Vector v = new Vector();
+>>>>>>> .r1271
+		
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="Select RatingScale from tbl_PrelimQnRatingScale WHERE PrelimRatingScaleID="+scaleID;
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				v.add(rs.getString("RatingScale"));
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getAllRating- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }	
+		return v;
+	}
+	*/
+	/**
+	 * @author xukun
+	 * @return
+	 */
+	public Vector<String> getAllRatingInVector(int scaleID){
+		TreeMap<Integer, String> v = new TreeMap<Integer, String>();
+		
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="Select RatingScale, RatingSequence from tbl_PrelimQnRatingScale WHERE PrelimRatingScaleID="+scaleID +"order by RatingSequence";
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				v.put(rs.getInt("RatingSequence"),rs.getString("RatingScale"));
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - getAllRating- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		Vector<String> result = new Vector<String>();
+		for(Map.Entry<Integer, String> entry:v.entrySet()){
+			result.add(entry.getValue());
+		}
+		
+		return result;
+	}
+	
+	
+	/**
+	 * @author xukun
+	 * @return
+	 */
+	public int addNewRatingScale(){
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="SELECT Max(PrelimQnRatingID) AS Total from tbl_PrelimQnRatingSet";
+		int total = 0;
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			if(rs.next()){
+				total = rs.getInt("Total");
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - addNewRatingScale- " + E);
+            return -1;
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+        
+        query ="INSERT INTO tbl_PrelimQnRatingSet (PrelimQnRatingID) VALUES ("+(total+1)+")";
+        System.out.println(query);
+        try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			st.executeUpdate(query);
+			return total+1;
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - addNewRatingScale- " + E);
+            return -1;
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		//return false;
+	}
+	
+	/**
+	 * @author xukun
+	 * @param scaleID
+	 * @return
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	public boolean deleteRatingScale(int scaleID) throws SQLException, Exception{
+		Connection con = null;
+		Statement st = null;
+		String sql = "DELETE tbl_PrelimQnRatingSet where PrelimQnRatingID = "+ scaleID;
+		try{
+			con = ConnectionBean.getConnection();
+			st = con.createStatement();
+			int result = st.executeUpdate(sql);
+			if(result == 0){
+				return false;
+			}
+		}catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - deleteRatingScale- " + E);
+            return false;
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+		return true;
+	}
+	
+	/**
+	 * @edited xukun
+	 * @param scaleID
+	 * @param name
+	 * @return
+	 */
+	public boolean addNewRating(int scaleID, String name){
+		if(isPrelimRatingScaleUpdateable(scaleID)){
+			Connection con = null;
+			Statement st = null;
+			ResultSet rs = null;
+			String query ="SELECT Count(DISTINCT RatingSequence) AS Total from tbl_PrelimQnRatingScale where PrelimRatingScaleID = "+scaleID;
+			int total = 0;
+			try{
+				
+				con=ConnectionBean.getConnection();
+				st=con.createStatement();
+				rs=st.executeQuery(query);
+				if(rs.next()){
+					total = rs.getInt("Total");
+				}
+			}
+	        catch(Exception E) 
+	        {
+	            System.err.println("PrelimQuestionController.java - addNewRating- " + E);
+	        }
+	        finally
+	        {
+	        	ConnectionBean.closeRset(rs); //Close ResultSet
+	        	ConnectionBean.closeStmt(st); //Close statement
+	        	ConnectionBean.close(con); //Close connection
+	        }
+	        
+	        query ="INSERT INTO tbl_PrelimQnRatingScale (PrelimRatingScaleID,RatingScale, RatingSequence) VALUES ("+(scaleID)+",'"+name+"',"+(total+1)+")";
+	        try{
+				con=ConnectionBean.getConnection();
+				st=con.createStatement();
+				st.executeUpdate(query);
+				return true;
+			}
+	        catch(Exception E) 
+	        {
+	            System.err.println("PrelimQuestionController.java - addNewRating- " + E);
+	        }
+	        finally
+	        {
+	        	ConnectionBean.closeStmt(st); //Close statement
+	        	ConnectionBean.close(con); //Close connection
+	        }
+			return false;
+		}
+		return false;
+	}
+	
+	/**
+	 * @edited xukun
+	 * @param scaleID
+	 * @param ratingSequence
+	 * @return
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	public boolean deleteRating(int scaleID, int ratingSequence) throws SQLException, Exception{
+		if(isPrelimRatingScaleUpdateable(scaleID)){
+			String sql = "DELETE FROM tbl_PrelimQnRatingScale WHERE PrelimRatingScaleID = "+scaleID+" AND RatingSequence ="+ratingSequence;
+			Connection con = null;
+			Statement st = null;
+	        boolean bIsDeleted = false;
+			
+	        try{
+	
+				con=ConnectionBean.getConnection();
+				st=con.createStatement();
+				int iSuccess = st.executeUpdate(sql);
+				if(iSuccess!=0) bIsDeleted=true;	
+			}catch (Exception E){
+				System.err.println("PrelimQuestionCollor.java - deleteRating - " + E);
+			}
+			finally{
+				ConnectionBean.closeStmt(st); //Close statement
+				ConnectionBean.close(con); //Close connection
+			}
+			return bIsDeleted;
+		}
+		return false;
+	}
+	
+	
+	/**
+	 * @author xukun
+	 * @param scaleID
+	 * @return
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	public boolean updateRatingSq(int scaleID) throws SQLException, Exception{
+		Vector<Integer> sqs = new Vector<Integer>();
+		String sql = "SELECT * from tbl_PrelimQnRatingScale where PrelimRatingScaleID = " + scaleID+" order by RatingSequence";
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		try{
+			con = ConnectionBean.getConnection();
+			st = con.createStatement();
+			rs = st.executeQuery(sql);
+			while(rs.next()){
+				sqs.add(rs.getInt("RatingSequence"));
+			}
+		}catch(Exception E){
+			System.err.println("PrelimQuestionContorller.java - updateRatingSq - "+ E);
+			return false;
+		}finally{
+			ConnectionBean.closeRset(rs);
+			ConnectionBean.closeStmt(st);
+			ConnectionBean.close(con);
+		}
+		// update all sequence
+		for(int i = 0; i < sqs.size(); i ++){
+			if(sqs.get(i) != i+1){
+				sql = "Update tbl_PrelimQnRatingScale set RatingSequence = "+ (i+1) +" where PrelimRatingScaleID = "+scaleID+" and RatingSequence = "+ sqs.get(i);
+				try{
+					con = ConnectionBean.getConnection();
+					st = con.createStatement();
+					st.executeUpdate(sql);
+				}catch(Exception E){
+					System.err.println("PrelimQuestionContorller.java - updateRatingSq - "+ E);
+					return false;
+				}finally{
+					ConnectionBean.closeRset(rs);
+					ConnectionBean.closeStmt(st);
+					ConnectionBean.close(con);
+				}
+			}
+		}
+		return true;
+	}
+	
+	// O(nlog(n))
+	/**
+	 * @author xukun
+	 * @param sq
+	 * @return
+	 */
+	public boolean checkRatingSqDuplicate(Vector<String> sq){
+		Set<String> s = new TreeSet<String>();
+		for(String i : sq){
+			if(!s.add(i)){
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * @author xukun
+	 * @param scaleID
+	 * @param newsqArr
+	 * @param contents
+	 * @return
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	public boolean updateRating(int scaleID, String[] newsqArr, String[]contents) throws SQLException, Exception{
+		if(isPrelimRatingScaleUpdateable(scaleID)){
+			return updateRatingSq(scaleID, newsqArr) &&
+			updateRatingContent(scaleID, newsqArr, contents);
+		}
+		return false;
+	}
+	
+	/**
+	 * @author xukun
+	 * @param scaleID
+	 * @param newsqArr
+	 * @param contents
+	 * @return
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	public boolean updateRatingContent(int scaleID, String[] newsqArr, String[] contents) throws SQLException, Exception{
+		for(int i = 0; i < newsqArr.length; i++){
+			String sql = "UPDATE tbl_PrelimQnRatingScale set RatingScale = '"+contents[i]+"' where RatingSequence ="+newsqArr[i] +" and PrelimRatingScaleID="+scaleID;
+			Connection con = null;
+			Statement st = null;
+			try{
+				con = ConnectionBean.getConnection();
+				st = con.createStatement();
+				int result = st.executeUpdate(sql);
+				if(result == 0)
+					return false;
+			}catch(Exception E){
+				System.err.println("PrelimQuestionContorller.java - updateRatingContent - "+ E);
+				return false;
+			}finally{
+				ConnectionBean.closeStmt(st);
+				ConnectionBean.close(con);
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * @author xukun
+	 * @param scaleID
+	 * @param newsqArr
+	 * @return
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	public boolean updateRatingSq(int scaleID, String[] newsqArr) throws SQLException, Exception{
+		Vector newsq = new Vector(Arrays.asList(newsqArr));
+		if(!checkRatingSqDuplicate(newsq)){
+			return false;
+		}
+		Vector<Integer> sqs = new Vector<Integer>();
+		Vector<Integer> affectedRating = new Vector<Integer>();
+		String sql = "SELECT * from tbl_PrelimQnRatingScale where PrelimRatingScaleID = " + scaleID+" order by RatingSequence";
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		try{
+			con = ConnectionBean.getConnection();
+			st = con.createStatement();
+			rs = st.executeQuery(sql);
+			while(rs.next()){
+				sqs.add(rs.getInt("RatingSequence"));
+			}
+		}catch(Exception E){
+			System.err.println("PrelimQuestionContorller.java - updateRatingSq - "+ E);
+			return false;
+		}finally{
+			ConnectionBean.closeRset(rs);
+			ConnectionBean.closeStmt(st);
+			ConnectionBean.close(con);
+		}
+		//1. temperately update all affected rating using the negate of its new sequence
+		for(int i = 0; i < sqs.size(); i ++){
+			if(sqs.get(i) != newsq.get(i)){
+				affectedRating.add(0-Integer.parseInt((String) newsq.get(i)));
+				sql = "Update tbl_PrelimQnRatingScale set RatingSequence = "+ (0-Integer.parseInt((String) newsq.get(i))) +" where PrelimRatingScaleID = "+scaleID+" and RatingSequence = "+ sqs.get(i);
+				try{
+					con = ConnectionBean.getConnection();
+					st = con.createStatement();
+					st.executeUpdate(sql);
+				}catch(Exception E){
+					System.err.println("PrelimQuestionContorller.java - updateRatingSq - "+ E);
+					return false;
+				}finally{
+					ConnectionBean.closeRset(rs);
+					ConnectionBean.closeStmt(st);
+					ConnectionBean.close(con);
+				}
+			}
+		}
+		//2. negate the sequence of the affected rating (double negation)
+		for(int i = 0; i < affectedRating.size(); i ++){
+			sql = "Update tbl_PrelimQnRatingScale set RatingSequence = "+ (0-affectedRating.get(i)) +" where PrelimRatingScaleID = "+scaleID+" and RatingSequence = "+ affectedRating.get(i);
+			try{
+				con = ConnectionBean.getConnection();
+				st = con.createStatement();
+				st.executeUpdate(sql);
+			}catch(Exception E){
+				System.err.println("PrelimQuestionContorller.java - updateRatingSq - "+ E);
+				return false;
+			}finally{
+				ConnectionBean.closeRset(rs);
+				ConnectionBean.closeStmt(st);
+				ConnectionBean.close(con);
+			}
+		}
+		return true;
+	}
+	
+	public void changeRatingScaleID(int qid, int scaleID){
+		Connection con = null;
+		Statement st = null;
+		String query ="Update tbl_PrelimQn set PrelimRatingScaleID="+scaleID+" WHERE PrelimQnID ="+qid;
+		
+		try{
+			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			st.executeUpdate(query);
+			
+		}catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - changeRatingScaleID - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+	}
+	
+	public boolean checkRatingScaleExist(int scaleID){
+		boolean exist = false;
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		String query ="Select RatingScale from tbl_PrelimQnRatingScale WHERE PrelimRatingScaleID="+scaleID;
+		
+		try{			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			if(rs.next()){
+				exist = true;
+			}
+		}
+        catch(Exception E) 
+        {
+            System.err.println("PrelimQuestionController.java - checkRatingScaleExist- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }	
+		return exist;
+	}
+	/**
+	 * @author xukun
+	 * 0:survey not found, 1:open, 2:close, 3:not commissioned
+	 * @param surveyID
+	 * @return
+	 */
+	public boolean isPrelimRatingScaleUpdateable(int prelimQnRatingScaleID){
+		String sql = "SELECT distinct PrelimRatingScaleID from tbl_PrelimQn inner join tblSurvey on " +
+				"tblSurvey.surveyID = tbl_PrelimQn.FKSurveyID where surveyStatus = 1 or surveyStatus = 2";
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		Vector<Integer> ids = new Vector<Integer>();
+		try{			
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(sql);
+			while(rs.next()){
+				ids.add(rs.getInt("PrelimRatingScaleID"));
+			}
+		}
+        catch(Exception E) 
+        {
+            System.out.println("PrelimQuestionController.java - isPrelimRatingScaleUpdateable- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }	
+		if(ids.contains(prelimQnRatingScaleID)){
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * @author xukun
+	 * @return
+	 */
+	public int getFirstRatingScale(){
+		String sql = "SELECT min(PrelimQnRatingID) from tbl_PrelimQnRatingSet";
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(sql);
+			while(rs.next()){
+				return rs.getInt(1);
+			}
+		}catch(Exception E) 
+        {
+            System.out.println("PrelimQuestionController.java - getFirstRatingScale- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }	
+		return -1;
+	}
+	
+	/**
+	 * @author xukun
+	 * @return
+	 */
+	public boolean checkHavingAns(int prelimQnID){
+		int count = 0;
+		String sql = "SELECT count(*) from tbl_PrelimQn inner join tbl_PrelimQnAns on " +
+				"PrelimQnID = FKPrelimQnID where " +
+				"PrelimQnID = "+prelimQnID;
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(sql);
+			while(rs.next()){
+				count = rs.getInt(1);
+			}
+			
+		}catch(Exception E) 
+        {
+            System.out.println("PrelimQuestionController.java - checkHavingAns- " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }	
+		
+		if(count == 0)
+			return false;
+		return true;
+	}
+}

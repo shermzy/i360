@@ -1,0 +1,72 @@
+<%// Author: Dai Yong in June 2013%>
+<%@ page import="java.sql.*"%>
+<%@ page import="java.io.*"%>
+<%@ page import="java.util.*"%>
+<%@ page import="CP_Classes.vo.*"%>
+<%@ page pageEncoding="UTF-8" %>
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>View Candidate Assignment</title>
+
+<jsp:useBean id="CoachSlotGroup" class="Coach.CoachSlotGroup"scope="session" />
+<jsp:useBean id="CoachSlot" class="Coach.CoachSlot"scope="session" />
+<jsp:useBean id="LoginStatus" class="Coach.LoginStatus" scope="session" />
+<jsp:useBean id="CoachDateGroup" class="Coach.CoachDateGroup"scope="session" />
+<jsp:useBean id="CoachDate" class="Coach.CoachDate"scope="session" />
+<jsp:useBean id="CoachVenue" class="Coach.CoachVenue"scope="session" />
+<script type="text/javascript">
+	var x = parseInt(window.screen.width) / 2 - 240;  // the number 250 is the exact half of the width of the pop-up and so should be changed according to the size of the pop-up
+	var y = parseInt(window.screen.height) / 2 - 115;  // the number 125 is the exact half of the height of the pop-up and so should be changed according to the size of the pop-up
+	
+			function closeWindow(){
+	    	window.close();
+		}
+	</script>
+</head>
+<body>
+<br>
+	<table align="center">
+
+				<%
+				int DisplayNo = 1;
+				int VenuePK=Integer.parseInt(request.getParameter("ViewDayGroup"));
+				voCoachVenue venue=CoachVenue.getSelectedCoachVenue(VenuePK);
+				
+				String addressLine1=venue.getVenue1();
+				String addressLine2=venue.getVenue2();
+				String addressLine3=venue.getVenue3();
+				
+				%>
+				<p align="center">
+				<b><font color="#000080" size="2" face="Arial">Venue Details</font></b>
+				</p>
+			<tr onMouseOver="this.bgColor = '#99ccff'"
+				onMouseOut="this.bgColor = '#FFFFCC'">
+				<td align="center">Address Line 1</td>
+				<td align="center">&nbsp;</td>
+				<td align="center"><%=addressLine1%></td>
+			</tr>
+			<tr onMouseOver="this.bgColor = '#99ccff'"
+				onMouseOut="this.bgColor = '#FFFFCC'">
+				<td align="center">Address Line 2</td>
+				<td align="center">&nbsp;</td>
+				<td align="center"><%=addressLine2%></td>
+			</tr>
+			<tr onMouseOver="this.bgColor = '#99ccff'"
+				onMouseOut="this.bgColor = '#FFFFCC'">
+				<td align="center">Address Line 3</td>
+				<td align="center">&nbsp;</td>
+				<td align="center"><%=addressLine3%></td>
+			</tr>
+		</table>
+		<br>
+		<br>
+		<br>
+		<div align="center">
+		<input align="middle" type="button" id="back" value="Close" onClick="closeWindow()"></div>
+</body>
+</html>

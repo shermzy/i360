@@ -1,0 +1,737 @@
+<%@ page import="java.sql.*,
+                 java.io.*,
+				 java.util.*, 
+                 java.lang.String"%>   
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>                   
+<jsp:useBean id="user" class="CP_Classes.User" scope="session"/>
+<jsp:useBean id="Cdepartment" class="CP_Classes.Department" scope="session"/>
+<jsp:useBean id="group" class="CP_Classes.Group" scope="session"/>
+<jsp:useBean id="division" class="CP_Classes.Division" scope="session"/>
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+<%// added to check whether the organisation is a consulting firm
+//Mark Oei 09 Mar 2010 %>
+<jsp:useBean id="Org" class="CP_Classes.Organization" scope="session"/>
+<jsp:useBean id="CE_Survey" class="CP_Classes.Create_Edit_Survey" scope="session"/>
+<%@ page import="CP_Classes.vo.voGroup"%>
+<%@ page import="CP_Classes.vo.voDepartment"%>
+<%@ page import="CP_Classes.vo.voDivision"%>
+<%@ page import="CP_Classes.vo.votblOrganization"%>
+<%@ page import="CP_Classes.vo.voUserType"%>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<%@ page pageEncoding="UTF-8"%>
+<%// by lydia Date 05/09/2008 Fix jsp file to support Thai language %>
+</head>
+<SCRIPT LANGUAGE="JavaScript">
+function validate()
+{
+    x = document.User
+    if (x.txtLoginID.value == "")
+    {
+	alert("<%=trans.tslt("Enter Login ID")%>");
+	return false 
+	}
+	if (x.txtFamilyName.value == "")
+    {
+	alert("<%=trans.tslt("Enter Family Name")%>");
+	return false 
+	}
+	if (x.txtGivenName.value == "")
+    {
+	alert("<%=trans.tslt("Enter Given Name")%>");
+	return false 
+	}
+	if (x.txtDesignation.value == "")
+    {
+	alert("<%=trans.tslt("Enter Designation")%>");
+	return false 
+	}
+	if (x.txtIDNumber.value == "")
+    {
+	alert("<%=trans.tslt("Enter ID Number")%>");
+	return false 
+	}	
+	if (x.selDivision.value == "")
+    {
+	alert("<%=trans.tslt("Enter Division")%>");
+	return false 
+	}    
+	if (x.selDepartment.value == "")
+    {
+	alert("<%=trans.tslt("Enter Department")%>");
+	return false 
+	} 
+	if (x.selGroup.value == "")
+    {
+	alert("<%=trans.tslt("Enter Group")%>");
+	return false 
+	} 
+	if (x.selUserType.value == "")
+	{
+	alert("<%=trans.tslt("Enter User Type")%>");
+	return false 
+	}
+	if (x.txtPassword.value == "")
+    {
+	alert("<%=trans.tslt("Enter Password")%>");
+	return false 
+	}  
+	if (x.txtPassword.value.length < 4)
+    {
+	alert("<%=trans.tslt("Password must be at least 4 charactes long")%>");
+	return false 
+	}  
+	if(x.txtPassword.value != x.txtPassword2.value)
+	{
+	alert("<%=trans.tslt("Password mismatch")%>");
+	return false 
+	}  
+	if (x.txtEmail.value == "")
+    {
+	alert("<%=trans.tslt("Enter Email")%>");
+	return false 
+	}
+	else
+	{
+      	if(emailCheck(x.txtEmail.value) == false)
+      	return false
+    }
+}
+
+//Edited by Xuehai 02 Jun 2011. Remove 'void'. Enable to run on different browers like Chrome&Firefox.
+//void function OpenWindow1(form) 
+function OpenWindow1(form) 
+{
+	//var myWindow=window.open('User.jsp','windowRef','scrollbars=no, width=300, height=570');
+	//myWindow.moveTo(x,y);
+	
+	form.action="User.jsp";
+	form.method="post";
+	form.submit();
+}
+
+//void function search(form)
+function search(form)
+{
+	window.document.User.action = "UserList.jsp";
+    window.document.User.method="post";	
+	window.document.User.submit();
+	//opener.location.href('UserList.jsp');
+	//window.close();
+	
+}
+
+function proceed(form,field)
+{
+	form.action="UserSearch.jsp?proceed="+field.value;
+	form.method="post";
+	form.submit();
+}
+
+function checkName(form,field)
+{
+	form.action="User.jsp?checkName=1";
+	form.method="post";
+	form.submit();
+}
+
+function emailCheck (emailStr) {
+
+/* The following variable tells the rest of the function whether or not
+to verify that the address ends in a two-letter country or well-known
+TLD.  1 means check it, 0 means don't. */
+
+var checkTLD=1;
+
+/* The following is the list of known TLDs that an e-mail address must end with. */
+
+var knownDomsPat=/^(com|net|org|edu|int|mil|gov|arpa|biz|aero|name|coop|info|pro|museum)$/;
+
+/* The following pattern is used to check if the entered e-mail address
+fits the user@domain format.  It also is used to separate the username
+from the domain. */
+
+var emailPat=/^(.+)@(.+)$/;
+
+/* The following string represents the pattern for matching all special
+characters.  We don't want to allow special characters in the address. 
+These characters include ( ) < > @ , ; : \ " . [ ] */
+
+var specialChars="\\(\\)><@,;:\\\\\\\"\\.\\[\\]";
+
+/* The following string represents the range of characters allowed in a 
+username or domainname.  It really states which chars aren't allowed.*/
+
+var validChars="\[^\\s" + specialChars + "\]";
+
+/* The following pattern applies if the "user" is a quoted string (in
+which case, there are no rules about which characters are allowed
+and which aren't; anything goes).  E.g. "jiminy cricket"@disney.com
+is a legal e-mail address. */
+
+var quotedUser="(\"[^\"]*\")";
+
+/* The following pattern applies for domains that are IP addresses,
+rather than symbolic names.  E.g. joe@[123.124.233.4] is a legal
+e-mail address. NOTE: The square brackets are required. */
+
+var ipDomainPat=/^\[(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\]$/;
+
+/* The following string represents an atom (basically a series of non-special characters.) */
+
+var atom=validChars + '+';
+
+/* The following string represents one word in the typical username.
+For example, in john.doe@somewhere.com, john and doe are words.
+Basically, a word is either an atom or quoted string. */
+
+var word="(" + atom + "|" + quotedUser + ")";
+
+// The following pattern describes the structure of the user
+
+var userPat=new RegExp("^" + word + "(\\." + word + ")*$");
+
+/* The following pattern describes the structure of a normal symbolic
+domain, as opposed to ipDomainPat, shown above. */
+
+var domainPat=new RegExp("^" + atom + "(\\." + atom +")*$");
+
+/* Finally, let's start trying to figure out if the supplied address is valid. */
+
+/* Begin with the coarse pattern to simply break up user@domain into
+different pieces that are easy to analyze. */
+
+var matchArray=emailStr.match(emailPat);
+
+if (matchArray==null) {
+
+/* Too many/few @'s or something; basically, this address doesn't
+even fit the general mould of a valid e-mail address. */
+
+alert("<%=trans.tslt("Email address seems incorrect")%> (<%=trans.tslt("check")%> @ <%=trans.tslt("and")%> .'s)");
+return false;
+}
+var user=matchArray[1];
+var domain=matchArray[2];
+
+// Start by checking that only basic ASCII characters are in the strings (0-127).
+
+for (i=0; i<user.length; i++) {
+if (user.charCodeAt(i)>127) {
+alert("<%=trans.tslt("The username contains invalid characters")%>.");
+return false;
+   }
+}
+for (i=0; i<domain.length; i++) {
+if (domain.charCodeAt(i)>127) {
+alert("<%=trans.tslt("The domain name contains invalid characters")%>.");
+return false;
+   }
+}
+
+// See if "user" is valid 
+
+if (user.match(userPat)==null) {
+
+// user is not valid
+
+alert("<%=trans.tslt("The username doesn''t seem to be valid")%>.");
+return false;
+}
+
+/* if the e-mail address is at an IP address (as opposed to a symbolic
+host name) make sure the IP address is valid. */
+
+var IPArray=domain.match(ipDomainPat);
+if (IPArray!=null) {
+
+// this is an IP address
+
+for (var i=1;i<=4;i++) {
+if (IPArray[i]>255) {
+alert("<%=trans.tslt("Destination IP address is invalid")%>!");
+return false;
+   }
+}
+return true;
+}
+
+// Domain is symbolic name.  Check if it's valid.
+ 
+var atomPat=new RegExp("^" + atom + "$");
+var domArr=domain.split(".");
+var len=domArr.length;
+for (i=0;i<len;i++) {
+if (domArr[i].search(atomPat)==-1) {
+alert("<%=trans.tslt("The domain name does not seem to be valid")%>.");
+return false;
+   }
+}
+
+/* domain name seems valid, but now make sure that it ends in a
+known top-level domain (like com, edu, gov) or a two-letter word,
+representing country (uk, nl), and that there's a hostname preceding 
+the domain or country. */
+
+if (checkTLD && domArr[domArr.length-1].length!=2 && 
+domArr[domArr.length-1].search(knownDomsPat)==-1) {
+alert("The address must end in a well-known domain or two letter " + "country.");
+return false;
+}
+
+// Make sure there's a host name preceding the domain.
+
+if (len<2) {
+alert("<%=trans.tslt("This address is missing a hostname")%>!");
+return false;
+}
+
+// If we've gotten this far, everything's valid!
+return true;
+
+}
+
+function populateDept(form, field)
+{
+	form.action="UserSearch.jsp?div=" + field.value;
+	form.method="post";
+	form.submit();
+}
+
+function populateGrp(form, field1, field2)
+{
+	form.action="UserSearch.jsp?div=" + field1.value + "&dept=" + field2.value;
+	form.method="post";
+	form.submit();
+}
+
+</script>
+<body>
+<%
+
+String username=(String)session.getAttribute("username");
+
+  if (!logchk.isUsable(username)) 
+  {%> <font size="2">
+   
+	<script>
+	window.close();
+	opener.parent.location.href = "index.jsp";
+	</script>
+<%  } 
+  else 
+  { 
+
+if(request.getParameter("proceed") != null)
+{ 
+	int PKOrg = new Integer(request.getParameter("proceed")).intValue();
+ 	logchk.setOrg(PKOrg);
+}
+String LoginID =" ";
+String FamilyName=" ";
+String GivenName = " ";
+String Designation =" ";
+String IDNumber=" ";
+int Division =0;
+int Department=0;
+int Group=0;
+int UserType=0;
+String dis=" ";
+String email=" ";
+user.set_SQLstatement("");
+
+if(request.getParameter("btnAdd") != null)
+{
+	try
+	{
+		int disable = 0;
+		LoginID = request.getParameter("txtLoginID");
+		FamilyName = request.getParameter("txtFamilyName");
+		GivenName = request.getParameter("txtGivenName");
+		Designation = request.getParameter("txtDesignation");
+		IDNumber = request.getParameter("txtIDNumber");
+		Division = new Integer(request.getParameter("selDivision")).intValue();
+		Department = new Integer(request.getParameter("selDepartment")).intValue();
+		Group = new Integer(request.getParameter("selGroup")).intValue();
+		UserType = new Integer(request.getParameter("selUserType")).intValue();
+		String Password = request.getParameter("txtPassword");
+		dis = request.getParameter("cliDisabled");
+		email = request.getParameter("txtEmail");		
+		int CompanyID = logchk.getCompany();
+	
+		if(dis != " ")
+		{
+			disable = 1;
+		}
+		
+		
+		boolean bIsAdded = user.addRecord(Department,Division,UserType,FamilyName,GivenName,LoginID,Designation,
+				IDNumber,Group,Password,disable,CompanyID,logchk.getOrg(),email,null,null,null,null, logchk.getPKUser()); 
+
+
+		if(bIsAdded) {
+%>
+			<script>
+				alert("<%=trans.tslt("User has been successfully registered")%>");
+				//location.href('User.jsp');
+				location.href='User.jsp';
+			</script>
+<%	
+		}
+	}
+	catch (SQLException sqle) 
+    {
+
+		%>
+			<script>
+				alert("<%=trans.tslt("User exists")%>");
+			</script>
+<%	}
+}
+	boolean rePopulate = false;
+	if(request.getParameter("div") != null)
+	{
+		if(request.getParameter("div").length() > 0)
+		{
+			Division = new Integer(request.getParameter("div")).intValue();
+			rePopulate = true;
+		}
+	}
+	
+	if(request.getParameter("dept") != null)
+	{
+		Department = new Integer(request.getParameter("dept")).intValue();
+		rePopulate = true;
+	}
+	
+	if(request.getParameter("selGroup") != null)
+	{
+		if(request.getParameter("selGroup").length() > 0)
+		{
+			Group = new Integer(request.getParameter("selGroup")).intValue();
+			rePopulate = true;
+		}
+	}
+	if(request.getParameter("selGroup") != null)
+	{
+		if(request.getParameter("selUserType").length() > 0)
+		{
+			UserType = new Integer(request.getParameter("selUserType")).intValue();
+			rePopulate = true;
+		}
+	}
+	
+	if(rePopulate)
+	{
+		LoginID = request.getParameter("txtLoginID");
+		FamilyName = request.getParameter("txtFamilyName");
+		GivenName = request.getParameter("txtGivenName");
+		Designation = request.getParameter("txtDesignation");
+		IDNumber = request.getParameter("txtIDNumber");
+		String Password = request.getParameter("txtPassword");
+		dis = request.getParameter("cliDisabled");
+		email = request.getParameter("txtEmail");
+	}
+%>
+
+<form name="User" action="User.jsp" method="post" onsubmit="return validate()">
+<table border="0" width="98%" cellspacing="0" cellpadding="0">
+	<tr>
+		<font size="2" face="Arial" color="#000080">
+   
+		<td>
+		<b><font face="Arial" size="2" color="#000080"><%=trans.tslt("Search User")%></font></b></td>
+		</font>
+		</tr>
+	<tr>
+		<font size="2">
+   
+		<td>
+<font size="2">
+   
+<ul>
+	<li><font face="Arial"><%=trans.tslt("To Show all Users, click on the Search button without entering any value")%>.</font></li>
+	<li><font face="Arial"><%=trans.tslt("To Search, fill in search criteria and click on the Search button")%>.</font></li>
+	<li><font face="Arial"><%=trans.tslt("To Register New User, click on the Register New User button and Enter details of new user")%>.</font></li>	
+</ul>
+		</td>
+		</font>
+		</tr>
+</table>
+
+
+
+
+<table border="0" width="98%" cellspacing="0" cellpadding="0">
+	<tr>
+		<td width="19%"><b><font face="Arial" size="2"><%=trans.tslt("Organisation")%>: </font></b></td>
+		<td width="68%"> <font size="2">
+   
+	<select size="1" name="selOrg" onchange="proceed(this.form,this.form.selOrg)">
+<%
+// Added to check whether organisation is also a consulting company
+// if yes, will display a dropdown list of organisation managed by this company
+// else, it will display the current organisation only
+// Mark Oei 09 Mar 2010
+	String [] UserDetail = new String[14];
+	UserDetail = CE_Survey.getUserDetail(logchk.getPKUser());
+	boolean isConsulting = true;
+	isConsulting = Org.isConsulting(UserDetail[10]); // check whether organisation is a consulting company 
+	if (isConsulting){
+		Vector vOrg = logchk.getOrgList(logchk.getCompany());
+	
+		for(int i=0; i<vOrg.size(); i++)
+		{
+			votblOrganization vo = (votblOrganization)vOrg.elementAt(i);
+			int PKOrg = vo.getPKOrganization();
+			String OrgName = vo.getOrganizationName();
+	
+			if(logchk.getOrg() == PKOrg)
+			{ %>
+				<option value=<%=PKOrg%> selected><%=OrgName%></option>
+<%			} else { %>
+				<option value=<%=PKOrg%>><%=OrgName%></option>
+<%			}	
+		} 
+	} else { %>
+		<option value=<%=logchk.getSelfOrg()%>><%=UserDetail[10]%></option>
+	<% } // End of isConsulting %>
+</select></td>
+		<td width="13%"><p align="center"> </td>
+	</tr>
+	<tr>
+		<td width="19%">&nbsp;</td>
+		<td width="13%">&nbsp;</td>
+		<td width="68%">&nbsp;</td>
+	</tr>
+</table>
+<table border="1" width="36%" bordercolor="#3399FF" bgcolor="#FFFFCC">
+	<tr>
+		<td colspan="2" bgcolor="#000080" height="27">
+		<p align="center"><b><font face="Arial" color="#FFFFFF" size="2"><%=trans.tslt("User Detail")%></font></b></td>
+	</tr>
+	<tr>
+		<td width="36%" align="left"><font face="Arial" size="2">
+		<%=trans.tslt("Login ID")%>:</font></td>
+		<td align="left" width="59%">
+		<font face="Arial"><span style="font-size: 11pt">
+		<input name="txtLoginID" size="20" style="float: left" onKeyPress="if(event.keyCode==13) { search(this.form)}" value=<%=LoginID%>></span><font size="2">
+		</font></font></td>
+	</tr>
+	<tr>
+		<td width="36%" align="left"><font face="Arial" size="2">
+		<%=trans.tslt("Family Name")%>:</font></td>
+		<td align="left" width="59%"><font face="Arial">
+		<span style="font-size: 11pt">
+		<input type="text" name="txtFamilyName" size="20" onKeyPress="if(event.keyCode==13) { search(this.form)}" value=<%=FamilyName%>></span></font></td>
+	</tr>
+	<tr>
+		<td width="36%" align="left"><font face="Arial" size="2">
+		<%=trans.tslt("Given Name")%>:</font></td>
+		<td align="left" width="59%"><font face="Arial">
+		<span style="font-size: 11pt">
+		<input type="text" name="txtGivenName" size="20" onKeyPress="if(event.keyCode==13) { search(this.form)}" value=<%=GivenName%>></span></font></td>
+	</tr>
+	<tr>
+		<td width="36%" align="left"><font face="Arial" size="2">
+		<%=trans.tslt("Designation")%>:</font></td>
+		<td align="left" width="59%"><font face="Arial">
+		<span style="font-size: 11pt">
+		<input type="text" name="txtDesignation" size="20" onKeyPress="if(event.keyCode==13) { search(this.form)}" value=<%=Designation%>></span></font></td>
+	</tr>
+	<tr>
+		<td width="36%" align="left"><font face="Arial" size="2">
+		<%=trans.tslt("ID Number")%>:</font></td>
+		<td align="left" width="59%"><font face="Arial">
+		<span style="font-size: 11pt">
+		<input type="text" name="txtIDNumber" size="20" onKeyPress="if(event.keyCode==13) { search(this.form)}" value=<%=IDNumber%>></span></font></td>
+	</tr>
+	<tr>
+		<td width="36%" align="left"><font face="Arial" size="2">
+		<%=trans.tslt("Division")%>:</font></td>
+		<td align="left" width="59%"><font face="Arial">
+		<span style="font-size: 11pt">
+			<select size="1" name="selDivision" onKeyPress="if(event.keyCode==13) { search(this.form)}" onChange="populateDept(this.form, this.form.selDivision)">
+<%
+	if(Division == 0)%>
+				<option value='' selected>&nbsp;</option>
+<%
+
+	/***********************
+	* Edited by James 17 Oct 2007
+	************************/
+	Vector v = division.getAllDivisions(logchk.getOrg());
+	
+	for(int i=0; i<v.size(); i++) {
+		voDivision vo = (voDivision)v.elementAt(i);
+
+		int div_ID = vo.getPKDivision();
+		String div_Name = vo.getDivision();
+
+
+	if(Division != 0 && Division == div_ID)
+	{
+	%>
+		<option value=<%=div_ID%> selected><%=div_Name%></option>
+<%	}else{%>
+		<option value=<%=div_ID%>><%=div_Name%></option>
+<%	}
+}	%>		
+			</select></span></font></td>
+	</tr>
+	<tr>
+		<td width="36%" align="left"><font face="Arial" size="2">
+		<%=trans.tslt("Department")%>:</font></td>
+		<td align="left" width="59%"><font face="Arial">
+		<span style="font-size: 11pt"><select size="1" name="selDepartment" onKeyPress="if(event.keyCode==13) { search(this.form)}" onChange="populateGrp(this.form, this.form.selDivision, this.form.selDepartment)">
+		<%
+	if(Department == 0)%>
+				<option value='' selected>&nbsp;</option>
+<%
+	int div = 0;
+	if(request.getParameter("div") != null)
+	{
+		String divID = request.getParameter("div");
+		if(divID.length() > 0)
+		{
+			div = Integer.parseInt(divID);
+		}
+	}
+	
+	/********************
+	* Edited by James 17 Oct 2007
+	************************/
+	 Vector vDepartments = Cdepartment.getAllDepartments(logchk.getOrg(),div);
+	 for(int i=0; i<vDepartments.size(); i++) { 
+	
+	
+		voDepartment voD = (voDepartment)vDepartments.elementAt(i);
+        
+		int dep_ID=voD.getPKDepartment();
+		String dep_Name =voD.getDepartmentName();
+	
+
+	if(Department != 0 && Department == dep_ID)
+	{
+	%>
+		<option value=<%=dep_ID%> selected><%=dep_Name%></option>
+<%	}else{%>		
+		<option value=<%=dep_ID%>><%=dep_Name%></option>
+
+<%	}
+}	%>			
+		</select></span></font></td>
+	</tr>
+	<tr>
+		<td width="36%" align="left"><font face="Arial" size="2">
+		<%=trans.tslt("Group/Section")%>:</font></td>
+		<td align="left" width="59%"><select size="1" name="selGroup" onKeyPress="if(event.keyCode==13) { search(this.form)}">
+<%
+	if(Group == 0)%>
+			<option value='' selected>&nbsp;</option>
+<%
+	int dept = 0;
+	if(request.getParameter("dept") != null)
+	{
+		String department = request.getParameter("dept");
+		if(department.length()> 0)
+		{
+			dept = Integer.parseInt(department);
+		}
+	}
+	
+	/********************
+	* Edited by James 17 Oct 2007
+	************************/
+	
+	 Vector vGroup = group.getAllGroups(logchk.getOrg(),dept);
+	 for(int i=0; i<vGroup.size(); i++) { 
+	   
+		voGroup voG = (voGroup)vGroup.elementAt(i);      
+		
+		int Group_ID = voG.getPKGroup();
+		String GroupName = voG.getGroupName();
+	
+	
+
+	if(Group != 0 && Group== Group_ID )
+	{
+	%>
+		<option value=<%=Group_ID%> selected><%=GroupName%></option>
+<%	}else{%>
+		<option value=<%=Group_ID%>><%=GroupName%></option>
+<%	}
+}	
+%>			
+		</select></td>
+	</tr>
+	<tr>
+		<td width="36%" align="left"><font face="Arial" size="2">
+		<%=trans.tslt("User Type")%>:</font></td>
+		<td align="left" width="59%"><font face="Arial">
+		<span style="font-size: 11pt"><select size="1" name="selUserType" onKeyPress="if(event.keyCode==13) { search(this.form)}">
+		<%
+	if(UserType == 0)%>
+				<option value='' selected>&nbsp;</option>
+<%
+	/********************
+	* Edited by James 17 Oct 2007
+	************************/
+	/* Codes added to limit other organization from creating Administrator
+	 * accounts. Only PCC can create Administrator accounts
+	 * Mark Oei 09 Mar 2010
+	 */
+	Vector vUser = user.getAllUsers();
+	String chkOrg = logchk.getOrgCode();
+	
+	for(int i=0; i<vUser.size(); i++) { 
+   
+		voUserType voU = (voUserType)vUser.elementAt(i);      
+		
+		int type_ID  =voU.getPKUserType();
+        String type_Name = voU.getUserTypeName();
+		
+        if (!(chkOrg.equals("PCC"))&& (type_Name.equals("Administrator"))){
+        	continue;
+        }
+        else {
+        	if(UserType != 0 && UserType== type_ID )
+        	{%>
+				<option value=<%=type_ID%> selected><%=type_Name%></option>
+<%			} else {%>		
+				<option value=<%=type_ID%>><%=type_Name%></option>
+<%			}
+        }
+	 }	
+%>				
+		</select></span></font></td>
+	</tr>
+
+</table>
+<table border="0" width="100%" height="56">
+	<tr>
+		<td width="254">&nbsp;</td>
+		<td width="721" align="right">&nbsp;</td>
+	</tr>
+	<tr>
+		<td width="254" align="right">
+		<font size="2">  
+   
+		
+		<td width="721" align="right">
+		<font size="2">
+   
+		<p align="center">
+   
+		<input type="button" value="<%=trans.tslt("Search")%>" name="btnSearch" onclick="search(this.form)" style="float: left"><input type="button" value="<%=trans.tslt("Register New User")%>" name="btnAdd" onclick="OpenWindow1(this.form)" style="float: left"></td>
+	</tr>
+</table>
+</form>
+</cfoutput>
+</p>
+<%@ include file="Footer.jsp"%>
+<%	}	%>
+</body>
+</html>

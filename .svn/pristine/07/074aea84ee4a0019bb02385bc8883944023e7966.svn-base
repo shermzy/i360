@@ -1,0 +1,24 @@
+<!-- Edited by Xuehai, 25 May 2011. Deleted the useless import and jsp:useBean declaration -->
+<html>
+
+<head>
+<title>3-Sixty Profiler</title>
+</head>
+
+<frameset framespacing="0" border="0" frameborder="0" rows="138,*">
+	<frame name="Top" border="0" scrolling="no" noresize target="main" src="Top_Login_DE.jsp">
+	<frameset cols="159,*" framespacing="0" border="0" frameborder="0">
+		<frame name="Side" target="main" src="Side_PARTICIPANT.jsp">
+		<frame name="main" src="Login.jsp" target="main">
+	</frameset>
+	
+	<noframes>
+	<body>
+
+	<p>This page uses frames, but your browser doesn't support them.</p>
+
+	</body>
+	</noframes>
+</frameset>
+
+</html>

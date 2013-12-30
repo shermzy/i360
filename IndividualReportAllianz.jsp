@@ -1,0 +1,633 @@
+<%@ page import="java.sql.*,
+                 java.io.*,
+                 java.text.DateFormat,
+                 java.util.*,
+                 java.util.Date,
+                 java.text.*,
+                 java.lang.String,
+                 java.util.Vector"%>  
+
+<%@ page pageEncoding="UTF-8"%>
+<%// by lydia Date 05/09/2008 Fix jsp file to support Thai language %>
+<%@ page pageEncoding="UTF-8"%>
+<%request.setCharacterEncoding("UTF-8");%>
+<html>
+<head>
+<title>Individual Report</title>
+
+</head>
+
+<body>
+<jsp:useBean id="Database" class="CP_Classes.Database" scope="session"/>
+<jsp:useBean id="QE" class="CP_Classes.QuestionnaireReport" scope="session"/>
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/> 
+<jsp:useBean id="User" class="CP_Classes.User_Jenty" scope="session"/>     
+<jsp:useBean id="ExcelIndividual" class="CP_Classes.IndividualReport" scope="session"/> 
+<jsp:useBean id="Setting" class="CP_Classes.Setting" scope="session"/>    
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+
+<script language="javascript">
+
+var x = parseInt(window.screen.width) / 2 - 200;  // the number 250 is the exact half of the width of the pop-up and so should be changed according to the size of the pop-up
+var y = parseInt(window.screen.height) / 2 - 200;
+var myWindow;
+
+	
+function getID(form, ID, type)
+{
+	var typeSelected = "";
+	
+	//if(ID != 0) {
+		switch(type) {
+			case 1: typeSelected = "surveyID";
+					  break;
+			case 2: typeSelected = "groupID";
+					  break;
+			case 3: typeSelected = "targetID";
+					  break;
+		}
+		var query = "IndividualReportAllianz.jsp?" + typeSelected + "=" + ID;
+		form.action = query;
+		form.method = "post";
+		form.submit();
+/*	} else {
+		alert("<%=trans.tslt("Please select the options")%> !");
+		return false;
+	}
+*/	return true;	
+}
+
+function delay(gap)
+{ 	/* gap is in millisecs */
+	var then,now; then=new Date().getTime();
+	now=then;
+	
+	while((now-then)<gap)
+	{
+		now = new Date().getTime();
+	}
+}
+
+function confirmOpen(form, survey, target)
+{
+	//type 1=simplified;2=standard
+	var type = 2; 
+	if(form.chkReportType.checked)
+		type = 1
+		
+	if(survey.value != 0) {
+		if(target.value == 0)
+		{
+			form.btnOpen.value = "<%=trans.tslt("Processing")%> ...";
+			form.btnOpen.disabled = true;
+		}
+
+		myWindow=window.open('IndividualReportAll.jsp','IndividualReportPopUp','scrollbars=no, width=480, height=250');
+		var query = "IndividualReportAll.jsp";
+		myWindow.moveTo(x,y);
+		myWindow.location.href = query;
+
+		form.action = "IndividualReportAllianz.jsp?open="+type+"&cancel=0&survey="+survey.value;
+		form.submit();
+		return true;	
+		
+	} else {
+		alert("<%=trans.tslt("Please select the survey name")%> !");
+		return false;
+	}	
+}
+
+function cancelPrint(form)
+{
+	form.btnOpen.value = "<%=trans.tslt("Preview")%>";
+	form.action = "IndividualReportAllianz.jsp?cancel=1";
+	form.submit();
+	return true;
+}
+
+function finishPrint(form)
+{
+	form.btnOpen.value = "<%=trans.tslt("Preview")%>";
+	form.action = "IndividualReportAllianz.jsp";
+	form.submit();
+	return true;
+}
+
+/*------------------------------------------------------------start: Login modification 1------------------------------------------*/
+/*	choosing organization*/
+
+function proceed(form,field)
+{
+	form.action="IndividualReportAllianz.jsp?proceed="+field.value;
+	form.method="post";
+	form.submit();
+}	
+
+function populateDept(form, field)
+{
+	form.action="IndividualReportAllianz.jsp?div="+field.value;
+	form.method="post";
+	form.submit();
+}
+
+function populateGrp(form, field1, field2)
+{
+	form.action="IndividualReportAllianz.jsp?div=" + field1.value + "&dept="+ field2.value;
+	form.method="post";
+	form.submit();
+}
+
+</script>
+
+<p>
+  <%
+	//response.setHeader("Pragma", "no-cache");
+	//response.setHeader("Cache-Control", "no-cache");
+	//response.setDateHeader("expires", 0);
+
+	String username=(String)session.getAttribute("username");
+
+	if (!logchk.isUsable(username)) 
+	{%> 
+    	<script>
+			parent.location.href = "index.jsp";
+		</script>
+<%  } 
+	else 
+	{
+		if(request.getParameter("proceed") != null)
+		{ 
+			int PKOrg = new Integer(request.getParameter("proceed")).intValue();
+		 	logchk.setOrg(PKOrg);
+		}
+
+		/*-----------------------------------end login modification 1--------------------------------------*/
+		
+		int compID = logchk.getCompany();
+
+%>
+<form name="IndividualReport" method="post" action="IndividualReportAllianz.jsp">
+<table boQEr="0" width="439" cellspacing="0" cellpadding="0" font style='font-size:10.0pt;font-family:Arial'>
+	<tr>
+	  <td colspan="4" align="left"><b><font color="#000080" size="2" face="Arial"><%=trans.tslt("Individual Report")%> </font></b></td>
+    </tr>
+
+</table>
+&nbsp;
+<table boQEr="0" width="439" cellspacing="0" cellpadding="0" style='font-size:10.0pt;font-family:Arial' border="2" bordercolor="#3399FF">
+	<tr>
+	  <td align="right" bordercolor="#FFFFFF">&nbsp;</td>
+	  <td bordercolor="#FFFFFF">&nbsp;</td>
+	  <td bordercolor="#FFFFFF">&nbsp;</td>
+	  <td align="right" bordercolor="#FFFFFF">&nbsp;</td>
+    </tr>
+	<tr>
+		<td width="100" align="right" bordercolor="#FFFFFF"><%=trans.tslt("Organisation")%> :</td>
+		<td width="19" bordercolor="#FFFFFF">&nbsp;</td>
+		<td width="207" bordercolor="#FFFFFF"><select size="1" name="selOrg">
+<%
+	ResultSet rs = logchk.getOrgList();
+	while(rs.next())
+	{
+		int PKOrg = rs.getInt("PKOrganization");
+		String OrgName = rs.getString("OrganizationName");
+	
+	if(logchk.getOrg() == PKOrg)
+	{
+%>
+	<option value=<%=PKOrg%> selected><%=OrgName%></option>
+
+<%	}
+	else	
+	{%>
+	<option value=<%=PKOrg%>><%=OrgName%></option>
+<%	}	
+}%>
+</select></td>
+		<td width="103" align="left" bordercolor="#FFFFFF"><input type="button" value="<%=trans.tslt("Show")%>" name="btnShow" onclick="proceed(this.form,this.form.selOrg)"></td>
+	</tr>
+	<tr>
+		<td width="100" bordercolor="#FFFFFF">&nbsp;</td>
+		<td width="19" bordercolor="#FFFFFF">&nbsp;</td>
+		<td bordercolor="#FFFFFF">&nbsp;</td>
+		<td bordercolor="#FFFFFF">&nbsp;</td>
+
+	</tr>
+</table>
+
+<%	
+	int OrgID = logchk.getOrg();	
+	
+	int pkUser = logchk.getPKUser();
+	int userType = logchk.getUserType();	// 1= super admin
+	int nameSeq = User.NameSequence(OrgID);
+
+	ResultSet surveyList = QE.getSurvey(compID, OrgID);
+	ResultSet divisionList = null;
+	ResultSet departmentList = null;
+	ResultSet groupList  = null;
+	ResultSet targetList = null;
+	ResultSet raterList  = null;
+		
+	int surveyID = QE.getSurveyID();
+	int divisionID = QE.getDivisionID();
+	int departmentID = QE.getDepartmentID();
+	int groupID  = QE.getGroupID();	
+	int target   = QE.getTargetID();	
+	
+	if(surveyID != 0)
+	{
+		divisionList = QE.getDivision(surveyID);
+		departmentList = QE.getDepartment(surveyID, divisionID);
+		groupList = QE.getGroup(surveyID, QE.getDivisionID(), QE.getDepartmentID());
+		targetList = QE.getTarget(surveyID, divisionID, departmentID, groupID);
+		
+		int count = 0;
+		while(targetList.next())
+		{
+			count ++;
+		}
+	}
+	
+	if(request.getParameter("cancel") != null)
+	{
+		int iCancelled = Integer.parseInt(request.getParameter("cancel"));
+		ExcelIndividual.setCancelPrint(iCancelled);		// 0=Proceed; 1=Cancelled
+	} else {
+		ExcelIndividual.setCancelPrint(0);
+	}
+	
+	if(request.getParameter("surveyID") != null) {
+		int ID = Integer.parseInt(request.getParameter("surveyID"));
+		QE.setSurveyID(ID);
+		QE.setDivisionID(0);
+		QE.setDepartmentID(0);
+		QE.setGroupID(0);
+		QE.setRaterID(0);
+		QE.setTargetID(0);	
+		QE.setPageLoad(1);	
+		
+		divisionList = QE.getDivision(ID);
+		departmentList = QE.getDepartment(ID);
+		groupList = QE.getGroup(ID, QE.getDivisionID(), QE.getDepartmentID());
+		targetList = QE.getTarget(ID,  QE.getDivisionID(),  QE.getDepartmentID(), QE.getGroupID());
+	}
+	else if(request.getParameter("groupID") != null) {
+		int group = Integer.parseInt(request.getParameter("groupID"));
+		QE.setGroupID(group);
+		QE.setRaterID(0);
+		QE.setTargetID(0);			
+		targetList = QE.getTarget(QE.getSurveyID(),  QE.getDivisionID(),  QE.getDepartmentID(), QE.getGroupID());
+	} 
+	else if(request.getParameter("targetID") != null) {
+		int ID = QE.getSurveyID();
+		int targetID = Integer.parseInt(request.getParameter("targetID"));
+		QE.setTargetID(targetID);
+		QE.setRaterID(0);
+		raterList = QE.getRater(surveyID, groupID, targetID);
+	}
+ 	
+	
+	if (request.getParameter("div") != null)
+	{
+		QE.setDepartmentID(0);
+		QE.setGroupID(0);
+		int ID = QE.getSurveyID();
+		int div = Integer.parseInt(request.getParameter("selDiv"));
+		QE.setDivisionID(div);
+		departmentList = QE.getDepartment(ID, QE.getDivisionID());
+		groupList = QE.getGroup(ID, QE.getDivisionID(), QE.getDepartmentID());
+		targetList = QE.getTarget(ID,  QE.getDivisionID(),  QE.getDepartmentID(), QE.getGroupID());
+	}
+	
+	if(request.getParameter("dept") != null)
+	{
+		QE.setGroupID(0);
+		int ID = QE.getSurveyID();
+		int dept = Integer.parseInt(request.getParameter("selDept"));
+		QE.setDepartmentID(dept);
+		groupList = QE.getGroup(ID, QE.getDivisionID(), QE.getDepartmentID());
+		targetList = QE.getTarget(ID,  QE.getDivisionID(),  QE.getDepartmentID(), QE.getGroupID());
+	}
+%>
+
+  <table width="438" boQEr="0" style='font-size:10.0pt;font-family:Arial' bgcolor="#FFFFCC" border="2" bordercolor="#3399FF" height="247">
+    <tr>
+      <td width="119" align="right" bordercolor="#FFFFCC">&nbsp;</td>
+      <td width="1" bordercolor="#FFFFCC">&nbsp;</td>
+	  <td width="110" bordercolor="#FFFFCC">&nbsp;
+	  </td>
+    </tr>
+    <tr>
+      <td width="119" align="right" bordercolor="#FFFFCC"><%=trans.tslt("Survey's Name")%> :</td>
+      <td width="1" bordercolor="#FFFFCC">&nbsp;</td>
+      <% int t = 0; %>
+	  <td width="110" bordercolor="#FFFFCC">
+	  <select name="surveyName" onchange = "getID(this.form, this.form.surveyName.options[surveyName.selectedIndex].value, 1)">
+	  <option value=<%=t%>><%=trans.tslt("Please select one")%>
+	  <% while(surveyList.next()) {
+	  		int ID = surveyList.getInt(1);
+			String name = surveyList.getString(2);
+			int selectedSurvey = QE.getSurveyID();
+			
+			if(selectedSurvey != 0 && ID == selectedSurvey) {
+	  %>
+	  	<option value = <%=selectedSurvey%> selected><%=name%>
+	  <% } else {  %>
+	  	<option value = <%=ID%>><%=name%>	  
+	  <% }
+		   } 
+	  %>
+      </select></td>
+    </tr>
+	  <tr>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+    </tr>
+    <tr>
+      <td align="right" bordercolor="#FFFFCC"><%=trans.tslt("Division")%> : </td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+	  <td bordercolor="#FFFFCC"><select name="selDiv" onchange="populateDept(this.form, this.form.selDiv)">
+	  <option value=<%=t%>><%=trans.tslt("All Divisions")%>
+	  <% 
+	  if(divisionList != null) { 
+		  	while(divisionList.next()) {
+	  			int ID = divisionList.getInt("PKDivision");
+				String name = divisionList.getString("DivisionName");
+				int selectedDiv = QE.getDivisionID();
+
+				if(selectedDiv != 0 && ID == selectedDiv) {
+	  %>			<option value = <%=ID%> selected><%=name%>
+	  <% 		} else { 
+	  				
+	  %>				<option value = <%=ID%>><%=name%>	
+	  <% 		}
+			} 
+		}
+		%>
+      </select></td>
+    </tr>
+	  <tr>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+    </tr>
+    <tr>
+      <td align="right" bordercolor="#FFFFCC"><%=trans.tslt("Department")%> : </td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+	  <td bordercolor="#FFFFCC"><select name="selDept" onchange="populateGrp(this.form, this.form.selDiv, this.form.selDept)">
+	  <option value=<%=t%>><%=trans.tslt("All Departments")%>
+	  <% 
+	 if(departmentList != null) { 
+		  	while(departmentList.next()) {
+	  			int ID = departmentList.getInt("PKDepartment");
+				String name = departmentList.getString("DepartmentName");
+				int selectedDept = QE.getDepartmentID();
+			
+				if(selectedDept != 0 && ID == selectedDept) {
+	  %>
+	  	<option value = <%=ID%> selected><%=name%>
+		<% } else 
+			{ 
+		%>			<option value = <%=ID%>><%=name%>	  
+		<%	}
+		} 
+	}%>
+      </select></td>
+    </tr>
+    <tr>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+    </tr>
+    <tr>
+      <td align="right" bordercolor="#FFFFCC"><%=trans.tslt("Group Name")%> : </td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+	  <td bordercolor="#FFFFCC"><select name="groupName" onchange="getID(this.form, this.form.groupName.options[groupName.selectedIndex].value, 2)">
+	  <option value=<%=t%>><%=trans.tslt("All Groups")%>
+	  <% 
+
+	  if(groupList != null) { 
+		  	while(groupList.next()) {
+	  			int ID = groupList.getInt("PKGroup");
+				String name = groupList.getString("GroupName");
+				int selectedGroup = QE.getGroupID();
+			
+				if(selectedGroup != 0 && ID == selectedGroup) {
+	  %>
+	  	<option value = <%=ID%> selected><%=name%>
+		<% } else { %>
+		<option value = <%=ID%>><%=name%>	  
+		<% }
+			} }%>
+      </select></td>
+    </tr>
+    <tr>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+    </tr>
+    <tr>
+      <td align="right" bordercolor="#FFFFCC"><%=trans.tslt("Target's Name")%> : </td>
+      <td bordercolor="#FFFFCC">&nbsp;</td>
+	  <td bordercolor="#FFFFCC"><select name="targetName">
+	  <option value=<%=t%>><%=trans.tslt("All Targets")%>
+	  <% 	if(targetList != null) {
+	  			while(targetList.next()) {
+				int loginID = targetList.getInt(1);
+				
+				String name=targetList.getString("FullName");
+				int selectedTarget = QE.getTargetID();
+		
+				if(loginID == selectedTarget) {
+	  %>
+	  <option value = <%=loginID%> selected><%=name%>	
+	 <% } else { %>
+	  	<option value = <%=loginID%>><%=name%>	  
+		<% }
+			} 
+			}%>
+      </select></td>
+    </tr>
+    <tr>
+    	<td bordercolor="#FFFFCC">
+		<p align="right">
+		<input type="checkbox" name="chkReportType" value="ON" checked></td>
+    	<td bordercolor="#FFFFCC">&nbsp;</td>
+    	<td bordercolor="#FFFFCC"><%=trans.tslt("Simplified Report")%></td>
+    </tr>
+	<tr>
+		<td bordercolor="#FFFFCC" colspan="3">
+		</td>
+		<td width="238" bordercolor="#FFFFCC"> 
+<%
+	if(compID != 2 || userType == 1) {
+
+%>		<input type="button" name="btnOpen" value="<%=trans.tslt("Preview")%>" onclick = "return confirmOpen(this.form, this.form.surveyName, this.form.targetName)">
+		<input type="button" name="btnCancel" value="<%=trans.tslt("Cancel")%>" onclick = "return cancelPrint(this.form)">
+<%		
+		if(request.getParameter("open") != null)
+		{
+			int type = Integer.parseInt(request.getParameter("open"));
+			surveyID = Integer.parseInt(request.getParameter("survey"));
+			divisionID = QE.getDivisionID();
+			departmentID = QE.getDepartmentID();
+			groupID = QE.getGroupID();
+			target = Integer.parseInt(request.getParameter("targetName"));
+			
+			QE.setTargetID(target);
+
+			if(target != 0)
+			{
+				Date timeStamp = new java.util.Date();
+				SimpleDateFormat dFormat = new SimpleDateFormat("ddMMyyHHmmss");
+				String temp  =  dFormat.format(timeStamp);
+				
+				String file_name = "IndividualReport" + temp + ".xls";
+			
+				ExcelIndividual.ReportAllianz(surveyID, target, pkUser, file_name);
+			%>
+				<script>
+					document.IndividualReport.btnOpen.disabled = false;
+				</script>
+			<%
+				String output = Setting.getReport_Path() + "\\" + file_name;
+				File f = new File (output);
+			
+				//set the content type(can be excel/word/powerpoint etc..)
+				response.setContentType ("application/xls");
+				//set the header and also the Name by which user will be prompted to save
+				response.addHeader ("Content-Disposition", "attachment;filename=\"IndividualReport.xls\"");
+			
+				//get the file name
+				String name = f.getName().substring(f.getName().lastIndexOf("/") + 1,f.getName().length());
+				
+				InputStream in = new FileInputStream(f);
+				ServletOutputStream outs = response.getOutputStream();
+				
+				int bit = 256;
+				int i = 0;
+		
+				try {
+					while ((bit) >= 0) {
+						bit = in.read();
+						outs.write(bit);
+					}
+				} catch (IOException ioe) {
+					ioe.printStackTrace(System.out);
+				}
+
+				outs.flush();
+				outs.close();
+				in.close();	
+			
+			} else {	//generate multiple reports here
+			
+				target = Integer.parseInt(request.getParameter("targetName"));
+				QE.setTargetID(target);
+				divisionID = Integer.parseInt(request.getParameter("selDiv"));
+				departmentID = Integer.parseInt(request.getParameter("selDept"));
+				groupID = Integer.parseInt(request.getParameter("groupName"));
+				QE.setDivisionID(divisionID);
+				QE.setDepartmentID(departmentID);
+				QE.setGroupID(groupID);
+				
+				// extract all targets under this group
+				int total = 1; //total report generated
+				String path = "J:/tomcat/webapps/i360/Report/";
+				System.out.println("Surv = " + surveyID);
+				System.out.println("Div = " + divisionID);
+				System.out.println("Dept = " + departmentID);
+				System.out.println("Grp = " + groupID);
+				Vector allTarget = ExcelIndividual.AllTargets(surveyID, divisionID, departmentID, groupID, OrgID);
+				int totalReports = allTarget.size();
+				
+				for(int i=0; i<totalReports; i++) 
+				{
+					// for delay purpose
+					if(i != 0)
+						for(int j=0;j<100000;j++);
+			
+					if (ExcelIndividual.getCancelPrint() == 0)
+					{
+						//generate individual report.
+						String [] data = (String[])(allTarget.elementAt(i));
+						String surveyName 	= data[0];
+						int targetID 		= Integer.parseInt(data[1]);
+						String targetName	= data[2];					
+	%>
+						<script>
+							window.status = "Generating Individual Report for " + "<%=targetName%> (<%=total%> of <%=totalReports%>.............)";
+						</script>
+	<%				
+						Date timeStamp = new java.util.Date();
+						SimpleDateFormat dFormat = new SimpleDateFormat("ddMMyyHHmmss");
+						String temp  =  dFormat.format(timeStamp);
+						
+						String file_name = "Individual Report for " + targetName + " (" + temp + ").xls";
+						
+						//try {
+						request.getSession().setMaxInactiveInterval(1800);
+						System.out.println("Generating Individual Report for " + targetName + " (" + total + " of " + totalReports + ").............");
+						
+						ExcelIndividual.Report(surveyID, targetID, pkUser, file_name, type);
+						
+						System.out.println("Completed Individual Report for " + targetName + " (" + total + " of " + totalReports + ").............");	
+						//} catch (Exception E) { System.out.println(E.getMessage());}					
+	%>
+						<script>
+							window.status = "Completed for "+ "<%=targetName%> (<%=total%> of <%=totalReports%>)";
+						</script>
+	<%
+						total++;
+					} else {
+						System.out.println("Report generation has been cancelled.\nThe generated reports are stored in " + path) ;
+						i = totalReports;	// Stop generating, break the for loop
+					}
+					
+				}	// end for
+	%>
+				<script>
+					alert("<%=total-1%> Report(s) Generated Successfully.\nThe generated reports are stored in <%=path%>");
+				</script>
+	<%
+			}	// end if (target != 0)
+
+		}	// end if (request.getParameter("open") != null)
+	} else { 
+	
+%>		<input type="button" name="btnOpen" value="<%=trans.tslt("Preview")%>" disabled> 
+		<input type="button" name="btnCancel" value="<%=trans.tslt("Cancel")%>" disabled>
+<%	
+	} // end if(compID != 2 || userType == 1) %>
+    	</td>   
+    	
+    </tr>
+    
+  </table>
+  
+<% }
+%>
+</form>
+
+<table border="0" width="610" height="26">
+	<tr>
+   
+		<td align="center" height="5" valign="top">
+		</td>
+		</tr>
+	<tr>
+   
+		<td align="center" height="5" valign="top">
+		</td>
+		</tr>
+	<tr>
+   
+		<td align="center" height="5" valign="top">
+		</td>
+		</tr>
+	</table>
+	<%@ include file="Footer.jsp"%>
+</body>
+</html>

@@ -1,0 +1,1198 @@
+package CP_Classes;
+
+import java.sql.*;
+
+/**
+ * This class implements all the operations for Questionnaire, which is to be used in System Libraries, Survey, and Report..
+ */
+public class Questionnaire
+{
+	/**
+	 * Declaration of new object of class Database. This object is declared private, which is to make sure that it is only accessible within this class Competency.
+	 */
+	private Database db;
+	
+	/**
+	 * Declaration of new object of class Calculation. This object is declared private, which is to make sure that it is only accessible within this class Competency.
+	 */
+	private Calculation C;
+	
+	/**
+	 * Declaration of new object of class User. This object is declared private, which is to make sure that it is only accessible within this class Competency.
+	 */
+	private User_Jenty U;
+	
+	/**
+	 * Bean Variable to store Job Position.
+	 */
+	public String JobPost;
+	
+	/**
+	 * Bean Variable to store the name of the target.
+	 */
+	public String Name;
+	
+	/**
+	 * Bean Variable to store total competency for the particular questionnaire.
+	 */
+	public int TotalComp;
+	
+	/**
+	 * Bean Variable to store the current total competency for the particular questionnaire.
+	 * This variable will increase/decrease everytime the rater move next /previous.
+	 */
+	public int TotalCurrComp;
+	
+	/**
+	 * Bean Variable to store the current competencyID for the particular questionnaire.
+	 */
+	public int CurrID;
+	
+	/**
+	 * Bean Variable to store whether the particular rating scale has been checked.
+	 */
+	public int Checked;
+
+	/**
+	 * Bean Variable to store all the rating tasks for the particular questionnaire.
+	 */
+	public int RT[];	//rating task
+	
+	/**
+	 * Bean Variable to store all the rating scales for the particular questionnaire.
+	 */
+	public int RS[];	// rating scale
+	
+	/**
+	 * Bean Variable to store the assignmentID of the particular rater.
+	 */
+	public int AssignmentID;
+	
+	/**
+	 * Bean Variable to store the future job ID for the particular questionnaire.
+	 */
+	public String FutureJob;
+	
+	/**
+	 * Bean Variable to store the timeframe ID for the particular questionnaire.
+	 */
+	public String TimeFrame;
+	
+	/**
+	 * Bean Variable to store the survey level for the particular questionnaire.
+	 */
+	public int surveyLevel;
+	
+	/**
+	 * Bean Variable to determine the starting for the particular questionnaire, 
+	 * so that it can be directed to the first question that has not been completed.
+	 */
+	public int StartID;
+
+
+	public Questionnaire() {
+		db = new Database();
+		C = new Calculation();
+		U = new User_Jenty();
+		
+		TotalCurrComp = 0;
+		TotalComp = 0;
+		Checked = 0;
+		StartID = 0;
+	}
+
+
+	/**
+	  * Retrieve the Competency or Key Behaviour List for a particular Survey.
+	  */
+	public ResultSet CompetencyOrKBList(int surveyID) {
+		
+		int surveyLevel = C.LevelOfSurvey(surveyID);
+		String query = "";
+		
+		try {
+			if(surveyLevel == 0) {
+				query = query + "SELECT tblSurveyCompetency.CompetencyID, Competency.CompetencyDefinition ";
+				query = query + "FROM tblSurveyCompetency INNER JOIN Competency ON ";
+				query = query + "tblSurveyCompetency.CompetencyID = Competency.PKCompetency ";
+				query = query + "WHERE tblSurveyCompetency.SurveyID = " + surveyID;
+				query = query + " ORDER BY tblSurveyCompetency.CompetencyID, Competency.CompetencyDefinition";
+			}
+			else {
+				query = query + "SELECT tblSurveyBehaviour.CompetencyID, Competency.CompetencyDefinition, ";
+				query = query + "tblSurveyBehaviour.KeyBehaviourID, KeyBehaviour.KeyBehaviour FROM ";
+				query = query + "tblSurveyBehaviour INNER JOIN Competency ON ";
+				query = query + "tblSurveyBehaviour.CompetencyID = Competency.PKCompetency INNER JOIN ";
+				query = query + "KeyBehaviour ON tblSurveyBehaviour.KeyBehaviourID = KeyBehaviour.PKKeyBehaviour ";
+				query = query + "WHERE tblSurveyBehaviour.SurveyID = " + surveyID;
+				query = query + " ORDER BY tblSurveyBehaviour.CompetencyID, Competency.CompetencyDefinition, ";
+				query = query + "tblSurveyBehaviour.KeyBehaviourID, KeyBehaviour.KeyBehaviour";
+			}
+			
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+
+			return rs;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+
+	
+	/**
+	  * Retrieve the total Competencies / Key Behaviours for a particular Survey.
+	  */
+	public int TotalList(int surveyID) {
+		
+		int surveyLevel = C.LevelOfSurvey(surveyID);
+		String query = "";
+		
+		try {
+			if(surveyLevel == 0) 
+				query = query + "Select count(*) from tblSurveyCompetency where SurveyID = " + surveyID;
+			else {
+				query = query + "Select count(*) from tblSurveyBehaviour where SurveyID = " + surveyID;
+			}
+								
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+
+			rs.next();
+
+			return rs.getInt(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return 0;
+	}
+
+
+
+	/**
+	  * This method returns the Key Behaviour Definition given the KB ID.
+	  */
+	public String getKB(int pkKB) {
+		try {
+			String query = "Select KeyBehaviour from KeyBehaviour where PKKeyBehaviour = " + pkKB;
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			rs.next();
+
+			return rs.getString(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+
+
+/************************************************* RATING TASK ***************************************************/
+
+	/**
+	  * This method is used to retrieve the Rating Task and Rating Scale assigned to each survey.
+	  */
+	public ResultSet getSurveyRating(int surveyID) {
+		try {
+			String query = "Select * from tblSurveyRating where SurveyID = " + surveyID;
+			query = query + " order by RatingTaskID";
+			
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+
+			return rs;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+
+	/**
+	 * Get the total rating tasks for the particular survey.
+	 */
+	public int getTotalSurveyRating(int surveyID) {
+		try {
+			String query = "Select count(*) from tblSurveyRating where SurveyID = " + surveyID;
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			rs.next();
+
+			return rs.getInt(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return 0;
+	}
+
+	/**
+	 * Get the rating task name given the rating task ID.
+	 */
+	public String getRatingTask(int RatingTaskID) {
+		try {
+			String query = "Select RatingTask from tblRatingTask where RatingTaskID = " + RatingTaskID;
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			rs.next();
+
+			return rs.getString(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+	
+	/**
+	 * Get the rating task name given the rating task ID.
+	 */
+	public String getSurveyRatingTask(int RatingTaskID, int surveyID) {
+		try {
+			String query = "Select RatingTaskName from tblSurveyRating where RatingTaskID = " + RatingTaskID + " and SurveyID = " + surveyID;
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			rs.next();
+
+			return rs.getString(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+
+	/**
+	 * Retrieves all the rating scale value given the specific scaleID.
+	 */
+	public ResultSet getRatingScale(int RatingScaleID) {
+		try {
+			String query = "Select * from tblScaleValue where ScaleID = " + RatingScaleID;
+			query = query + " order by LowValue, HighValue";
+			
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+
+			return rs;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+
+	/**
+	 * Retrieves all the rating scale value given the specific scaleID.
+	 * @param RatingScaleID
+	 * @return
+	 * @author Maruli
+	 */
+	public ResultSet getRatingScaleDescending(int RatingScaleID) {
+		try {
+			String query = "SELECT * FROM tblScaleValue WHERE ScaleID = " + RatingScaleID;
+			query = query + " ORDER BY LowValue DESC, HighValue DESC";
+			
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+
+			return rs;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+	
+	/**
+	 * Get total rating scale value under the particular scale.
+	 */
+	public int getTotalRS(int ScaleID) {
+		try {
+			String query = "Select count(*) from tblScaleValue where ScaleID = " + ScaleID;
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			rs.next();
+
+			return rs.getInt(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return 0;
+	}
+	
+
+	/**
+	  * Get the AssignmentID based on SurveyID, TargetLoginID, and RaterLoginID assigned to the particular Survey.
+	  */
+	public int AssignmentID(int surveyID, int targetID, int raterID) {
+		try {
+			String query = "Select AssignmentID from tblAssignment where ";
+			query = query + "SurveyID = " + surveyID + " and RaterLoginID = " + raterID;
+			query = query + " and TargetLoginID = " + targetID;
+			
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			rs.next();
+
+			return rs.getInt(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return 0;
+	}
+
+/**************************************************** SURVEY INFO ***************************************************/
+
+	/**
+	 * Retrieves the survey information from tblSurvey.
+	 * This is basically to get the Future Job and Time Frame ID
+	 */
+	public ResultSet getSurveyInfo(int SurveyID) {
+		try {
+			String query = "Select * from tblSurvey where SurveyID = " + SurveyID;
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+
+			return rs;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+	
+	/**
+	 * Get the future job decription given the surveyID.
+	 */
+	public String FutureJob(int surveyID) {
+			try {
+				String query = "Select JobPosition from tblJobPosition ";
+				query = query + "join tblSurvey on tblSurvey.JobFutureID = tblJobPosition.JobPositionID ";
+				query = query + "where SurveyID = " + surveyID;
+
+				db.openDB();
+				Statement stmt = db.con.createStatement();
+				ResultSet rs = stmt.executeQuery(query);
+				rs.next();
+
+				String jobFunct = rs.getString(1);
+
+				return jobFunct;
+			} catch (SQLException SE) {
+				System.err.println(SE.getMessage());
+			}
+			return null;
+	}
+
+	/**
+	 * Get the time frame description given the SurveyID.
+	 */
+	public String TimeFrame(int SurveyID) {
+		try {
+			String query = "Select tblTimeFrame.TimeFrame from tblTimeFrame JOIN ";
+			query = query + "tblSurvey ON tblSurvey.TimeFrameID = tblTimeFrame.TimeFrameID ";
+			query = query + "where SurveyID = " + SurveyID;
+			
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			rs.next();
+
+			return rs.getString(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+
+
+/*********************************************** ADD RESULTS *******************************************************/
+
+	
+	/**
+	 * Add a new record to the database when Rater fill in the questionnaire.
+	 * Competency Level Questionnaire will be added into tblResultCompetency.
+	 * Key Behaviour Level Questionnaire will be added into tblResultBehaviour.
+	 * @param AssignmentID
+	 * @param CompOrKBID
+	 * @param RatingTaskID
+	 * @param Result
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	public void addResult(int AssignmentID, int CompOrKBID, int RatingTaskID, float Result) throws SQLException, Exception 
+	{
+		int surveyLevel = C.SurveyLevelByAssignmentID(AssignmentID);
+		String query = "";
+		
+		if(surveyLevel == 0) {
+			query = query + "Insert into tblResultCompetency(AssignmentID, CompetencyID, RatingTaskID, Result) ";
+			query = query + "values (" + AssignmentID + ", " + CompOrKBID + ", " + RatingTaskID;
+			query = query + ", " + Result + ")";
+		}
+		else {
+			query = query + "Insert into tblResultBehaviour(AssignmentID, KeyBehaviourID, RatingTaskID, Result) ";
+			query = query + "values (" + AssignmentID + ", " + CompOrKBID + ", " + RatingTaskID + ", " + Result + ")";
+		}
+		
+		db.openDB();
+		PreparedStatement ps = db.con.prepareStatement(query);
+		
+		float exist = CheckOldResultExist(AssignmentID, CompOrKBID, RatingTaskID);
+		
+		if(exist < 0) 
+			ps.executeUpdate();
+			
+		db.closeDB();
+	}
+	
+	/**
+	 * Delete result from db.
+	 * This is used in import questionnaire.
+	 */
+	public void deleteResult(int AssignmentID, int CompOrKBID, int RatingTaskID) throws SQLException, Exception {
+		
+		int surveyLevel = C.SurveyLevelByAssignmentID(AssignmentID);
+		String query = "";
+		
+		if(surveyLevel == 0) {		
+			query = "Delete from tblResultCompetency ";
+			query +=" where AssignmentID = " + AssignmentID + " and CompetencyID = " + CompOrKBID;
+			query +=" and RatingTaskID = " + RatingTaskID;
+		}
+		else {
+			query = "Delete from tblResultBehaviour ";
+			query +=" where AssignmentID = " + AssignmentID + " and KeyBehaviourID = " + CompOrKBID;
+			query +=" and RatingTaskID = " + RatingTaskID;
+		}
+			
+		db.openDB();
+		PreparedStatement ps = db.con.prepareStatement(query);
+		ps.executeUpdate();
+			
+		db.closeDB();
+	}
+	
+	
+	/**
+	 * Delete comment from db.
+	 * This is used in import questionnaire.
+	 */
+	public void deleteComment(int AssignmentID, int CompID, int KBID) throws SQLException, Exception 
+	{
+		String	query = "Delete from tblComment ";
+		query +=" where AssignmentID = " + AssignmentID + " and CompetencyID = " + CompID;
+		query += " and KeyBehaviourID = " + KBID;
+		
+		db.openDB();
+		PreparedStatement ps = db.con.prepareStatement(query);
+		ps.executeUpdate();
+			
+		db.closeDB();
+	}
+	
+	/**
+	  * Edit the new rating to the database when Rater importing the questionnaire.
+	  * Competency Level Questionnaire will be added in to tblResultCompetency.
+	  * Key Behaviour Level Questionnaire will be added in tblResultBehaviour.
+	  */
+	public void editResult(int AssignmentID, int CompOrKBID, int RatingTaskID, int Result) throws SQLException, Exception 
+	{		
+		int surveyLevel = C.SurveyLevelByAssignmentID(AssignmentID);
+		String query = "";
+	
+		if(surveyLevel == 0) {		
+			query = "Update tblResultCompetency set Result = " + Result;
+			query +=" where AssignmentID = " + AssignmentID + " and CompetencyID = " + CompOrKBID;
+			query +=" and RatingTaskID = " + RatingTaskID;
+		}
+		else {
+			query = "Update tblResultBehaviour set Result = " + Result;
+			query +=" where AssignmentID = " + AssignmentID + " and KeyBehaviourID = " + CompOrKBID;
+			query +=" and RatingTaskID = " + RatingTaskID;
+		}
+			
+		db.openDB();
+		PreparedStatement ps = db.con.prepareStatement(query);
+		ps.executeUpdate();
+			
+		db.closeDB();
+	}
+	
+	/**
+	 * Update rater status.
+	 */
+	public void SetRaterStatus(int assignmentID, int status) 
+	{
+		String query = "";
+			
+		try {
+			query = query + "Update tblAssignment Set RaterStatus = " + status;
+			query = query + " WHERE AssignmentID = " + assignmentID;
+
+			db.openDB();
+			PreparedStatement ps = db.con.prepareStatement(query);
+			ps.executeUpdate();
+			
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+	}
+
+
+
+/************************************************** OLD RESULTS ****************************************************/
+
+	/**
+	 * Retrieves the existing result that has been filled in before.
+	 */
+	public ResultSet QuestionnaireOldResult(int assignmentID) 
+	{
+		int surveyLevel = C.SurveyLevelByAssignmentID(assignmentID);
+		String query = "";
+			
+		try {
+			if(surveyLevel == 0) {		
+				query = query + "select CompetencyID, RatingTaskID, Result from tblResultCompetency ";
+				query = query + "where AssignmentID = " + assignmentID;
+				query = query + " order by CompetencyID, RatingTaskID";
+			}
+			else {
+				query = query + "SELECT tblResultBehaviour.AssignmentID, KeyBehaviour.FKCompetency, ";
+				query = query + "tblResultBehaviour.KeyBehaviourID, tblResultBehaviour.RatingTaskID, ";
+				query = query + "tblResultBehaviour.Result FROM KeyBehaviour INNER JOIN tblResultBehaviour ";
+				query = query + "ON KeyBehaviour.PKKeyBehaviour = tblResultBehaviour.KeyBehaviourID ";
+				query = query + "WHERE tblResultBehaviour.AssignmentID = " + assignmentID;
+				query = query + " ORDER BY KeyBehaviour.FKCompetency, tblResultBehaviour.KeyBehaviourID, ";
+				query = query + "tblResultBehaviour.RatingTaskID";
+			}
+			
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+
+			return rs;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+	
+	/**
+	 * Count the total results that has been filled in.
+	 * This is to check whether the rater has completed the questionnaire, so that we won't allow them to click FINISH.
+	 */
+	public int TotalResult(int assignmentID) {
+		int surveyLevel = C.SurveyLevelByAssignmentID(assignmentID);
+		String query = "";
+			
+		try {
+			if(surveyLevel == 0)		
+				query = query + "select count(*) from tblResultCompetency where AssignmentID = " + assignmentID;
+			else 
+				query = query + "select count(*) from tblResultBehaviour where AssignmentID = " + assignmentID;
+			
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			rs.next();
+
+			return rs.getInt(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return 0;
+	}
+	
+	
+	/**
+	 * Count the total results that has been filled in for each Competency.
+	 * This is for display purpose, first open questionnaire will display the question that has not been answered.
+	 */
+	public int TotalResult(int assignmentID, int compID, int KBID) {
+		int surveyLevel = C.SurveyLevelByAssignmentID(assignmentID);
+		String query = "";
+			
+			
+		try {
+			if(surveyLevel == 0) {
+				query = query + "select count(*) from tblResultCompetency where AssignmentID = " + assignmentID;
+				query = query + " and CompetencyID = " + compID + " group by CompetencyID";
+			}
+			else {
+				query = query + "select count(*) from tblResultBehaviour where AssignmentID = " + assignmentID;
+				query = query + " and KeyBehaviourID = " + KBID + " group by KeyBehaviourID";
+			}
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			rs.next();
+
+			return rs.getInt(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return 0;
+	}
+	
+	/**
+	 * Update the existing result if the rater change the rating. 
+	 * @param assignmentID
+	 * @param ID
+	 * @param RatingTaskID
+	 * @param Result
+	 */
+	public void updateOldResult(int assignmentID, int ID, int RatingTaskID, float Result) 
+	{
+		String query = "";
+		int surveyLevel = C.SurveyLevelByAssignmentID(assignmentID);
+		
+		try {
+			if(surveyLevel == 0) {
+				query = query + "Update tblResultCompetency ";
+				query = query + "SET Result = " + Result;
+				query = query + " WHERE AssignmentID = " + assignmentID + " AND CompetencyID = " + ID;
+				query = query + " AND RatingTaskID = " + RatingTaskID;
+			}
+			else {
+				query = query + "Update tblResultBehaviour ";
+				query = query + "SET Result = " + Result;
+				query = query + " WHERE AssignmentID = " + assignmentID;
+				query = query + " AND KeyBehaviourID = " + ID;
+				query = query + " AND RatingTaskID = " + RatingTaskID;
+			}
+			
+			db.openDB();
+			PreparedStatement ps = db.con.prepareStatement(query);
+			ps.executeUpdate();
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+	}
+	
+	
+	/**
+	 * Check whether the particular question has been answered previously.
+	 * If yes, then it will return the Result, if no then we will need to add in the new record to the Database.
+	 * @param assignmentID
+	 * @param ID
+	 * @param RatingTaskID
+	 * @return Previous score value
+	 */
+	public float CheckOldResultExist(int assignmentID, int ID, int RatingTaskID) {
+		int surveyLevel = C.SurveyLevelByAssignmentID(assignmentID);
+		String query = "";
+			
+		try {
+			if(surveyLevel == 0) {
+				query = query + "select Result from tblResultCompetency ";
+				query = query + " WHERE AssignmentID = " + assignmentID + " AND CompetencyID = " + ID;
+				query = query + " AND RatingTaskID = " + RatingTaskID;
+			}
+			else {
+				query = query + "SELECT Result from tblResultBehaviour ";
+				query = query + " WHERE AssignmentID = " + assignmentID + " AND KeyBehaviourID = " + ID;
+				query = query + " AND RatingTaskID = " + RatingTaskID;
+			}
+			
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if(rs.next())
+				return rs.getFloat(1);
+			
+			return -1;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return -1;
+	}
+	
+	
+	
+	/**
+	  * Retrieve user name from [User].
+	  */
+	public String UserName(int orgID, int pkUser) {
+		String query = "";
+		int nameSequence = U.NameSequence(orgID);
+						
+		try {	
+			
+			if(nameSequence == 0) {
+				query = query + "select FamilyName + ' ' + GivenName from [User] ";
+				query = query + " WHERE PKUser = " + pkUser;
+			} else {
+				query = query + "select GivenName + ' ' + FamilyName from [User] ";
+				query = query + " WHERE PKUser = " + pkUser;
+			}
+				
+			
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			rs.next();
+
+			return rs.getString(1);
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return null;
+	}
+
+
+
+
+/************************************************** BEAN VARIABLES *************************************************/
+
+	/**
+	 * Store bean variable job position.
+	 */
+	public void setJobPost(String JobPost) {
+		this.JobPost = JobPost;
+	}
+
+	/**
+	 * Get bean variable job position.
+	 */
+	public String getJobPost() {
+		return JobPost;
+	}
+
+	/**
+	 * Store bean variable target name.
+	 */
+	public void setName(String Name) {
+		this.Name = Name;
+	}
+
+	/**
+	 * Get bean variable target name.
+	 */
+	public String getName() {
+		return Name;
+	}
+
+	/**
+	 * Store bean variable total competency.
+	 */
+	public void setTotalComp(int TotalComp) {
+		this.TotalComp = TotalComp;
+	}
+
+	/**
+	 * Get bean variable total competency.
+	 */
+	public int getTotalComp() {
+		return TotalComp;
+	}
+
+	/**
+	 * Store bean variable of current total competency.
+	 */
+	public void setTotalCurrComp(int TotalCurrComp) {
+		this.TotalCurrComp = TotalCurrComp;
+	}
+
+	/**
+	 * Get bean variable of current total competency.
+	 */
+	public int getTotalCurrComp() {
+		return TotalCurrComp;
+	}
+
+	/**
+	 * Store bean variable of the rating tasks ID.
+	 */
+	public void setRT(int RT[]) {
+		this.RT = RT;
+	}
+
+	/**
+	 * Get bean variable of the rating tasks ID.
+	 */
+	public int [] getRT() {
+		return RT;
+	}
+
+	/**
+	 * Store bean variable of the rating scales ID.
+	 */
+	public void setRS(int RS[]) {
+		this.RS = RS;
+	}
+
+	/**
+	 * Get bean variable of the rating scales ID.
+	 */
+	public int [] getRS() {
+		return RS;
+	}
+
+	/**
+	 * Store bean variable of the assignmentID.
+	 */
+	public void setAssignmentID(int AssignmentID) {
+		this.AssignmentID = AssignmentID;
+	}
+
+	/**
+	 * Get bean variable of the assignmentID.
+	 */
+	public int getAssignmentID() {
+		return AssignmentID;
+	}
+
+	/**
+	 * Store bean variable of the job future id.
+	 */
+	public void setFutureJob(String FutureJob) {
+		this.FutureJob = FutureJob;
+	}
+
+	/**
+	 * Get bean variable of the job future id.
+	 */
+	public String getFutureJob() {
+		return FutureJob;
+	}
+
+	/**
+	 * Store bean variable of the timeframe ID.
+	 */
+	public void setTimeFrame(String TimeFrame) {
+		this.TimeFrame = TimeFrame;
+	}
+
+	/**
+	 * Get bean variable of the timeframe ID.
+	 */
+	public String getTimeFrame() {
+		return TimeFrame;
+	}
+
+	/**
+	 * Store bean variable of the survey level.
+	 */
+	public void setSurveyLevel(int surveyLevel) {
+			this.surveyLevel = surveyLevel;
+	}
+
+	/**
+	 * Get bean variable of the survey level.
+	 */
+	public int getSurveyLevel() {
+			return surveyLevel;
+	}
+	
+	/**
+	 * Store the checked status to bean variable.
+	 */
+	public void setChecked(int Checked) {
+			this.Checked = Checked;
+	}
+
+	/**
+	 * Get the checked status to bean variable.
+	 */
+	public int getChecked() {
+			return Checked;
+	}
+	
+	/**
+	 * Store bean variable of the current competency ID.
+	 */
+	public void setCurrID(int CurrID) {
+			this.CurrID = CurrID;
+	}
+
+	/**
+	 * Get bean variable of the current competency ID.
+	 */
+	public int getCurrID() {
+			return CurrID;
+	}
+	
+	/**
+	 * Store bean variable of the StartID.
+	 */
+	public void setStartID(int StartID) {
+			this.StartID = StartID;
+	}
+
+	/**
+	 * Get bean variable of the StartID.
+	 */
+	public int getStartID() {
+			return StartID;
+	}
+	
+	/**
+	 * Add rater's comment to database.
+	 */
+	public boolean addComment(int assignmentID, int PKComp, int KBID, String comment) throws SQLException, Exception {											
+		String sql = "Insert into tblComment values(" + assignmentID + ", " + PKComp + ", ";
+		sql = sql + KBID + ", '" + comment + "')";
+				
+		db.openDB();		
+		PreparedStatement ps = db.con.prepareStatement(sql);
+			
+		ps.executeUpdate();
+			
+		db.closeDB();
+		return true;
+	}
+	
+	/**
+	 * Update rater's comment in the database.
+	 */
+	public boolean updateComment(int assignmentID, int PKComp, int KBID, String comment) throws SQLException, Exception {											
+		String sql = "Update tblComment set comment = '" + comment + "' where ";		
+		sql = sql + "assignmentID = " + assignmentID + " and CompetencyID = " + PKComp;
+		sql = sql + " and KeyBehaviourID = " + KBID;
+				
+		db.openDB();		
+		PreparedStatement ps = db.con.prepareStatement(sql);
+			
+		ps.executeUpdate();
+			
+		db.closeDB();
+		return true;
+	}
+	
+	
+	/**
+	 * Check whether rater's comment has already in the database.
+	 */
+	public String checkCommentExist(int assignmentID, int PKComp, int KBID) throws SQLException, Exception {											
+		String exist = "";
+		
+		String sql = "Select * from tblComment where ";		
+		sql = sql + "assignmentID = " + assignmentID + " and CompetencyID = " + PKComp;
+		sql = sql + " and KeyBehaviourID = " + KBID;
+				
+		db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(sql);
+		if(rs.next())
+			exist = rs.getString("Comment");				
+			
+		return exist; 
+	}
+	
+	
+	/**
+	 * Get CompetencyID based on Key Behaviour ID.
+	 */
+	public int CompetencyID(int KBID) throws SQLException, Exception {											
+		int exist = 0;
+		
+		String sql = "Select * from KeyBehaviour where ";		
+		sql = sql + "PKKeyBehaviour = " + KBID;
+				
+		db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(sql);
+		if(rs.next())
+			exist = rs.getInt("FKCompetency");				
+			
+		return exist; 
+	}
+	
+	/**
+	 * Check whether comment is included.
+	 */
+	public int commentIncluded(int surveyID) {											
+		int exist = 0;
+		
+		String sql = "Select * from tblSurvey where ";		
+		sql = sql + "SurveyID = " + surveyID;
+				
+		try {
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			if(rs.next())
+				exist = rs.getInt("Comment_Included");				
+		}catch(SQLException SE) {
+			System.err.println(SE.getMessage());
+		}	
+		return exist; 
+	}
+	
+	/**
+	 * Check whether Self comment is included.
+	 */
+	public int SelfCommentIncluded(int surveyID) {											
+		int exist = 0;
+		
+		String sql = "Select * from tblSurvey where ";		
+		sql = sql + "SurveyID = " + surveyID;
+				
+		try {
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			if(rs.next())
+				exist = rs.getInt("Self_Comment_Included");				
+		}catch(SQLException SE) {
+			System.err.println(SE.getMessage());
+		}	
+		return exist; 
+	}
+	
+	/**
+	 * Check Rating Task Setup status.
+	 * @param RTID
+	 * @param surveyID
+	 * @return 0 = Default, 1 = Show, 2 = Hide
+	 */
+	public int RTSetupStatus(int RTID, int surveyID) {											
+		int exist = 0;
+		
+		String sql = "Select * from tblSurveyRating where ";		
+		sql = sql + "SurveyID = " + surveyID + " and RatingTaskID = " + RTID;
+				
+		try {
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			if(rs.next())
+				exist = rs.getInt("AdminSetup");				
+		}catch(SQLException SE) {
+			System.err.println(SE.getMessage());
+		}	
+		return exist; 
+	}
+	
+	
+	/**
+	 * Check Rating Score for the particular competency and rating task
+	 * @param RTID
+	 * @param surveyID
+	 * @param pkComp
+	 * @return Score value
+	 */
+	public float RTScore(int RTID, int surveyID, int pkComp) {											
+		float fixedScore = 0;
+		
+		String sql = "Select * from tblRatingSetup where ";		
+		sql = sql + "SurveyID = " + surveyID + " and RatingTaskID = " + RTID + " and CompetencyID = " + pkComp;
+		
+		try {
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			if(rs.next())
+				fixedScore = rs.getFloat("Score");				
+		}catch(SQLException SE) {
+			System.err.println(SE.getMessage());
+		}
+		return fixedScore; 
+	}	
+	
+	/**
+	 * Check Rating Score for the particular key behaviour and rating task
+	 * @param RTID
+	 * @param surveyID
+	 * @param pkBehv
+	 * @return Score value
+	 */
+	public float RTScoreBehv(int RTID, int surveyID, int pkBehv) {
+		float fixedScore = 0;
+		int pkComp = 0;
+		
+		String Sql = "SELECT FKCompetency FROM KeyBehaviour WHERE PKKeyBehaviour = "+pkBehv;
+		
+		try {
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(Sql);
+			if(rs.next())
+				pkComp = rs.getInt("FKCompetency");
+		}catch(SQLException SE) {
+			System.err.println(SE.getMessage());
+		}	
+		
+		Sql = "Select * from tblRatingSetup where ";		
+		Sql = Sql + "SurveyID = " + surveyID + " and RatingTaskID = " + RTID + " and CompetencyID = " + pkComp;
+				
+		try {
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(Sql);
+			if(rs.next())
+				fixedScore = rs.getFloat("Score");				
+		}catch(SQLException SE) {
+			System.err.println(SE.getMessage());
+		}	
+		return fixedScore; 
+	}
+	
+	
+	/**
+	 * Get survey id given assignment id.
+	 */
+	public int getSurveyID(int assignmentID) {											
+		int exist = 0;
+		
+		String sql = "Select * from tblAssignment where AssignmentID = " + assignmentID;
+				
+		try {
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			if(rs.next())
+				exist = rs.getInt("SurveyID");				
+		}catch(SQLException SE) {
+			System.err.println(SE.getMessage());
+		}	
+		return exist; 
+	}	
+	
+	
+	/**
+	 * Check whether the particular rater has complete all the ratings.
+	 */
+	public int checkRatingCompleted(int assignmentID) {											
+		
+		int surveyID = getSurveyID(assignmentID);
+		
+		int totalRatingTask = getTotalSurveyRating(surveyID);
+		int totalAll = TotalList(surveyID);
+		int totalCompleted = TotalResult(assignmentID);
+		
+		if(totalCompleted == (totalAll * totalRatingTask))
+			return 1;
+		else
+			return 0;
+	}
+	
+	/**
+	 * Check whether there is any comment input into the questionnaire.
+	 */
+	public int checkCommentInput(int assignmentID) {											
+		int exist = 0;
+		
+		String sql = "Select * from tblComment where AssignmentID = " + assignmentID;
+				
+		try {
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(sql);
+			if(rs.next())
+				return 1;
+				
+			return 0;			
+		}catch(SQLException SE) {
+			System.err.println(SE.getMessage());
+		}	
+		return exist; 
+		
+	}		
+}

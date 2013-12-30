@@ -1,0 +1,75 @@
+<jsp:useBean id="setting" class="CP_Classes.Setting" scope="session"/>
+<jsp:useBean id="org" class="CP_Classes.Organization" scope="session"/>
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>
+
+<HTML>
+<HEAD>
+<TITLE>360 interface revise</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html">
+<%@ page pageEncoding="UTF-8"%>
+<%// by lydia Date 05/09/2008 Fix jsp file to support Thai language %>
+<base target="main">
+</HEAD>
+<BODY BGCOLOR=#FFFFFF LEFTMARGIN=0 TOPMARGIN=0 MARGINWIDTH=0 MARGINHEIGHT=0>
+<TABLE WIDTH=133 BORDER=0 CELLPADDING=0 CELLSPACING=0>
+	<TR>
+		<TD width="10" rowspan="5" valign="top">
+			<IMG SRC="images/360_01.jpg" WIDTH=10 HEIGHT=430 ALT=""></TD>
+		<td valign="top">			
+		<IMG SRC="images/icons_01.bmp" WIDTH=128 HEIGHT=30 ALT=""></TD>
+	</TR>
+	
+
+	<TR>
+	  <TD width="123" height="162" valign="top">
+<%
+                // Changed by DeZ, 18/06/08, to add function to enable/disable Nominate Rater
+	  	if ( setting.getNomModule()== 1 && org.getNomRater( logchk.getOrg() ) ){	
+	  		if (logchk.getOrgCode().equals("SPF")){
+%>
+	  			<IMG SRC="images/nominate_hide.bmp" WIDTH=128 HEIGHT=52 ALT="" border="0"><br>
+<%			}else{
+%>
+	  			<IMG SRC="images/nominate.bmp" WIDTH=128 HEIGHT=52 ALT="" border="0" usemap="#Map1"><br>
+<%			}
+		}else {
+			if (logchk.getOrgCode().equals("SPF")){
+%>
+				<IMG SRC="images/nominate_hide.bmp" WIDTH=128 HEIGHT=52 ALT="" border="0"><br>
+<%			}else{
+%>
+				<IMG SRC="images/nominate_OFF.bmp" WIDTH=128 HEIGHT=52 ALT="" border="0"><br>
+<%			}
+		}
+%>
+		  <IMG SRC="images/ratertodo_mod.bmp" WIDTH=128 HEIGHT=57 ALT="" border="0" usemap="#Map"><br>
+	 </TD>
+	</TR>
+	
+
+	<TR>
+		<TD width="123" height="237" valign="top">
+			&nbsp;</TD>
+	</TR>
+	<tr>
+		<td><a href="Coach/CandidateSignUp.jsp">
+		<IMG SRC="images/booking.png" WIDTH=128 HEIGHT=30 ALT=""></a>
+		</td>
+	</tr>
+	
+	
+</TABLE>
+<map name="Map1">
+  <area shape="rect" coords="34, 15, 108, 38" href="Nomination_AssignTR.jsp">
+</map>
+<map name="Map">
+  <area shape="rect" coords="34, 15, 108, 38" href="RatersToDoList.jsp">
+</map>
+
+ 
+<script type='text/javascript' src='exmplmenu_var_PARTICIPANT.js'></script>
+<script type='text/javascript' src='menu_com_PARTICIPANT.js'></script>
+
+<noscript>Your browser does not support script</noscript>
+</BODY>
+</HTML>

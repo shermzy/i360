@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="WEB-INF/src"/>
+	<classpathentry kind="src" output="work" path="work"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/PCCAPI"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/cos.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/excel-1.3.7.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/fileupload.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/j2ee-1.4.jar" sourcepath="C:/Users/Dai Yong/resin-pro-4.0.36/webapps/i360_Pool_SVNJSP/WEB-INF/lib/j2ee-1.4.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/javax.servlet.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/jl1.0.1.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/jtds-1.3.0.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/juh-2.4.1.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/jurt-2.4.1.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/jxl.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/resin.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/ridl-2.4.1.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/sqljdbc4.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/struts.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/unoil-2.4.1.jar"/>
+	<classpathentry kind="lib" path="WEB-INF/lib/uploadbean.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Dai Yong/resin-pro-4.0.36/webapps/i360_Pool_SVNJSP/WEB-INF/lib/mysql-connector-java-5.0.8-bin.jar"/>
+	<classpathentry kind="output" path="WEB-INF/classes"/>
+</classpath>

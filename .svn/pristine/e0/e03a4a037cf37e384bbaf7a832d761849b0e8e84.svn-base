@@ -1,0 +1,97 @@
+<%@ page import="java.sql.*" errorPage="" %>
+<%@ page pageEncoding="UTF-8"%>
+<%//by Yiting 19/09/2008 Fix jsp files to support Thai Language%>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Questionnaire</title>
+
+<meta http-equiv="Content-Type" content="text/html">
+
+</head>
+
+<body>
+<jsp:useBean id="Database" class="CP_Classes.Database" scope="session"/>
+<jsp:useBean id="RDE" class="CP_Classes.RatersDataEntry" scope="session"/>
+<jsp:useBean id="Questionnaire" class="CP_Classes.Questionnaire" scope="session"/>
+<jsp:useBean id="Calculation" class="CP_Classes.Calculation" scope="session"/>
+<jsp:useBean id="User" class="CP_Classes.User_Jenty" scope="session"/>
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>   
+
+<%
+String username=(String)session.getAttribute("username");
+
+  if (!logchk.isUsable(username)) 
+  {%> <font size="2">
+   
+    	    	<script>
+	parent.location.href = "index.jsp";
+</script>
+<%  } else{
+
+	int surveyID = RDE.getSurveyID();
+	int targetID = RDE.getTargetID();
+	int raterID = RDE.getRaterID();
+	int orgID = logchk.getOrg();	
+	
+	int assignmentID = Questionnaire.AssignmentID(surveyID, targetID, raterID);
+	Questionnaire.setAssignmentID(assignmentID);
+	
+	String timeFrame = Questionnaire.TimeFrame(surveyID);
+	Questionnaire.setTimeFrame(timeFrame);
+	
+	int TotalCurrComp = 0;
+	Questionnaire.setTotalCurrComp(TotalCurrComp);
+	
+	
+	String name = Questionnaire.UserName(orgID, targetID);	
+	String jobPost = RDE.getJobPosition(surveyID);
+
+	Questionnaire.setName(name);
+	Questionnaire.setJobPost(jobPost);
+	
+	String futureJob = Questionnaire.FutureJob(surveyID);
+	Questionnaire.setFutureJob(futureJob);
+		
+	int surveyLevel = Calculation.LevelOfSurvey(surveyID);
+	Questionnaire.setSurveyLevel(surveyLevel);
+			
+		int totalComp = Questionnaire.TotalList(surveyID,0);		// total = total Competency = total questions
+
+		Questionnaire.setTotalComp(totalComp);
+	
+
+
+
+	ResultSet surveyRating = Questionnaire.getSurveyRating(surveyID);
+	int totalRatingTask = Questionnaire.getTotalSurveyRating(surveyID);		// total rating task for the specific survey
+	int ratingTaskID[] = new int[totalRatingTask];
+	int ratingScaleID[] = new int[totalRatingTask];
+	int id = 0;
+	
+	while(surveyRating.next()) {
+		ratingTaskID[id] = surveyRating.getInt("RatingTaskID");		// store all the ratings ID in an array
+		ratingScaleID[id] = surveyRating.getInt("ScaleID");
+		id++;
+	}
+	
+	Questionnaire.setRT(ratingTaskID);
+	Questionnaire.setRS(ratingScaleID);
+	Questionnaire.setStartID(1);
+//<jsp:forward page="Questionnaires.jsp" />
+%>
+
+<script>
+	window.location.href = "Questionnaires.jsp";
+</script>	
+	
+<% 
+	
+	
+} 
+
+	request.getSession(false);
+
+%>
+</body>
+</html>

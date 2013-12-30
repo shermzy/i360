@@ -1,0 +1,3033 @@
+package CP_Classes;
+
+import java.io.*;
+import java.sql.*;
+import java.util.HashMap;
+import java.util.Vector;
+
+import CP_Classes.vo.voCompetency;
+import CP_Classes.vo.voImportance;
+import CP_Classes.vo.voKeyBehaviour;
+import CP_Classes.vo.voRatingResult;
+import CP_Classes.vo.voRatingTask;
+import CP_Classes.vo.voUser;
+
+import com.sun.star.lang.XMultiComponentFactory;
+import com.sun.star.lang.XComponent;
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.XTableChart;
+
+
+/**
+ * This class implements all the operations for Group Report in Excel.
+ * It implements OpenOffice API.
+ */
+public class GroupReport { 
+	
+	private Database db;
+	private Calculation C;
+	private Questionnaire Q;
+	private OpenOffice OO;
+	private RatingScale rscale;
+	private GlobalFunc G;
+	private Setting ST; //Declaration of new object of class Setting.
+	private User_Jenty U; // Declaration of new object of class User.
+	private EventViewer EV; //Declaration of new object of class EventViewer.
+	
+	private XMultiComponentFactory xRemoteServiceManager = null;
+	private XComponent xDoc = null;
+	private XSpreadsheet xSpreadsheet = null;
+	private String storeURL;
+	
+	private final int BGCOLOR = 12632256;
+	private final int ROWHEIGHT = 560;
+	
+	//---global variable---
+	private String surveyInfo [];
+	private int surveyID;
+	private int groupSection; 
+	private int deptID;		// department ID
+	private int divID;		// division ID
+	
+	private int arrN []; //To print N (No of Raters) for Simplified report
+
+	private int iReportType; //1=Simplified Report "No Competencies charts", 2=Standard Report
+	int startColumn = 0;
+	int endColumn = 0;
+	int row = 0;
+	int column = 0;
+	
+	private boolean hasCP = false; // true if CP is chosen
+	private boolean hasCPR = false; // true if CPR is chosen
+	private boolean hasFPR = false; // true if FPR is chosen
+	
+	private Vector vGap;	// this is to store the gap of each competency so does not need to reopen another resultset
+	private Vector vCompDetails;
+	private Vector vRatingTask;
+	private Vector vCP;
+	private Vector vCPR;
+	
+	private HashMap CPCPRMap;
+	private HashMap CompIDGapMap;
+	
+	/**
+	 * Creates a new intance of GroupReport object.
+	 */
+	public GroupReport() {
+		
+		ST 	= new Setting();
+		db 	= new Database();
+		C 	= new Calculation();
+		Q 	= new Questionnaire();
+		U 	= new User_Jenty();
+		EV 	= new EventViewer();
+		OO	= new OpenOffice();
+		G	= new GlobalFunc();
+		rscale = new RatingScale();
+	
+		
+		vGap = new Vector();
+		CPCPRMap = new HashMap();
+		CompIDGapMap = new HashMap();
+		vCompDetails = new Vector();
+		vRatingTask = new Vector();
+		vCP = new Vector();
+		vCPR = new Vector();
+		
+		hasCP = false;
+		hasCPR = false;
+		hasFPR = false;
+		
+		startColumn = 0;
+		endColumn = 12;					
+	}
+	
+	/***************************START - INITIALISATION***************************************/
+	
+	/**
+	 * Initialize all the processes dealing with Excel Application.
+	 * 
+	 * @param savedFileName
+	 * @throws IOException
+	 * @throws Exception
+	 */
+	public void InitializeExcel(String savedFileName) throws IOException, Exception 
+	{	
+		System.out.println("2. Excel Initialisation Starts");
+		storeURL 	= "file:///" + ST.getOOReportPath() + savedFileName;
+		String templateURL 	= "file:///" + ST.getOOReportTemplatePath() + "Group Report Template.xls";
+		
+		xRemoteServiceManager = OO.getRemoteServiceManager("uno:socket,host=localhost,port=8100;urp;StarOffice.ServiceManager");
+		xDoc = OO.openDoc(xRemoteServiceManager, templateURL);
+		
+		//save as the template into a new file first. This is to avoid the template being used.		
+		OO.storeDocComponent(xRemoteServiceManager, xDoc, storeURL);		
+		OO.closeDoc(xDoc);
+		
+		//open up the saved file and modify from there
+		xDoc = OO.openDoc(xRemoteServiceManager, storeURL);
+		xSpreadsheet = OO.getSheet(xDoc, "Sheet1");
+		System.out.println("END OF INTIALISATION");
+	}
+	
+	/****************************END OF INITIALISATION**************************************/
+	
+	
+	
+	
+	/***************************START - SURVEY INITIALISATION********************************/
+	/**
+	 * 	Initializes all processes dealing with Survey
+	 * 
+	 *	@param int SurveyID
+	 *	@param int DeptID	PKDepartment
+	 *	@param int DivID	PKDivision
+	 */
+	public void InitializeSurvey(int surveyID, int groupSection, int deptID, int divID) throws SQLException, IOException
+	{
+		System.out.println("1. Survey Initialisation Starts");
+
+		this.surveyID = surveyID;
+		this.groupSection = groupSection;
+		this.deptID = deptID;
+		this.divID = divID;
+
+		surveyInfo = new String [6];
+		surveyInfo = SurveyInfo();	
+		
+		//Initialise array for arrN
+		arrN = new int[73 * 10 * 6]; //size = max 73 competencies * max 10 KBs * max 6 Rating
+			
+	}	
+	
+	/**
+	 * Retrieves the survey details and stores in an array
+	 * 
+	 * @return
+	 * @throws SQLException
+	 */
+	public String [] SurveyInfo() throws SQLException {
+		String [] info = new String[7];
+		
+		String query = "SELECT tblSurvey.LevelOfSurvey, tblJobPosition.JobPosition, tblSurvey.AnalysisDate, ";
+		query = query + "tblOrganization.NameSequence, tblSurvey.SurveyName, tblOrganization.OrganizationName, tblOrganization.OrganizationLogo FROM tblSurvey INNER JOIN ";
+		query = query + "tblJobPosition ON tblSurvey.JobPositionID = tblJobPosition.JobPositionID INNER JOIN ";
+		query = query + "tblOrganization ON tblSurvey.FKOrganization = tblOrganization.PKOrganization ";
+		query = query + "WHERE tblSurvey.SurveyID = " + surveyID;
+		
+		if(db.con == null)
+			db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+
+		if(rs.next())
+			for(int i=0; i<7; i++)
+				info[i] = rs.getString(i+1);
+
+		return info;
+	}
+	
+	/**
+	 * 	Retrieves the group name based on groupID
+	 *
+	 *	@return String GroupName
+	 */
+	public String getGroupName() throws SQLException {
+		String info = "";
+		
+		String query = "SELECT * from [Group] where PKGroup = " + groupSection;
+								
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+
+		if(rs.next())
+			info = rs.getString("GroupName");
+		
+		rs.close();
+		stmt.close();
+		
+		return info;
+	}	
+	
+	/**
+	 * 	Retrieves the department name based on deptID
+	 *	
+	 *	@return String DepartmentName
+	 */
+	public String getDeptName() throws SQLException {
+		String info = "";	
+
+		String query = "SELECT * from Department where PKDepartment = " + deptID;
+								
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+
+		if(rs.next())
+			info = rs.getString("DepartmentName");
+
+		rs.close();
+		stmt.close();
+		return info;
+	}	
+	
+	/**
+	 * 	Retrieves the division name based on divID
+	 *	
+	 *	@return String DivisionName
+	 */
+	public String getDivName() throws SQLException 
+	{
+		String info = "";
+		
+		String query = "SELECT * from Division where PKDivision = " + divID;
+								
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+
+		if(rs.next())
+			info = rs.getString("DivisionName");
+
+		rs.close();
+		stmt.close();
+		return info;
+	}	
+	
+
+	/******************************END - SURVEY INITIALISATION***************************/
+
+	
+	
+	/************************START - CP/CPR****************************************/
+	/**
+	 * print CP and CPR
+	 * @throws SQLException
+	 * @throws IOException
+	 * @throws Exception
+	 * @see generateReport()
+	 */
+	public void printCPvsCPR() throws SQLException, IOException, Exception 
+	{
+		System.out.println("4. Generating CP Versus CPR");
+	
+		int [] address = OO.findString(xSpreadsheet, "<CP versus CPR Graph>");
+		
+		column = address[0];
+		row = address[1];
+		
+		OO.findAndReplace(xSpreadsheet, "<CP versus CPR Graph>", "");
+		
+		if(hasCP)
+			vCP = getCPCPR("CP");
+		
+		if(hasCPR)
+			vCPR = getCPCPR("CPR");
+		else if(hasFPR)
+			vCPR = getCPCPR("FPR");
+		
+		drawLineChart();
+		
+	}
+	
+	/**
+	 * get rating task which match CP, CPR or FPR.
+	 * 
+	 * @return vector of voSurveyRating
+	 * @throws SQLException
+	 * @see printCPvsCPR()
+	 */
+	public Vector getRatingTask() throws SQLException {
+		Vector v = new Vector();
+		
+		String query = "";
+		
+		query = query + "SELECT tblSurveyRating.RatingTaskID, tblRatingTask.RatingCode, ";
+		query = query + "tblSurveyRating.RatingTaskName FROM tblSurveyRating INNER JOIN ";
+		query = query + "tblRatingTask ON tblSurveyRating.RatingTaskID = tblRatingTask.RatingTaskID ";
+		query = query + "WHERE tblSurveyRating.SurveyID = " + surveyID;
+		query = query + " and tblRatingTask.RatingCode in('CP', 'CPR', 'FPR')";
+		query = query + " ORDER BY tblSurveyRating.RatingTaskID";
+						
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		while(rs.next()) 
+		{
+			voRatingTask vo = new voRatingTask();
+			vo.setRatingTaskID(rs.getInt("RatingTaskID"));
+			vo.setRatingCode(rs.getString("RatingCode"));
+			vo.setRatingTaskName(rs.getString("RatingTaskName"));
+			v.add(vo);
+		}
+		
+		rs.close();
+		stmt.close();
+		
+		return v;
+	}
+	
+	/**
+	 * check whether hasCP, hasCPR, hasFPR exist or not.
+	 *
+	 */
+	public void checkCPCPR() {
+		
+		for(int i=0; i<vRatingTask.size(); i++ )
+		{
+			voRatingTask vo = (voRatingTask)vRatingTask.elementAt(i);
+			String RTCode = vo.getRatingCode();
+			
+			if(RTCode.equals("CP"))
+				hasCP = true;
+			
+			if(RTCode.equals("CPR")) 
+				hasCPR = true;
+			
+			if(RTCode.equals("FPR")) 
+				hasFPR = true;
+		}
+		
+	}
+	
+	/**
+	 * 	Retrieves the results under that particular rating code
+	 *	@param String RTCode	Rating Task Code
+	 *	
+	 *	@return Vector CPCPR
+	 *	@see printCPvsCPR() 
+	 */
+	public Vector getCPCPR(String RTCode) throws SQLException 
+	{
+		String query = "";
+	
+		int reliabilityCheck = C. ReliabilityCheck(surveyID);
+		
+	
+		if(reliabilityCheck == 0) 	// trimmed mean
+		{		
+			query = query + "SELECT Competency.PKCompetency AS CompetencyID, Competency.CompetencyName, ";
+			query += "ROUND(AVG(tblTrimmedMean.TrimmedMean), 2) AS Result FROM ";
+			query += "tblTrimmedMean INNER JOIN Competency ON ";
+			query += "tblTrimmedMean.CompetencyID = Competency.PKCompetency INNER JOIN ";
+			query += "tblRatingTask ON tblTrimmedMean.RatingTaskID = tblRatingTask.RatingTaskID INNER JOIN ";
+			query += "[User] ON [User].PKUser = tblTrimmedMean.TargetLoginID ";
+			query += "WHERE tblTrimmedMean.SurveyID = " + surveyID;
+			query += " AND tblTrimmedMean.Type = 1 AND tblRatingTask.RatingCode = '" + RTCode + "' AND ";
+			query += "tblTrimmedMean.TargetLoginID IN (SELECT TargetLoginID FROM tblAssignment INNER JOIN ";
+			query += "[USER] ON [USER].PKUser = tblAssignment.TargetLoginID ";
+			query += "WHERE SurveyID = " + surveyID + " AND RaterCode <> 'SELF' AND ";
+			query += "RaterStatus IN (1, 2, 4) ";
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+				
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+				
+			query += ") ";
+			
+			query += " GROUP BY Competency.PKCompetency, Competency.CompetencyName ";
+			query += "ORDER BY Competency.CompetencyName";
+			
+		}
+		else 
+		{
+			query = "SELECT Competency.PKCompetency AS CompetencyID, Competency.CompetencyName, ";
+			query += "ROUND(AVG(tblAvgMean.AvgMean), 2) AS Result FROM ";
+			query += "tblAvgMean INNER JOIN Competency ON ";
+			query += "tblAvgMean.CompetencyID = Competency.PKCompetency INNER JOIN ";
+			query += "tblRatingTask ON tblAvgMean.RatingTaskID = tblRatingTask.RatingTaskID INNER JOIN ";
+			query += "[User] ON [User].PKUser = tblAvgMean.TargetLoginID ";
+			query += "WHERE tblAvgMean.SurveyID = " + surveyID;
+			query += " AND tblAvgMean.Type = 1 AND tblRatingTask.RatingCode = '" + RTCode + "' AND ";
+			query += "tblAvgMean.TargetLoginID IN (SELECT TargetLoginID FROM tblAssignment INNER JOIN ";
+			query += "[USER] ON [USER].PKUser = tblAssignment.TargetLoginID ";
+			query += "WHERE SurveyID = " + surveyID + " AND RaterCode <> 'SELF' AND ";
+			query += "RaterStatus IN (1, 2, 4) ";
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+				
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+			query += ") ";
+		
+			query += " GROUP BY Competency.PKCompetency, Competency.CompetencyName ";
+			query += "ORDER BY Competency.CompetencyName";
+
+		}
+	
+		Vector v = new Vector();
+		if(db.con == null) 
+			db.openDB();
+			
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		while(rs.next()) {
+			voRatingResult vo = new voRatingResult();
+			vo.setCompetencyID(rs.getInt("CompetencyID"));
+			vo.setCompetencyName(rs.getString("CompetencyName"));
+			vo.setResult(rs.getDouble("Result"));
+			
+			v.add(vo);
+			
+		}
+		
+		rs.close();
+		stmt.close();
+
+		return v;
+	}	
+	
+	/**
+	 * 	Draw line chart for CPCPR or CPFPR.
+	 *
+	 *	@see printCPvsCPR()
+	 */
+	public void drawLineChart() throws IOException, Exception 
+	{
+
+		XSpreadsheet xSpreadsheet2 = OO.getSheet(xDoc, "Sheet2");
+		
+		int r = row;
+		int c = 0;
+		
+		int total = totalCompetency();		// 1 for all
+		
+		c=1;
+		OO.insertString(xSpreadsheet2, "CP", r, c);
+		
+		c++;
+		
+		if(hasCPR)
+			OO.insertString(xSpreadsheet2, "CPR", r, c);
+		else if(hasFPR) {
+			OO.insertString(xSpreadsheet2, "FPR", r, c);
+//			title = "Current Proficiency Vs Future Required Proficiency";
+		}
+
+		r++;
+		
+		for(int i=0; i<total; i++) 
+		{							
+			c = 0;
+			int compID = 0;
+			String compName = "";
+			double dCP = 0;
+			double dCPR = 0;
+
+			voRatingResult voCP = (voRatingResult)vCP.elementAt(i);
+			
+			if(voCP != null) {
+				
+				compID = voCP.getCompetencyID();
+				compName = UnicodeHelper.getUnicodeStringAmp(voCP.getCompetencyName());
+				dCP = voCP.getResult();	
+			} 
+		
+			OO.insertString(xSpreadsheet2, compName, r, c);
+			c++;
+			
+			OO.insertNumeric(xSpreadsheet2, dCP, r, c);
+			c++;
+			
+			if(hasCPR || hasFPR) {
+				voRatingResult voCPR = (voRatingResult)vCPR.elementAt(i);
+				
+				if(voCPR != null)
+					dCPR = voCPR.getResult();
+				else
+					dCPR = 0;	
+				
+				double gap = Math.round((dCP - dCPR) * 100.0) / 100.0;
+				OO.insertNumeric(xSpreadsheet2, dCPR, r, c);
+				c++;
+
+				double [] dArrTemp = new double [2];
+				dArrTemp[0] = dCP;
+				dArrTemp[1] = dCPR;
+
+				CPCPRMap.put(new Integer(compID), (double[])dArrTemp);
+				vGap.add(new String[]{compName, Double.toString(gap)});
+				CompIDGapMap.put(new Integer(compID), Double.toString(gap));
+			}
+
+			r++;
+		}
+
+		
+		OO.setSourceData(xSpreadsheet, xSpreadsheet2, 0, c-3, c-1, row, r-1);
+		
+		total = total + row - 1;
+		row--;
+	
+	}
+	
+	
+	/**
+	 * Count the total competencies in the particular survey
+	 * 
+	 * @return int TotalComp	Total Competency
+	 * @throws SQLException
+	 * 
+	 * @see drawChart()
+	 */
+	public int totalCompetency() throws SQLException 
+	{
+		String query = "";
+		int surveyLevel = Integer.parseInt(surveyInfo[0]);
+		
+		int total = 0;
+		
+		if(surveyLevel == 0) {
+			
+			query = query + "SELECT  COUNT(CompetencyID) AS Total FROM tblSurveyCompetency ";
+			query = query + "WHERE SurveyID = " + surveyID;
+			
+		}else {
+			query = query + "SELECT COUNT(DISTINCT CompetencyID) AS Total FROM ";
+			query = query + "tblSurveyBehaviour WHERE SurveyID = " + surveyID;
+		}
+			
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next())
+			total = rs.getInt(1);
+
+		rs.close();
+		stmt.close();
+		
+		return total;
+	}
+	
+	/*************************END CP/CPR****************************************************/
+	
+	
+	
+	
+	/**************************START GAP****************************************************/
+	/**
+	 * print gap
+	 * 
+	 * @throws SQLException
+	 * @throws IOException
+	 * @throws Exception
+	 * 
+	 * @see generateReport()
+	 */
+	public void printGap() throws SQLException, IOException, Exception {
+		
+		System.out.println("5. Gap Insertion Starts");
+					
+		int [] address = OO.findString(xSpreadsheet, "<Gap>");
+		
+		column = address[0];
+		row = address[1];
+		int c = 0;
+		
+		vGap = G.sorting(vGap, 1);
+		
+		OO.findAndReplace(xSpreadsheet, "<Gap>", "");
+		
+		double MinMaxGap [] = getMinMaxGap();
+		
+		double low = MinMaxGap[0];
+		double high = MinMaxGap[1];
+		
+		if (hasCPR || hasFPR)	// If CPR or FPR is chosen in this survey
+		{
+			String title = "COMPETENCY";
+	
+			if (ST.LangVer == 2)
+				title = "KOMPETENSI";
+			
+			OO.insertString(xSpreadsheet, title, row, c);
+			OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);
+	
+			row++;
+			OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+2, 2, 1);
+			
+			int startBorder = row;
+			
+			if (ST.LangVer == 1){
+				OO.insertString(xSpreadsheet, "STRENGTH", row, c);
+				OO.insertString(xSpreadsheet, "Gap >= " + high, row, 10);
+			}
+			else if (ST.LangVer == 2){
+				OO.insertString(xSpreadsheet, "KEKUATAN", row, c);
+				OO.insertString(xSpreadsheet, "Selisih >= " + high, row, 10);
+			}
+			
+			OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);
+			OO.setBGColor(xSpreadsheet, startColumn, endColumn-1, row, row, BGCOLOR);					
+			row++;
+			
+	
+			for(int i=0; i<vGap.size(); i++) {
+				double gap = Double.valueOf(((String [])vGap.elementAt(i))[1]).doubleValue();
+				
+				if(gap >= high) {
+					String compName = ((String [])vGap.elementAt(i))[0];
+					
+					OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);			
+					
+					OO.insertString(xSpreadsheet, compName, row, c);
+					OO.insertNumeric(xSpreadsheet, gap, row, 10);
+					row++;	
+				}
+			}
+			
+			row++;
+			int endBorder = row;
+			OO.setTableBorder(xSpreadsheet, startColumn, endColumn-1, startBorder, endBorder, false, false, true, true, true, true);
+	
+			startBorder = endBorder + 1;		
+			row++;	
+			OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+2, 2, 1);
+							
+			if (ST.LangVer == 1){
+				OO.insertString(xSpreadsheet, "MEET EXPECTATIONS", row, c);
+				OO.insertString(xSpreadsheet, low + " < Gap < " + high, row, 10);
+			}
+			else if (ST.LangVer == 2){			
+				OO.insertString(xSpreadsheet, "MEMENUHI PENGHARAPAN", row, c);
+				OO.insertString(xSpreadsheet, low + " < Selisih < " + high, row, 10);
+			}
+			
+			OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);
+			OO.setBGColor(xSpreadsheet, startColumn, endColumn-1, row, row, BGCOLOR);						
+			row++;
+			
+			for(int i=0; i<vGap.size(); i++) {
+				double gap = Double.valueOf(((String [])vGap.elementAt(i))[1]).doubleValue();
+				
+				if(gap < high && gap > low) {
+					String compName = ((String [])vGap.elementAt(i))[0];				
+					
+					OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);			
+					
+					OO.insertString(xSpreadsheet, compName, row, c);
+					OO.insertNumeric(xSpreadsheet, gap, row, 10);
+					row++;
+				}
+			}
+				
+			row++;
+			endBorder = row;
+			OO.setTableBorder(xSpreadsheet, startColumn, endColumn-1, startBorder, endBorder, false, false, true, true, true, true);
+										
+			startBorder = endBorder + 1;		
+			row++;
+			
+			OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+2, 2, 1);					
+			
+			if (ST.LangVer == 1){
+				OO.insertString(xSpreadsheet, "DEVELOPMENTAL AREA", row, c);
+				OO.insertString(xSpreadsheet, "Gap <= " + low, row, 10);
+			}
+			else if (ST.LangVer == 2){
+				OO.insertString(xSpreadsheet, "AREA PERKEMBANGAN", row, c);
+				OO.insertString(xSpreadsheet, "Selisih <= " + low, row, 10);
+			}
+			
+			OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);
+			OO.setBGColor(xSpreadsheet, startColumn, endColumn-1, row, row, BGCOLOR);
+							
+			row++;
+					
+			for(int i=0; i<vGap.size(); i++) {
+				double gap = Double.valueOf(((String [])vGap.elementAt(i))[1]).doubleValue();
+				
+				if(gap <= low) {
+					String compName = ((String [])vGap.elementAt(i))[0];
+					
+					OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);			
+					
+					OO.insertString(xSpreadsheet, compName, row, c);
+					OO.insertNumeric(xSpreadsheet, gap, row, 10);
+					row++;	
+				}
+			}
+			
+			endBorder = row;
+			OO.setTableBorder(xSpreadsheet, startColumn, endColumn-1, startBorder, endBorder, false, false, true, true, true, true);
+		} else {
+			// Delete the rows with Gap Table description from the report
+			OO.deleteRows(xSpreadsheet, 0, 12, 89, 102, 13, 1);
+		}
+		
+	}
+	
+	/**
+	 * get minimum and maximum gap.
+	 * 
+	 * @return min and max gap in an array
+	 * @throws SQLException
+	 * @see printGap()
+	 */
+	public double [] getMinMaxGap() throws SQLException 
+	{
+		double gap [] = new double [2];
+		
+		String query = "Select MIN_gap, MAX_Gap from tblSurvey where SurveyID = " + surveyID;
+
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+
+		if(rs.next()) {
+			gap[0] = rs.getDouble(1);
+			gap[1] = rs.getDouble(2);
+		}
+		
+		rs.close();
+		stmt.close();
+		
+		return gap;
+	}	
+
+	/****************************END GAP****************************************************/
+	
+	
+	
+	/***************************START COMPETENCY********************************************/
+	/**
+	 * 
+	 * 
+	 * @throws SQLException
+	 * @throws IOException
+	 * @throws Exception
+	 */
+	public void printCompetency() throws SQLException, IOException, Exception 
+	{
+		System.out.println("6. Competency/Key Behaviour Report");
+		
+		int [] address = OO.findString(xSpreadsheet, "<Report>");
+		OO.findAndReplace(xSpreadsheet, "<Report>", "");
+		
+		column = address[0];
+		row = address[1];
+		
+		int surveyLevel = Integer.parseInt(surveyInfo[0]);
+		  
+		int totalOth = getTotalRaters("OTH%");
+		int totalSup = getTotalRaters("SUP%");
+		int totalSelf = getTotalRaters("SELF");
+		
+		int totalAll = totalOth + totalSup;// get the total number of raters exclude self.(ALL)
+		int total = 0;// to determine the number of variables in y-axis.
+		
+		//to determine the y legend in charts
+		if(totalSelf > 0)
+			total = 1 + getTotalOtherRaters() + 1;		// 1(self) + other raters + 1(all)
+		else
+			total = 0 + getTotalOtherRaters() + 1;		// 1(self) + other raters + 1(all)
+	
+		/*
+		 * First page of Competency rank will print out "Competency Report" and a blank after that
+		 * This will cause the page break to go haywire. So we have to reduce the insertion of rows by 2
+		 * iInitial will keep track of the first instance of generation of Competency Report
+		 */
+		//chart related variable
+		int iN = 0; //To be used as counter for arrN
+		int iInitial = 0;
+		int count = 0; // to count total chart for each page, max = 2;
+		int rowTotal = row + 1;
+		
+		int add = 13/total;
+	
+		String level = "Competency";
+		if (ST.LangVer == 2)
+			level = "Kompetensi";
+		
+		if (ST.LangVer == 1)
+			OO.insertString(xSpreadsheet, level + " Report", row, 0);
+		else if (ST.LangVer == 2)
+			OO.insertString(xSpreadsheet, "Laporan " + level, row, 0);
+		
+		OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);
+		row += 2;
+		
+		int endRow = row;
+		int [] ID = {0,0};
+		
+		for(int i=0; i<vCompDetails.size(); i++)
+		{
+			System.out.println("before---" + iInitial + "--" + i + "---" + endRow + "---" + total + "---" + iN + "---" +  totalAll + "---" + count);
+			
+			if(i != 0) {
+				count = ID[1];
+			}
+			
+			ID = generateChart(0, null, 0, iInitial, i, endRow, total, iN, totalAll, add, totalSelf, count, vCompDetails.size());
+			System.out.println("after---" + iInitial + "--" + i +  "---" + endRow + "---" + total + "---" + iN + "---" +  totalAll + "---" + count);
+			
+			int compID = ID[0];
+			if(surveyLevel == 1) {
+				
+				Vector vKBDetails = getKBList(ID[0]);
+				for(int j=0; j<vKBDetails.size(); j++) {
+					count = ID[1];
+					ID = generateChart(1, vKBDetails, compID, iInitial, j, endRow, total, iN, totalAll, add, totalSelf, count, vKBDetails.size());
+				
+					iInitial++;
+				}
+				
+			}
+		
+			iInitial++;
+		} // while Comp			
+		
+	}
+	
+	/**
+	 * CHART TEMPLATE
+	 * type = 0 to generate competency chart
+	 * type = 1 to generate KB chart.
+	 * 
+	 * @param type
+	 * @param iInitial
+	 * @param i
+	 * @param startRow
+	 * @param endRow
+	 * @param r1
+	 * @param total
+	 * @param iN
+	 * @param totalAll
+	 * @param add
+	 * @param totalSelf
+	 * @param count
+	 * @throws Exception
+	 */
+	public int[] generateChart(int type, Vector v, int iFKComp, int iInitial, int i, int endRow, int total, int iN, int totalAll, int add, int totalSelf, int count, int size) throws Exception {
+		
+		//--common
+		int RTID = 0;
+		int KBID = 0;
+		int ID[] = {0,0};
+		int r =0 ;
+		int rowTotal = 0;
+		String sGap = "";
+		double dCPScore = -1;
+		double dCPRScore = -1;
+		int startRow = row;
+		int r1 = 1;
+		
+		//competency variable
+		int iCompID = iFKComp;
+		String sCompName = "";
+		String sCompDef = "";
+		
+		//KB varibale
+		String sKB ="";
+		
+		
+		if(type == 0) {
+//		OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+20, 20, 1);
+			if(iInitial == 0 || iInitial == 1)
+				OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+18, 18, 1);
+			else
+				OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+19, 19, 1);
+		
+			
+			voCompetency voComp = (voCompetency)vCompDetails.elementAt(i);
+			iCompID = voComp.getCompetencyID();
+			ID[0] = iCompID;
+			sCompName = voComp.getCompetencyName();
+			sCompDef = voComp.getCompetencyDefinition();
+			
+			startRow = row;
+			
+			OO.insertString(xSpreadsheet, UnicodeHelper.getUnicodeStringAmp(sCompName), row, 0);
+			OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);
+			OO.setBGColor(xSpreadsheet, startColumn, endColumn, row, row, BGCOLOR);							
+			row++;
+			
+			r1 = row;
+			OO.insertString(xSpreadsheet, UnicodeHelper.getUnicodeStringAmp(sCompDef), row, 0);
+			OO.mergeCells(xSpreadsheet, startColumn, endColumn, row, row);
+			OO.setRowHeight(xSpreadsheet, row, 1, ROWHEIGHT*OO.countTotalRow(sCompDef, 90));
+			row++;
+				
+			r = 0;
+			
+			rowTotal = row + 11;
+		}
+		
+		if(type == 1) {
+			OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+20, 20, 1);
+			voKeyBehaviour vo = (voKeyBehaviour)v.elementAt(i);
+			KBID = vo.getKeyBehaviourID();
+			ID[0] = KBID;
+			sKB = vo.getKeyBehaviour();
+			
+			startRow = row;
+			r1 = row;
+			
+			int no = i+1;
+			OO.insertString(xSpreadsheet, no + ". " + UnicodeHelper.getUnicodeStringAmp(sKB), row, 0);
+			OO.mergeCells(xSpreadsheet, startColumn, endColumn, row, row);
+			OO.setRowHeight(xSpreadsheet, row, 0, ROWHEIGHT*OO.countTotalRow(sKB, 90));
+	
+			row += 2;
+			
+			rowTotal = row + 11;														
+			
+			r = 0;
+		}
+		
+		String [] Rating = new String [total];
+		double [] Result = new double [total];
+		
+		for(int j=0; j<vRatingTask.size(); j++) {
+			voRatingTask voSurvey = (voRatingTask)vRatingTask.elementAt(j);
+			
+			RTID = voSurvey.getRatingTaskID();
+			String RTCode = voSurvey.getRatingCode();
+			
+			//Common variable
+			double dSelfScore = -1; 
+			
+			
+			//Comp variable
+			double [] CPCPRScore = {-1,-1};
+			
+			if(type == 0) {
+				CPCPRScore = (double[])CPCPRMap.get(new Integer(iCompID));
+				dCPScore = CPCPRScore[0];
+				dCPRScore = CPCPRScore[1];
+			} 
+			
+			if(RTCode.equals("CP")) {
+				
+				if(type == 1)
+					dCPScore = getKBCPCPR(iCompID, KBID, RTCode);
+					
+				if(dCPScore != -1) 
+				{	
+					Rating[r] = RTCode + " (ALL)";
+					Result[r] = dCPScore;
+					
+					arrN[iN] = totalAll;
+					iN++;
+					if(iReportType == 2) 
+						OO.insertNumeric(xSpreadsheet, totalAll, rowTotal, 0);
+					rowTotal -= add;
+					
+					r++;
+				}
+			
+				if(totalSelf != 0) {
+					
+					if(type == 0)
+						dSelfScore = getCPSelf(iCompID);
+					else 
+						dSelfScore = getKBCPSelf(iCompID, KBID);
+					
+					if(dSelfScore != -1 ) 
+					{	
+						Rating[r] = RTCode + " (SELF)";							
+						Result[r++] = dSelfScore;
+						
+						arrN[iN] = totalSelf;
+						iN++;
+						if(iReportType == 2) 
+							OO.insertNumeric(xSpreadsheet, totalSelf, rowTotal, 0);
+						rowTotal -= add;
+					}
+				}
+			}
+			else if(RTCode.equals("CPR") || RTCode.equals("FPR"))
+			{
+				if(type == 1)
+					dCPRScore = getKBCPCPR(iCompID, KBID, RTCode);
+				
+				if(dCPRScore != -1) {
+					Rating[r] = RTCode + " (ALL)";
+					Result[r++] = dCPRScore;
+					
+					arrN[iN] = totalAll;
+					iN++;
+					if(iReportType == 2) 
+						OO.insertNumeric(xSpreadsheet, totalAll, rowTotal, 0);
+					rowTotal -= add;
+				}					
+			}												
+		}//while RT
+		
+		row++;
+
+		int maxScale = getMaxScale();
+	
+		//start draw chart from here
+		drawChart(Rating, Result, 1, maxScale);
+		
+		column = 9;		//write the importance n gap
+		int rtemp = row;
+
+		voImportance voImp = getImportance(iCompID, KBID);
+	
+		if(voImp != null) 
+		{
+			String task = voImp.getRatingTask();
+			
+			if(task != null) {
+				double taskResult = voImp.getResult();
+				
+				OO.insertString(xSpreadsheet, task + ": " + taskResult, rtemp, column);
+				OO.mergeCells(xSpreadsheet, column, endColumn, rtemp, rtemp+1);
+				OO.setCellAllignment(xSpreadsheet, column, endColumn, rtemp, rtemp+1, 2, 1);
+				
+				rtemp += 3;
+			}
+		}
+
+		if (hasCPR || hasFPR)	// If CPR is chosen in this survey
+		{
+
+			if(type == 0) {
+				sGap = (String) CompIDGapMap.get(new Integer(iCompID));
+			} else {
+				sGap = Double.toString(Math.round((dCPScore - dCPRScore) * 100.0) / 100.0);
+			}
+			
+			if (ST.LangVer == 1)
+				OO.insertString(xSpreadsheet, "Gap = " + sGap, rtemp, column);
+			else if (ST.LangVer == 2)
+				OO.insertString(xSpreadsheet, "Selisih = " + sGap, rtemp, column);
+			
+			OO.mergeCells(xSpreadsheet, column, endColumn, rtemp, rtemp+1);
+			OO.setCellAllignment(xSpreadsheet, column, endColumn, rtemp, rtemp+1, 2, 1);		
+		}				
+		rtemp+=3;
+	
+		double LOA = 0;
+
+		LOA = LevelOfAgreement(iCompID, KBID);
+		
+		if (ST.LangVer == 1)
+			OO.insertString(xSpreadsheet, "Level Of Agreement: " + LOA + "%", rtemp, column);
+		else if (ST.LangVer == 2)
+			OO.insertString(xSpreadsheet, "Tingkat Persetujuan: " + LOA + "%", rtemp, column);
+		
+		OO.mergeCells(xSpreadsheet, column, endColumn, rtemp, rtemp+1);
+		OO.setCellAllignment(xSpreadsheet, column, endColumn, rtemp, rtemp+1, 2, 1);
+		
+		column = 0;											
+		count++;
+		
+		
+		if(count == 2) {
+			count = 0;
+			if(iInitial == 0 || iInitial == 1)
+				row += 15;
+			else
+				row += 16;
+			
+		
+				OO.insertPageBreak(xSpreadsheet, startColumn, endColumn, row);
+		} else {
+			column = 0;
+			if(iInitial == 0 || iInitial == 1)
+				row += 15;
+			else
+				row += 16;
+		}
+		ID[1] = count;
+		
+		endRow = row - 1;
+		//comp name and definition
+		OO.setTableBorder(xSpreadsheet, startColumn, endColumn, startRow, startRow+1, 
+						false, false, true, true, true, true);
+		//total sup n others				
+		OO.setTableBorder(xSpreadsheet, startColumn, startColumn, startRow+2, endRow, 
+						false, false, true, true, true, true);
+						
+		//chart
+		OO.setTableBorder(xSpreadsheet, startColumn+1, 8, startRow+2, endRow, 
+						false, false, true, true, true, true);
+		OO.setTableBorder(xSpreadsheet, 9, endColumn, startRow+2, endRow, 
+						false, false, true, true, true, true);
+		
+		OO.setCellAllignment(xSpreadsheet, startColumn, startColumn, startRow+2, endRow, 1, 2);
+		
+		return ID;	
+	}
+
+	
+	/**
+	 * 	Retrieves Key Behaviour lists based on CompetencyID
+	 *
+	 * @param compID
+	 * @return
+	 * @throws SQLException
+	 */
+	public Vector getKBList(int compID) throws SQLException {
+		String query = "";
+		
+		Vector v = new Vector();
+		
+		query = query + "SELECT DISTINCT tblSurveyBehaviour.KeyBehaviourID, KeyBehaviour.KeyBehaviour ";
+		query = query + "FROM tblSurveyBehaviour INNER JOIN KeyBehaviour ON ";
+		query = query + "tblSurveyBehaviour.KeyBehaviourID = KeyBehaviour.PKKeyBehaviour ";
+		query = query + "WHERE tblSurveyBehaviour.SurveyID = " + surveyID + " AND ";
+		query = query + "tblSurveyBehaviour.CompetencyID = " + compID;
+		query = query + " ORDER BY tblSurveyBehaviour.KeyBehaviourID";
+
+		if(db.con == null) 
+			db.openDB();
+			
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+
+		while(rs.next()) {
+			voKeyBehaviour vo = new voKeyBehaviour();
+			vo.setKeyBehaviourID(rs.getInt("KeyBehaviourID"));
+			vo.setKeyBehaviour(rs.getString("KeyBehaviour"));
+			v.add(vo);
+		}
+		
+		rs.close();
+		stmt.close();
+		return v;
+	}
+
+	/**
+	 * 	Draw bar chart for competency report.
+	 */
+	public void drawChart(String Rating [], double Result [], int type, int maxScale) throws IOException, Exception 
+	{	
+		//System.out.println("draw open");
+		XSpreadsheet xSpreadsheet2 = OO.getSheet(xDoc, "Sheet2");
+		int r = row;
+		int c = 0;
+		
+		if(iReportType == 1)
+		{
+			//Print heading for "N" and align
+			OO.insertString(xSpreadsheet, "N", r, c+5);
+			OO.setCellAllignment(xSpreadsheet, c+5, c+5, r, r, 1, 1);
+		}
+			
+		for(int i=0; i<Rating.length; i++) 
+		{
+			r++;
+			OO.insertString(xSpreadsheet, Rating[i], r, c+2);
+			OO.mergeCells(xSpreadsheet, c+2, c+3, r, r);
+			
+			OO.insertNumeric(xSpreadsheet, Result[i], r, c+4);
+			OO.insertNumeric(xSpreadsheet, arrN[i], r, c+5);						 	
+		}
+		
+		r = row; //reset
+		if(iReportType == 2) //Standard Report
+		{
+			//draw chart
+	 		for(int i=0; i<Rating.length; i++) 
+	 		{
+				OO.insertString(xSpreadsheet2, Rating[i], r, c);
+				OO.insertNumeric(xSpreadsheet2, Result[i], r, c+1);
+				r++;
+			}
+	
+	 		long then = System.currentTimeMillis();
+	 		long now = System.currentTimeMillis();
+	 		
+			XTableChart xtablechart = OO.getChart(xSpreadsheet, xSpreadsheet2, c, c+1, row-1, r-1, Integer.toString(row), 9000, 7800, row, 2);
+			OO.setFontSize(8);
+			long now1 = System.currentTimeMillis();
+			now = System.currentTimeMillis();
+			xtablechart = OO.setChartTitle(xtablechart, "");
+			 
+			now1 = System.currentTimeMillis();
+			System.out.println("set chart title: " + (now1 - now) / 1000);
+			System.out.println("MaxScale---" + maxScale);
+			xtablechart = OO.setAxes(xtablechart, "", "Scores (%)", maxScale, 1, 0, 0,0);
+			now = System.currentTimeMillis();
+			System.out.println("SEt axis: " + (now - now1) / 1000);
+			OO.setChartProperties(xtablechart, false, true, false, true, true);
+			OO.showLegend(xtablechart, false);
+			now = System.currentTimeMillis();
+			System.out.println( "Time : " + (now - then)/1000 );
+		}
+		
+		//System.out.println("draw - close");
+	}
+
+	/**
+	 * get CP score for self
+	 * @param iFKComp
+	 * @return
+	 * @throws SQLException
+	 * @see generateChart
+	 */
+	public double getCPSelf(int iFKComp) throws SQLException 
+	{
+		String query = "";
+		
+		int reliabilityCheck = C. ReliabilityCheck(surveyID);
+		
+		double dScore = -1;
+		
+		if(reliabilityCheck == 0) 	// trimmed mean
+		{		
+			query = query + "SELECT Competency.PKCompetency AS CompetencyID, Competency.CompetencyName, ";
+			query += "ROUND(AVG(tblTrimmedMean.TrimmedMean), 2) AS Result FROM ";
+			query += "tblTrimmedMean INNER JOIN Competency ON ";
+			query += "tblTrimmedMean.CompetencyID = Competency.PKCompetency INNER JOIN ";
+			query += "tblRatingTask ON tblTrimmedMean.RatingTaskID = tblRatingTask.RatingTaskID INNER JOIN ";
+			query += "[User] ON [User].PKUser = tblTrimmedMean.TargetLoginID ";
+			query += "WHERE tblTrimmedMean.SurveyID = " + surveyID;
+			query += " AND tblTrimmedMean.Type = 4 AND tblRatingTask.RatingCode = 'CP' AND ";
+			query += "tblTrimmedMean.TargetLoginID IN (SELECT TargetLoginID FROM tblAssignment INNER JOIN ";
+			query += "[USER] ON [USER].PKUser = tblAssignment.TargetLoginID ";
+			query += "WHERE SurveyID = " + surveyID + " AND Competency.PKCompetency = " + iFKComp + " AND RaterCode = 'SELF' AND ";
+			query += "RaterStatus IN (1, 2, 4) ";
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+			
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+				
+			query += ") ";
+			
+			query += " GROUP BY Competency.PKCompetency, Competency.CompetencyName ";
+			query += "ORDER BY Competency.CompetencyName";
+			
+		}
+		else 
+		{
+			query = "SELECT Competency.PKCompetency AS CompetencyID, Competency.CompetencyName, ";
+			query += "ROUND(AVG(tblAvgMean.AvgMean), 2) AS Result FROM ";
+			query += "tblAvgMean INNER JOIN Competency ON ";
+			query += "tblAvgMean.CompetencyID = Competency.PKCompetency INNER JOIN ";
+			query += "tblRatingTask ON tblAvgMean.RatingTaskID = tblRatingTask.RatingTaskID INNER JOIN ";
+			query += "[User] ON [User].PKUser = tblAvgMean.TargetLoginID ";
+			query += "WHERE tblAvgMean.SurveyID = " + surveyID;
+			query += " AND tblAvgMean.Type = 4 AND tblRatingTask.RatingCode = 'CP' AND ";
+			query += "tblAvgMean.TargetLoginID IN (SELECT TargetLoginID FROM tblAssignment INNER JOIN ";
+			query += "[USER] ON [USER].PKUser = tblAssignment.TargetLoginID ";
+			query += "WHERE SurveyID = " + surveyID + " AND Competency.PKCompetency = " + iFKComp + " AND RaterCode = 'SELF' AND ";
+			query += "RaterStatus IN (1, 2, 4) ";
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+				
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+				
+			query += ") ";
+			
+			query += " GROUP BY Competency.PKCompetency, Competency.CompetencyName ";
+			query += "ORDER BY Competency.CompetencyName";
+
+		}
+		
+		
+		Vector v = new Vector();
+		if(db.con == null) 
+			db.openDB();
+			
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next()) {
+			dScore = rs.getDouble("Result");
+		}
+		
+		rs.close();
+		stmt.close();
+
+		return dScore;
+	}	
+	
+	/**
+	 * 	Retrieves the KB results under that particular rating code
+	 *	@param String RTCode	Rating Task Code
+	 *	@param iKBID
+	 *
+	 *	@return CP/CPR score
+	 *	@see generateChart()
+	 */
+	public double getKBCPCPR(int iCompID, int iKBID, String RTCode) throws SQLException 
+	{
+		String query = "";
+
+		double dScore = -1;
+	
+		query = "SELECT ROUND(AVG(tblAvgMean.AvgMean), 2) AS Result FROM ";
+		query += "tblAvgMean INNER JOIN ";
+		query += "tblRatingTask ON tblAvgMean.RatingTaskID = tblRatingTask.RatingTaskID INNER JOIN ";
+		query += "[User] ON [User].PKUser = tblAvgMean.TargetLoginID ";
+		query += "WHERE tblAvgMean.SurveyID = " + surveyID ;
+		query += " AND CompetencyID = " + iCompID + " AND KeyBehaviourID = " + iKBID+ " AND tblAvgMean.Type = 1 AND tblRatingTask.RatingCode = '" + RTCode + "' AND ";
+		query += "tblAvgMean.TargetLoginID IN (SELECT TargetLoginID FROM tblAssignment INNER JOIN ";
+		query += "[USER] ON [USER].PKUser = tblAssignment.TargetLoginID ";
+		query += "WHERE SurveyID = " + surveyID + " AND RaterCode <> 'SELF' AND ";
+		query += "RaterStatus IN (1, 2, 4) ";
+		
+		if(divID != 0) 
+			query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+			
+		if(deptID != 0) 
+			query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+			
+		if(groupSection != 0)
+			query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+		query += ") ";
+		
+		if(db.con == null) 
+			db.openDB();
+			
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next()) {
+			dScore = rs.getDouble("Result");
+		}
+		
+		rs.close();
+		stmt.close();
+
+		return dScore;
+	}	
+	
+	/**
+	 * Retrieve the value for CP Self at KB Level
+	 * @param iKBID
+	 * @return CP Score at KB Level
+	 * @throws SQLException
+	 * @see generateChart()
+	 */
+	public double getKBCPSelf(int iCompID, int iKBID) throws SQLException 
+	{
+		String query = "";
+
+		double dScore = -1;
+	
+		query = "SELECT ROUND(AVG(tblAvgMean.AvgMean), 2) AS Result FROM ";
+		query += "tblAvgMean INNER JOIN ";
+		query += "tblRatingTask ON tblAvgMean.RatingTaskID = tblRatingTask.RatingTaskID INNER JOIN ";
+		query += "[User] ON [User].PKUser = tblAvgMean.TargetLoginID ";
+		query += "WHERE tblAvgMean.SurveyID = " + surveyID ;
+		query += " AND CompetencyID = " + iCompID + " AND KeyBehaviourID = " + iKBID+ " AND tblAvgMean.Type = 4 AND tblRatingTask.RatingCode = 'CP' AND ";
+		query += "tblAvgMean.TargetLoginID IN (SELECT TargetLoginID FROM tblAssignment INNER JOIN ";
+		query += "[USER] ON [USER].PKUser = tblAssignment.TargetLoginID ";
+		query += "WHERE SurveyID = " + surveyID + " AND RaterCode = 'SELF' AND ";
+		query += "RaterStatus IN (1, 2, 4) ";
+		
+		if(divID != 0) 
+			query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+			
+		if(deptID != 0) 
+			query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+			
+		if(groupSection != 0)
+			query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+		query += ") ";
+		
+		if(db.con == null) 
+			db.openDB();
+			
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next()) {
+			dScore = rs.getDouble("Result");
+		}
+		
+		rs.close();
+		stmt.close();
+
+		return dScore;
+	}	
+	
+	/**
+	 * 	Count total raters in that particular group.
+	 *	@param int group	GroupID (1=ALL, 2=SUP, 3=OTH, 4=SELF)
+	 *
+	 *	@return int TotalRaters		Total no. of raters
+	 */
+	public int getTotalRaters(int group) throws SQLException 
+	{
+		String query = "";
+		String filter = "";
+		int total = 0;
+		
+		switch(group) {	// 1 for all, 4 for self
+			case 1: filter = "tblAssignment.RaterCode <> 'SELF'";
+					break;	
+			case 2: filter = "tblAssignment.RaterCode LIKE 'SUP%'";
+					break;	
+			case 3: filter = "tblAssignment.RaterCode LIKE 'OTH%'";
+					break;	
+			case 4: filter = "tblAssignment.RaterCode = 'SELF'";
+					break;	
+		}
+		
+		query = "SELECT COUNT(tblAssignment.RaterLoginID) AS Total FROM ";
+		query = query + "tblAssignment INNER JOIN [User] ON ";
+		query = query + "tblAssignment.TargetLoginID = [User].PKUser ";
+		query = query + "WHERE tblAssignment.SurveyID = " + surveyID + " AND ";
+		query = query + "tblAssignment.RaterStatus IN (1, 2, 4)";
+		query = query + " AND " + filter;
+		
+		if(divID != 0) 
+			query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+		
+		if(deptID != 0) 
+			query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+			
+		if(groupSection != 0)
+			query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next())
+			total = rs.getInt(1);
+
+		rs.close();
+		stmt.close();
+		return total;
+	}
+	
+	/**
+	 * get the total number of raters. specify the rater type in the parameter
+	 * 
+	 * @param RaterType
+	 * @return
+	 * @throws SQLException
+	 * @see printCompetency
+	 */
+	public int getTotalRaters(String sRaterType) throws SQLException 
+	{
+		String query = "";
+		int total = 0;
+		
+		query = query + "SELECT COUNT(tblAssignment.RaterCode) AS Total FROM tblAssignment INNER JOIN ";
+		query = query + "[User] ON tblAssignment.TargetLoginID = [User].PKUser ";
+		
+		query = query + "WHERE tblAssignment.SurveyID = " + surveyID;
+		
+		if(divID != 0) 
+			query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+			
+		if(deptID != 0) 
+			query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+			
+		if(groupSection != 0)
+			query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+		query = query + " AND tblAssignment.RaterCode LIKE '"+ sRaterType +"'";
+		query = query + " AND tblAssignment.RaterStatus IN (1,2,4)";
+			
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next())
+			total = rs.getInt(1);
+
+		rs.close();
+		db.closeDB();
+		return total;
+	}
+	
+	/**
+	 * 	Count total other rating tasks besides CP for the particular survey
+	 *
+	 *	@return int total	Total no. of RatingCode in tblRatingTask
+	 *	@see printCompetency
+	 */
+	public int getTotalOtherRaters() throws SQLException 
+	{
+		String query = "";
+		int total = 0;
+
+		query = query + "SELECT COUNT(distinct(tblRatingTask.RatingCode)) AS TotalRT ";
+		query = query + "FROM tblSurveyRating INNER JOIN tblRatingTask ON ";
+		query = query + "tblSurveyRating.RatingTaskID = tblRatingTask.RatingTaskID ";
+		query = query + "WHERE tblSurveyRating.SurveyID = " + surveyID;
+		query = query + " AND (tblRatingTask.RatingCode = 'CPR' or tblRatingTask.RatingCode = 'FPR')";
+			
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next())
+			total = rs.getInt(1);
+		
+		rs.close();
+		stmt.close();
+		
+		return total;
+	}
+
+	/**
+	 * Get the maximum rating scale for alignment purposes.
+	 * 
+	 * @return int MaxScale
+	 * @throws SQLException
+	 */
+	public int getMaxScale() throws SQLException {
+		String query = "";
+		int total = 0;
+		
+		query = query + "SELECT MAX(tblScale.ScaleRange) AS Result FROM ";
+		query = query + "tblScale INNER JOIN tblSurveyRating ON ";
+		query = query + "tblScale.ScaleID = tblSurveyRating.ScaleID WHERE ";
+		query = query + "tblSurveyRating.SurveyID = " + surveyID;
+			
+		db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next())
+			total = rs.getInt(1);
+		
+		rs.close();
+		stmt.close();
+		db.closeDB();
+		
+		return total;
+	}
+	
+	public voImportance getImportance(int compID, int KBID) throws SQLException {
+		voImportance vo = new voImportance() ;
+		
+		String query = "";
+		
+		int reliabilityCheck = C. ReliabilityCheck(surveyID);
+		
+		if(reliabilityCheck == 0 && KBID == 0) 	// trimmed mean
+		{		
+			query = query + "SELECT ROUND(AVG(tblTrimmedMean.TrimmedMean), 2) AS Result, RatingTask ";
+			query = query + "FROM tblTrimmedMean INNER JOIN ";
+			query = query + "tblRatingTask ON tblTrimmedMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query = query + "WHERE tblTrimmedMean.CompetencyID = " + compID;									
+			query = query + " AND (tblRatingTask.RatingCode = 'IF' or tblRatingTask.RatingCode = 'IN') AND (tblTrimmedMean.SurveyID = "+surveyID+") AND (tblTrimmedMean.TargetLoginID IN ";
+			query = query + "(SELECT TargetLoginID FROM tblAssignment INNER JOIN ";
+			query = query + "[USER] ON [USER].PKUser = tblAssignment.TargetLoginID ";                                              
+			query = query + "WHERE SurveyID = " +surveyID+ " AND RaterCode <> 'SELF' AND RaterStatus IN (1, 2, 4) ";
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+				
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+				
+			query += "))  Group BY tblRatingTask.RatingTask";
+		}
+		else 
+		{
+			query = query + "SELECT ROUND(AVG(tblAvgMean.AvgMean), 2) AS Result, RatingTask ";
+			query = query + "FROM tblAvgMean INNER JOIN ";
+			query = query + "tblRatingTask ON tblAvgMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query = query + "WHERE tblAvgMean.CompetencyID = " + compID;
+
+			if(KBID != 0) 
+				query = query + " AND tblAvgMean.KeyBehaviourID = " + KBID;										
+			
+			query = query + " AND (tblRatingTask.RatingCode = 'IF' or tblRatingTask.RatingCode = 'IN') AND (tblAvgMean.SurveyID = "+surveyID+") AND (tblAvgMean.TargetLoginID IN ";
+			query = query + "(SELECT TargetLoginID FROM tblAssignment INNER JOIN ";
+			query = query + "[USER] ON [USER].PKUser = tblAssignment.TargetLoginID ";                                              
+			query = query + "WHERE SurveyID = " +surveyID+ " AND RaterCode <> 'SELF' AND RaterStatus IN (1, 2, 4) ";
+			
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+				
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+			
+			query += "))  Group BY tblRatingTask.RatingTask";
+		}
+	
+		Vector v = new Vector();
+		if(db.con == null) 
+			db.openDB();
+			
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next()) {
+		
+			vo.setRatingTask(rs.getString("RatingTask"));
+			vo.setResult(rs.getDouble("Result"));
+		
+		}
+		
+		rs.close();
+		stmt.close();
+
+		return vo;
+	}
+	
+	/**
+	 * 	Retrieves the group level of agreement from tblLevelOfAgreement based on Competency and Key Behaviour.
+	 * 	KBID = 0 if it is Competency Level Analysis.
+	 *  type = 0 Competency Level
+	 *  type = 1 KB Level
+	 *  
+	 *	@param int compID	CompetencyID
+	 *	@param int KBID		KeyBehaviourID
+	 *
+	 *	@return double LevelofAgreement
+	 *
+	 *	@see getLOABase(int iNoOfRaters)
+	 * 	@see MaxScale(int surveyID)
+	 */
+	public double LevelOfAgreement(int compID, int KBID) throws SQLException, Exception
+	{
+		String query = "";
+		
+		//double LOA = 0;
+		
+		double LOA = 100; //Default 100%
+		
+		
+		query = query + "SELECT ROUND(AVG(tblLevelOfAgreement.LevelOfAgreement), 2) AS LOA ";
+		query = query + "FROM tblLevelOfAgreement INNER JOIN ";
+		query = query + "tblRatingTask ON tblLevelOfAgreement.RatingTaskID = tblRatingTask.RatingTaskID INNER JOIN ";
+		query = query + "[User] ON [User].PKUser = tblLevelOfAgreement.TargetLoginID ";
+		query = query + " WHERE tblLevelOfAgreement.CompetencyID = " + compID;
+		
+		if(KBID != 0) 
+			query = query + " AND tblLevelOfAgreement.KeyBehaviourID = " + KBID;										
+		
+		query = query + " AND (tblRatingTask.RatingCode = 'CP') AND (tblLevelOfAgreement.SurveyID = "+surveyID+") AND (tblLevelOfAgreement.TargetLoginID IN ";
+		query = query + "(SELECT TargetLoginID FROM tblAssignment INNER JOIN ";
+		query = query + "[USER] ON [USER].PKUser = tblAssignment.TargetLoginID ";                                              
+		query = query + "WHERE SurveyID = " +surveyID+ " AND RaterCode <> 'SELF' AND RaterStatus IN (1, 2, 4) ";
+		
+		
+		if(divID != 0) 
+			query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+			
+		if(deptID != 0) 
+			query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+			
+		if(groupSection != 0)
+			query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+		query += "))";
+	
+		if(db.con == null) 
+			db.openDB();
+			
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+
+		if(rs.next())
+			LOA = rs.getDouble("LOA");
+		
+		
+		rs.close();
+		stmt.close();
+		return LOA;
+	}
+
+	
+	/*************************END COMPETENCY*************************************************************/
+	
+	
+	
+	/**************************COMMENTS****************************************************************/
+	/**
+	 * Write comments on excel.
+	 * 
+	 * @throws SQLException
+	 * @throws IOException
+	 * @throws Exception
+	 * @see generateReport
+	 */
+	public void printComments() throws SQLException, IOException, Exception 
+	{
+		System.out.println("      - Insert Comments");
+	
+		//check for the survery level
+		int surveyLevel = Integer.parseInt(surveyInfo[0]);
+		
+		column = 0;
+		
+		OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+2, 2, 1);
+		row++;
+		
+		if (ST.LangVer == 1)
+			OO.insertString(xSpreadsheet, "Narrative Comments", row, column);
+		else if (ST.LangVer == 2)
+			OO.insertString(xSpreadsheet, "Komentar Naratif", row, column);
+		OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);	
+		row += 2;
+		
+		int startBorder = row;
+		int endBorder = 1;
+		int selfIncluded = Q.SelfCommentIncluded(surveyID);
+		int column = 0;
+
+		int count = 0;			
+	
+		int borderArr [] = new int [2];
+		
+		for(int i=0; i<vCompDetails.size(); i++)
+		{
+			voCompetency voComp = (voCompetency)vCompDetails.elementAt(i);
+			count++;
+			int compID = voComp.getCompetencyID();
+			String statement = voComp.getCompetencyName();
+				
+			OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);
+				
+			OO.insertString(xSpreadsheet, Integer.toString(count) + ".", row, column);								
+			
+			OO.insertString(xSpreadsheet, UnicodeHelper.getUnicodeStringAmp(statement), row, column+1);
+			OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);
+			OO.setBGColor(xSpreadsheet, startColumn, endColumn, row, row, BGCOLOR);
+				
+			int KBID = 0;
+		
+			if(surveyLevel == 0) {
+				borderArr = generateComments(compID, KBID, selfIncluded, startBorder, endBorder);
+				startBorder = borderArr[0];
+				endBorder = borderArr[1];
+				
+			} else if(surveyLevel == 1) {
+				Vector vKBDetails = getKBList(compID);			
+				row++;
+				
+				for(int j=0; j<vKBDetails.size(); j++) {
+					voKeyBehaviour voKB = (voKeyBehaviour)vKBDetails.elementAt(j);
+					KBID = voKB.getKeyBehaviourID();
+					String KB = voKB.getKeyBehaviour();
+					
+					OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);
+					OO.insertString(xSpreadsheet, "-", row, column);
+					OO.insertString(xSpreadsheet, UnicodeHelper.getUnicodeStringAmp(KB), row, column+1);
+					OO.mergeCells(xSpreadsheet, column+1, endColumn, row, row);
+					OO.setRowHeight(xSpreadsheet, row, column+1, ROWHEIGHT*OO.countTotalRow(KB, 100));
+					OO.setCellAllignment(xSpreadsheet, startColumn, startColumn, row, row, 2, 1);
+												 					
+					//int isThai = KB.indexOf("&#");
+					borderArr = generateComments(compID, KBID, selfIncluded, startBorder, endBorder);
+					startBorder = borderArr[0];
+					endBorder = borderArr[1];
+				}
+				
+			} 
+			
+		
+		}
+
+	}
+	
+	public int [] generateComments(int compID, int KBID, int selfIncluded, int startBorder, int endBorder) throws Exception {
+		
+		int start = 0;
+		int chartArr [] = {0,0}; 
+		row++;
+		
+		int countRecord = 0;
+		
+		/*=========================SELF======================================================*/
+		
+		if(selfIncluded == 1) {
+			ResultSet selfComments = getComments("SELF", compID, KBID);
+			
+			if(selfComments != null) {
+				while(selfComments.next()) {
+					
+					OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);
+					
+					if(start == 0) {																
+						
+						if (ST.LangVer == 1)
+							OO.insertString(xSpreadsheet, "Self", row, column+1);
+						else if (ST.LangVer == 2)
+							OO.insertString(xSpreadsheet, "Diri Sendiri", row, column+1);
+							
+						OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);
+						OO.setFontItalic(xSpreadsheet, startColumn, endColumn, row, row);
+						
+						row++;								
+						start++;
+					}
+					
+					String comment = selfComments.getString("Comment").trim();
+					
+					
+					String [] comments = comment.split("\n");
+					
+					OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);
+					
+					for(int m=0; m<comments.length; m++) {
+						comments[m] = comments[m].trim();
+						if(m!=0) 
+							row = row+1;
+						
+						OO.insertString(xSpreadsheet, "- " + UnicodeHelper.getUnicodeStringAmp(comments[m]), row, column+1);
+						OO.mergeCells(xSpreadsheet, column+1, endColumn, row, row);
+						OO.setRowHeight(xSpreadsheet, row, column+1, ROWHEIGHT*OO.countTotalRow(comment, 105));
+						
+					}
+					OO.setCellAllignment(xSpreadsheet, startColumn, startColumn, row, row, 2, 1);
+					
+					row++;		
+					
+				}//while(selfComments.next())
+				
+			} else {//if(selfComments != null)
+				start = 0;					
+				row++;
+			}
+		}//if(selfIncluded)
+		
+		ResultSet supComments = getComments("SUP%", compID, KBID);
+		ResultSet othComments = getComments("OTH%", compID, KBID);
+		
+		/* ================================== SUPERVISOR ======================================== */
+		
+		if(supComments != null) {				
+			while(supComments.next()) {
+				if(start == 0) 
+				{							
+					OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);
+						
+					OO.insertString(xSpreadsheet, "Supervisor", row, column+1);
+					OO.mergeCells(xSpreadsheet, column+1, endColumn, row, row);
+					OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);
+					OO.setFontItalic(xSpreadsheet, startColumn, endColumn, row, row);
+					
+					row++;						
+					start++;
+				}
+				
+				String comment = supComments.getString("Comment").trim();
+				
+				String [] comments = comment.split("\n");
+				OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);				
+				
+				for(int m=0; m<comments.length; m++) {
+					comments[m] = comments[m].trim();
+					if(m!=0) 
+						row = row+1;
+				
+					OO.insertString(xSpreadsheet, "- " + UnicodeHelper.getUnicodeStringAmp(comments[m]), row, column+1);
+					OO.mergeCells(xSpreadsheet, column+1, endColumn, row, row);
+					OO.setRowHeight(xSpreadsheet, row, column+1, ROWHEIGHT*OO.countTotalRow(comment, 105));
+					
+				}
+				
+				OO.setCellAllignment(xSpreadsheet, startColumn, startColumn, row, row, 2, 1);
+				
+				row++;
+			}
+			
+			start = 0;
+			countRecord = 0;
+			
+		}				
+		
+		/* ================================== OTHERS ======================================== */
+		
+		if(othComments != null) {
+			while(othComments.next()) 
+			{	
+				if(start == 0) 
+				{
+					OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);
+					if (ST.LangVer == 1)
+						OO.insertString(xSpreadsheet, "Others", row, column+1);					
+					else if (ST.LangVer == 2)
+						OO.insertString(xSpreadsheet, "Lainnya", row, column+1);
+											
+					OO.mergeCells(xSpreadsheet, column+1, endColumn, row, row);
+					OO.setFontBold(xSpreadsheet, startColumn, endColumn, row, row);
+					OO.setFontItalic(xSpreadsheet, startColumn, endColumn, row, row);
+					
+					start++;
+					row++;
+				}	
+										
+				String comment = othComments.getString("Comment").trim();
+										
+				OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);
+				String [] comments = comment.split("\n");
+				
+				for(int m=0; m<comments.length; m++) {
+					comments[m] = comments[m].trim();
+					if(m!=0) 
+						row = row+1;
+				
+					OO.insertString(xSpreadsheet, "- " + UnicodeHelper.getUnicodeStringAmp(comments[m]), row, column+1);
+					OO.mergeCells(xSpreadsheet, column+1, endColumn, row, row);
+					OO.setRowHeight(xSpreadsheet, row, column+1, ROWHEIGHT*OO.countTotalRow(comment, 105));
+					
+				}
+				
+				OO.setCellAllignment(xSpreadsheet, startColumn, startColumn, row, row, 2, 1);
+				
+				row++;					
+			}
+		}
+		
+		OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+1, 1, 1);
+		endBorder = row;
+		chartArr[1] = endBorder;
+		
+		System.out.println("1---->" + startBorder);
+		OO.setTableBorder(xSpreadsheet, startColumn, endColumn, startBorder, endBorder, 
+						false, false, true, true, true, true);
+		row++;
+		startBorder = row;
+		System.out.println("2---->" + startBorder);
+		chartArr[0] = startBorder;
+		
+		return chartArr;
+	}
+	
+	/**
+	 * 
+	 * Retrieves all the comments input upon fill in the questionnaire
+	 * @param String raterCode
+	 * @param int compID	CompetencyID
+	 * @param int KBID		KeyBehaviourID
+	 * @return
+	 * @throws SQLException
+	 * 
+	 * @see printComments
+	 */
+	public ResultSet getComments(String raterCode, int compID, int KBID) throws SQLException 
+	{
+		String query = "";
+		int surveyLevel = Integer.parseInt(surveyInfo[0]);
+		
+		if(surveyLevel == 0) {
+			query = query + "SELECT Competency.CompetencyName, tblComment.Comment ";
+			query = query + "FROM tblAssignment INNER JOIN tblComment ON ";
+			query = query + "tblAssignment.AssignmentID = tblComment.AssignmentID INNER JOIN ";
+			query = query + "[User] ON tblAssignment.TargetLoginID = [User].PKUser INNER JOIN ";
+			query = query + "Competency ON tblComment.CompetencyID = Competency.PKCompetency ";
+			query = query + "WHERE tblAssignment.SurveyID = " + surveyID;
+			query = query + " AND tblAssignment.RaterCode LIKE '" + raterCode + "'";
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				//query = query + " AND [User].FKDivision = " + divID;
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+				//query = query + " AND [User].FKDepartment = " + deptID;
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+				//query = query + " AND [User].Group_Section = " + groupSection;
+			
+			query = query + " AND Competency.PKCompetency = " + compID;
+			query = query + " ORDER BY tblComment.Comment";
+		} else {
+			query = query + "SELECT Competency.CompetencyName, KeyBehaviour.KeyBehaviour, tblComment.Comment ";
+			query = query + "FROM tblAssignment INNER JOIN tblComment ON ";
+			query = query + "tblAssignment.AssignmentID = tblComment.AssignmentID INNER JOIN ";
+			query = query + "[User] ON tblAssignment.TargetLoginID = [User].PKUser INNER JOIN ";
+			query = query + "Competency ON tblComment.CompetencyID = Competency.PKCompetency ";
+			query = query + "INNER JOIN KeyBehaviour ON ";
+			query = query + "tblComment.KeyBehaviourID = KeyBehaviour.PKKeyBehaviour ";
+			query = query + "WHERE tblAssignment.SurveyID = " + surveyID;
+			query = query + " AND tblAssignment.RaterCode LIKE '" + raterCode + "'";
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				//query = query + " AND [User].FKDivision = " + divID;
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+				//query = query + " AND [User].FKDepartment = " + deptID;
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+				//query = query + " AND [User].Group_Section = " + groupSection;
+			
+			query = query + " AND Competency.PKCompetency = " + compID;
+			query = query + " AND KeyBehaviour.PKKeyBehaviour = " + KBID;
+			query = query + " ORDER BY tblComment.Comment";												
+		}
+			
+
+		if(db.con == null) 
+			db.openDB();
+			
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+			
+		return rs;
+	}
+	
+	/**************************end COMMENTS**************************************************************************/
+	
+	
+	
+	/***********************START COMPETENCY DISTRIBUTION REPORT***************************************/
+	/**
+	 * 	Write Group Competency Distribution Report
+	 */
+	public void printTotalTargets() throws IOException, Exception 
+	{	
+		System.out.println("7. Group Competency Distribution Report");
+		
+		int [] address = OO.findString(xSpreadsheet, "<Total Targets>");
+		
+		column = address[0];
+		row = address[1];
+		
+		OO.findAndReplace(xSpreadsheet, "<Total Targets>", " ");
+		
+		column = 1;
+		int count = 0;
+
+		
+		for(int a=0; a<vCompDetails.size(); a++)
+		{
+			//OO.insertRows(xSpreadsheet, startColumn, endColumn, row, row+15, 15, 0);
+			OO.insertRows(xSpreadsheet, startColumn, endColumn, row+1, row+16, 15, 0);
+			
+			int c=0;
+
+			voCompetency voComp = (voCompetency)vCompDetails.elementAt(a);
+			int compID = voComp.getCompetencyID();
+			String compName = voComp.getCompetencyName();
+			
+			int total = 0;
+		
+			// Get total number of Targets in this survey
+			// 2 or more targets with same ratings are considered as 1
+			total = getTotalAllTargetResults(compID);
+			
+			int targets [] = new int [total];
+			int result [] = new int [total];
+		
+			ResultSet totalTargets = null;
+		
+			// Get the ratings of all the target in this survey
+			totalTargets = getAllResults(compID);
+		
+			// Count total no of targets for each ratings
+			while(totalTargets.next()) {
+				result[c] = totalTargets.getInt("Result");
+				
+				targets[c] = totalTargetBasedScore(compID, result[c]);
+				
+				c++;
+			
+			}
+		
+			OO.insertString(xSpreadsheet, UnicodeHelper.getUnicodeStringAmp(compName), row, column);
+			OO.setFontBold(xSpreadsheet, column, column, row, row);
+			OO.setFontSize(xSpreadsheet, column, column, row, row, 12);
+			row = row + 2;
+			
+			long now = System.currentTimeMillis();
+			drawTotalTargets(result, targets);
+			long then = System.currentTimeMillis();
+			
+			System.out.println("Comp Report : " + (then-now)/1000);
+			
+			count++;
+			
+			row = row + 13;
+			
+			if(count == 2 && a != (vCompDetails.size()-1)) {
+				count = 0;
+				//Insert page break each time after printed 2 charts
+				OO.insertPageBreak(xSpreadsheet, startColumn, endColumn, row);
+			}			
+						
+		}	// for(int a=0; a<vCompInfo.size(); a++)
+	}
+	
+	/**
+	 * 	Draw line chart for total targets on each rating.
+	 */
+	public void drawTotalTargets(int result [], int targets []) throws IOException, Exception 
+	{			
+		int r = row;
+		int c = 2;
+		int total = result.length;
+		
+		XSpreadsheet xSpreadsheet2 = OO.getSheet(xDoc, "Sheet2");
+		
+		OO.insertNumeric(xSpreadsheet2, 0, r, c);
+		OO.insertNumeric(xSpreadsheet2, 0, r, c+1);
+		r++;
+		
+		int maxTotal = 0;//this is to set the maximum height of Y Axis
+		for(int i=0; i<total; i++) 
+		{
+			OO.insertNumeric(xSpreadsheet2, result[i], r, c);
+			OO.insertNumeric(xSpreadsheet2, targets[i], r, c+1);
+			
+			if(maxTotal < targets[i])
+				maxTotal = targets[i];
+				
+			r++;
+		}
+		
+		String sXAxis = "Ratings";
+		String sYAxis = "Number of Targets";
+
+        if (ST.LangVer == 2){
+        	sXAxis = "Nilai";
+        	sYAxis = "Jumlah Target";
+        }
+        
+        //draw chart 
+		XTableChart xtablechart = OO.getChart(xSpreadsheet, xSpreadsheet2, c, c+1, row-1, r-1, "Distribution"+(row-1), 10000, 7000, row-1, c);
+		OO.setFontSize(8);
+		xtablechart = OO.setChartTitle(xtablechart, "");
+		xtablechart = OO.setAxes(xtablechart, sXAxis, sYAxis, maxTotal, 1, 0, 0,0);
+			
+		//OO.setAxes(xtablechart, sXAxis, sYAxis, true, false, false, 0, 0);
+		//xtablechart = OO.setAxes(xtablechart, sXAxis, sYAxis, maxTotal, 1, false);
+		//OO.setChartProperties(xtablechart, false, true, false, true, true);	
+		OO.setChartProperties(xtablechart, true, true, true, true, true);
+		OO.showLegend(xtablechart, false);
+		
+		//need to change to LineDiagram and set the scale of xAxis, and also the width of the line
+		OO.changeChartType("com.sun.star.chart.LineDiagram", xtablechart);
+	}
+	
+	/**
+	 * 	Retrieves the total number of targets and ratings based on competencyID
+	 *	@param int compID	CompetencyID
+	 *
+	 *	@return int TotalAllTarget
+	 */
+	public int getTotalAllTargetResults(int compID) throws SQLException 
+	{
+		int totalTarget = 0;
+			
+		String query = "";
+		
+		int reliability = C.ReliabilityCheck(surveyID);
+		
+		if(reliability == 0) 
+		{
+			/*query = "SELECT COUNT(*) AS Total FROM (SELECT DISTINCT CAST(AVG(tblTrimmedMean.TrimmedMean) AS int) AS Average ";
+			query += "FROM tblTrimmedMean INNER JOIN tblAssignment ON tblTrimmedMean.TargetLoginID = tblAssignment.TargetLoginID ";
+			query += "INNER JOIN tblRatingTask ON tblTrimmedMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query += "WHERE tblTrimmedMean.SurveyID = " + surveyID + " AND tblTrimmedMean.Type = 1 ";
+			query += "AND tblTrimmedMean.CompetencyID = " + compID + " AND tblAssignment.RaterCode <> 'SELF' AND tblRatingTask.RatingCode = 'CP' ";
+			query += " GROUP BY tblTrimmedMean.TargetLoginID ";
+			
+			if(divID != 0) 
+				query += ", tblAssignment.FKTargetDivision ";
+			if(deptID != 0) 
+				query += ", tblAssignment.FKTargetDepartment ";
+			if(groupSection != 0)
+				query += ", tblAssignment.FKTargetGroup ";
+			
+			if(divID != 0 || deptID != 0 || groupSection != 0)
+				query += "HAVING (";
+			
+			if(divID != 0) 
+			{
+				query += " tblAssignment.FKTargetDivision = " + divID;
+				
+				if(deptID != 0 || groupSection != 0)
+					query += " AND ";
+			}
+			if(deptID != 0) 
+			{
+				query += " tblAssignment.FKTargetDepartment = " + deptID;
+				
+				if(groupSection != 0)
+					query += " AND ";
+			}
+			if(groupSection != 0)
+				query += " tblAssignment.FKTargetGroup = " + groupSection;
+				
+			if(divID != 0 || deptID != 0 || groupSection != 0)
+				query += ")";
+			query += ") DERIVEDTBL"; 
+			*/
+		
+			query = "SELECT count(distinct CAST(tblTrimmedMean.TrimmedMean AS int)) AS Total ";
+			query += "FROM tblTrimmedMean INNER JOIN ";
+			query += "tblAssignment ON tblTrimmedMean.SurveyID = tblAssignment.SurveyID AND ";
+			query += "tblTrimmedMean.TargetLoginID = tblAssignment.TargetLoginID ";
+			query += "INNER JOIN tblRatingTask ON tblTrimmedMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query += "WHERE tblTrimmedMean.SurveyID = " + surveyID;
+			query += " AND tblTrimmedMean.Type = 1 AND tblRatingTask.RatingCode = 'CP' AND ";
+			query += "tblTrimmedMean.CompetencyID = " + compID + " and RaterCode <> 'SELF'";				
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				//query = query + " AND [User].FKDivision = " + divID;
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+				//query = query + " AND [User].FKDepartment = " + deptID;
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+				//query = query + " AND [User].Group_Section = " + groupSection;
+		} 
+		else 
+		{
+			query = "SELECT COUNT(*) AS Total FROM (SELECT DISTINCT CAST(AVG(tblAvgMean.AvgMean) AS int) AS Average ";
+			query += "FROM tblAvgMean INNER JOIN tblAssignment ON tblAvgMean.TargetLoginID = tblAssignment.TargetLoginID ";
+			query += "INNER JOIN tblRatingTask ON tblAvgMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query += "WHERE tblAvgMean.SurveyID = " + surveyID + " AND tblAvgMean.Type = 1 ";
+			query += "AND tblAvgMean.CompetencyID = " + compID + " AND tblAssignment.RaterCode <> 'SELF' AND tblRatingTask.RatingCode = 'CP'";
+			query += " GROUP BY tblAvgMean.TargetLoginID ";
+			
+			if(divID != 0) 
+				query += ", tblAssignment.FKTargetDivision ";
+			if(deptID != 0) 
+				query += ", tblAssignment.FKTargetDepartment ";
+			if(groupSection != 0)
+				query += ", tblAssignment.FKTargetGroup ";
+			
+			if(divID != 0 || deptID != 0 || groupSection != 0)
+				query += "HAVING (";
+			
+			if(divID != 0) 
+			{
+				query += " tblAssignment.FKTargetDivision = " + divID;
+				
+				if(deptID != 0 || groupSection != 0)
+					query += " AND ";
+			}
+			if(deptID != 0) 
+			{
+				query += " tblAssignment.FKTargetDepartment = " + deptID;
+				
+				if(groupSection != 0)
+					query += " AND ";
+			}
+			if(groupSection != 0)
+				query += " tblAssignment.FKTargetGroup = " + groupSection;
+				
+			if(divID != 0 || deptID != 0 || groupSection != 0)
+				query += ")";
+			query += ") DERIVEDTBL";
+		}
+	
+		if(db.con == null) 
+			db.openDB();
+			
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next())
+			totalTarget = rs.getInt(1);
+		
+		rs.close();
+		stmt.close();
+		
+		return totalTarget;
+	}			
+	
+	/**
+	 * 	Retrieves all distinct result from particular survey and competencyid
+	 *	@param int compID	CompetencyID
+	 *	
+	 *	@return ResultSet AllResults
+	 */
+	public ResultSet getAllResults(int compID) throws SQLException 
+	{
+		int reliability = C.ReliabilityCheck(surveyID);
+		
+		String query = "";
+		
+		if(reliability == 0) {
+			/*query = "SELECT DISTINCT CAST(AVG(tblTrimmedMean.TrimmedMean) AS int) AS Result FROM tblTrimmedMean ";
+			query += "INNER JOIN tblAssignment ON tblTrimmedMean.TargetLoginID = tblAssignment.TargetLoginID ";
+			query += "INNER JOIN tblRatingTask ON tblTrimmedMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query += "WHERE tblTrimmedMean.SurveyID = " + surveyID + " AND tblTrimmedMean.Type = 1 ";
+			query += "AND tblRatingTask.RatingCode = 'CP' AND tblTrimmedMean.CompetencyID = " + compID + " AND tblAssignment.RaterCode <> 'SELF'";
+			query += " GROUP BY tblTrimmedMean.CompetencyID, tblTrimmedMean.TargetLoginID ";
+			
+			if(divID != 0) 
+				query += ", tblAssignment.FKTargetDivision ";
+			if(deptID != 0) 
+				query += ", tblAssignment.FKTargetDepartment ";
+			if(groupSection != 0)
+				query += ", tblAssignment.FKTargetGroup ";
+			
+			if(divID != 0 || deptID != 0 || groupSection != 0)
+				query += "HAVING (";
+			
+			if(divID != 0) 
+			{
+				query += " tblAssignment.FKTargetDivision = " + divID;
+				
+				if(deptID != 0 || groupSection != 0)
+					query += " AND ";
+			}
+			if(deptID != 0) 
+			{
+				query += " tblAssignment.FKTargetDepartment = " + deptID;
+				
+				if(groupSection != 0)
+					query += " AND ";
+			}
+			if(groupSection != 0)
+				query += " tblAssignment.FKTargetGroup = " + groupSection;
+			
+			if(divID != 0 || deptID != 0 || groupSection != 0)
+				query += ")";*/
+			
+			query = "SELECT distinct CAST(tblTrimmedMean.TrimmedMean AS int) AS Result ";
+			query += "FROM tblTrimmedMean INNER JOIN ";
+			query += "tblAssignment ON tblTrimmedMean.SurveyID = tblAssignment.SurveyID AND ";
+			query += "tblTrimmedMean.TargetLoginID = tblAssignment.TargetLoginID ";
+			query += "INNER JOIN tblRatingTask ON tblTrimmedMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query += "WHERE tblTrimmedMean.SurveyID = " + surveyID;
+			query += " AND tblTrimmedMean.Type = 1 AND tblRatingTask.RatingCode = 'CP' AND ";
+			query += "tblTrimmedMean.CompetencyID = " + compID + " and RaterCode <> 'SELF'";				
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				//query = query + " AND [User].FKDivision = " + divID;
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+				//query = query + " AND [User].FKDepartment = " + deptID;
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+				//query = query + " AND [User].Group_Section = " + groupSection;
+				
+
+			query += " GROUP BY CAST(tblTrimmedMean.TrimmedMean AS int)";
+			
+		} else {
+		
+			query = "SELECT DISTINCT CAST(AVG(tblAvgMean.AvgMean) AS int) AS Result FROM tblAvgMean ";
+			query += "INNER JOIN tblAssignment ON tblAvgMean.TargetLoginID = tblAssignment.TargetLoginID ";
+			query += "INNER JOIN tblRatingTask ON tblAvgMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query += "WHERE tblAvgMean.SurveyID = " + surveyID + " AND tblAvgMean.Type = 1 ";
+			query += "AND tblRatingTask.RatingCode = 'CP' AND tblAvgMean.CompetencyID = " + compID + " AND tblAssignment.RaterCode <> 'SELF'";
+			query += " GROUP BY tblAvgMean.CompetencyID, tblAvgMean.TargetLoginID ";
+			
+			if(divID != 0) 
+				query += ", tblAssignment.FKTargetDivision ";
+			if(deptID != 0) 
+				query += ", tblAssignment.FKTargetDepartment ";
+			if(groupSection != 0)
+				query += ", tblAssignment.FKTargetGroup ";
+			
+			if(divID != 0 || deptID != 0 || groupSection != 0)
+				query += "HAVING (";
+			
+			if(divID != 0) 
+			{
+				query += " tblAssignment.FKTargetDivision = " + divID;
+				
+				if(deptID != 0 || groupSection != 0)
+					query += " AND ";
+			}
+			if(deptID != 0) 
+			{
+				query += " tblAssignment.FKTargetDepartment = " + deptID;
+				
+				if(groupSection != 0)
+					query += " AND ";
+			}
+			if(groupSection != 0)
+				query += " tblAssignment.FKTargetGroup = " + groupSection;
+			
+			if(divID != 0 || deptID != 0 || groupSection != 0)
+				query += ")";
+		}
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		return rs;
+	}
+	
+	/**
+	 * 	Retrieves total target based on the score
+	 *	@param int compID	CompetencyID
+	 *	@param int score	
+	 *
+	 *	@return int TargetBasedScore
+	 */
+	public int totalTargetBasedScore(int compID, int score) throws SQLException 
+	{
+		int reliability = C.ReliabilityCheck(surveyID);
+		int iTotalTarget = 0;
+		String query = "";
+		
+		if(reliability == 0) {
+			/*query = "SELECT COUNT(*) AS Total FROM ";
+			query += "(SELECT tblTrimmedMean.TargetLoginID FROM tblTrimmedMean INNER JOIN ";
+			query += "tblAssignment ON tblTrimmedMean.TargetLoginID = tblAssignment.TargetLoginID ";
+			query += "INNER JOIN tblRatingTask ON tblTrimmedMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query += "WHERE tblTrimmedMean.SurveyID = " + surveyID + " AND tblRatingTask.RatingCode = 'CP' ";
+			query += "AND tblTrimmedMean.CompetencyID = " + compID + " AND tblTrimmedMean.Type = 1 ";
+			query += "GROUP BY tblTrimmedMean.TargetLoginID ";
+	        
+	        if(divID != 0) 
+				query += ", tblAssignment.FKTargetDivision ";
+			if(deptID != 0) 
+				query += ", tblAssignment.FKTargetDepartment ";
+			if(groupSection != 0)
+				query += ", tblAssignment.FKTargetGroup ";
+			
+			query += "HAVING (CAST(AVG(tblTrimmedMean.TrimmedMean) AS int) = " + score + ") ";
+			
+			if(divID != 0)
+				query += "AND tblAssignment.FKTargetDivision = " + divID;
+			if(deptID != 0)
+				query += "AND tblAssignment.FKTargetDepartment = " + deptID;
+			if(groupSection != 0)
+				query += "AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+			query += ") DERIVEDTBL";*/
+			
+			
+			query = "SELECT COUNT(distinct tblTrimmedMean.TargetLoginID) AS Total FROM tblTrimmedMean INNER JOIN ";
+			query += "tblAssignment ON tblTrimmedMean.SurveyID = tblAssignment.SurveyID AND ";
+			query += "tblTrimmedMean.TargetLoginID = tblAssignment.TargetLoginID ";
+			query += "INNER JOIN tblRatingTask ON tblTrimmedMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query += "WHERE tblTrimmedMean.SurveyID = " + surveyID;
+			query += " AND tblTrimmedMean.Type = 1 AND tblRatingTask.RatingCode = 'CP' AND ";
+			query += "tblTrimmedMean.CompetencyID = " + compID + " and RaterCode <> 'SELF'";				
+			
+			if(divID != 0) 
+				query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+				
+			if(deptID != 0) 
+				query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+				
+			if(groupSection != 0)
+				query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+				
+
+			query += " GROUP BY CAST(tblTrimmedMean.TrimmedMean AS int) ";
+			query += " HAVING (CAST(tblTrimmedMean.TrimmedMean AS int) = " + score + ") ";
+			
+		} else {
+			query = "SELECT COUNT(*) AS Total FROM ";
+			query += "(SELECT tblAvgMean.TargetLoginID FROM tblAvgMean INNER JOIN ";
+			query += "tblAssignment ON tblAvgMean.TargetLoginID = tblAssignment.TargetLoginID ";
+			query += "INNER JOIN tblRatingTask ON tblAvgMean.RatingTaskID = tblRatingTask.RatingTaskID ";
+			query += "WHERE tblAvgMean.SurveyID = " + surveyID + " AND tblRatingTask.RatingCode = 'CP' ";
+			query += "AND tblAvgMean.CompetencyID = " + compID + " AND tblAvgMean.Type = 1 ";
+			query += "GROUP BY tblAvgMean.TargetLoginID ";
+	        
+	        if(divID != 0) 
+				query += ", tblAssignment.FKTargetDivision ";
+			if(deptID != 0) 
+				query += ", tblAssignment.FKTargetDepartment ";
+			if(groupSection != 0)
+				query += ", tblAssignment.FKTargetGroup ";
+			
+			query += "HAVING (CAST(AVG(tblAvgMean.AvgMean) AS int) = " + score + ") ";
+			
+			if(divID != 0)
+				query += "AND tblAssignment.FKTargetDivision = " + divID;
+			if(deptID != 0)
+				query += "AND tblAssignment.FKTargetDepartment = " + deptID;
+			if(groupSection != 0)
+				query += "AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+			query += ") DERIVEDTBL";
+		}
+		
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next())
+			iTotalTarget = rs.getInt(1);
+		
+		rs.close();
+		stmt.close();
+		
+		return iTotalTarget;
+	}
+	/*****************************END DISTRIBUTION REPORT************************************************/
+	
+	
+	
+	
+	/*******************************TARGET RANK***********************************************/
+	/**
+	 *	 Writes target rank to excel.
+	 */
+	public void printTargetRank() throws SQLException, IOException, Exception 
+	{
+		if (hasCPR)	// If CPR is chosen in this survey
+		{
+			System.out.println("8. Group Ranking Report");
+		
+			int maxScale = getMaxScale();
+			
+			int [] address = OO.findString(xSpreadsheet, "<Group Rank>");
+			
+			column = address[0];
+			row = address[1];
+					
+			OO.findAndReplace(xSpreadsheet, "<Group Rank>", " ");
+						
+			int total = getTotalTarget();
+	
+			double gap [] = new double [total];
+			String target [] = new String [total];
+			HashMap NameMap = new HashMap();
+			
+			int i=0;
+		
+			//1. get all the completed raters.
+			ResultSet rsRank = getAllTargets();	
+	
+			//2. get all the gap and target name
+			Vector vGap = new Vector();
+			
+		
+			while(rsRank.next()) {	
+				
+				int fkUser = Integer.parseInt(rsRank.getString(1));
+				
+				voUser vo = getTargetGap(fkUser);
+				double dGap = vo.getGap();
+				String sName = vo.getName();
+				
+				NameMap.put(new Integer(fkUser), sName);
+				
+				vGap.add(new String [] {Integer.toString(fkUser), Double.toString(dGap)});
+			
+			}
+		
+			Vector vSorted = G.sorting(vGap, 1);
+		
+			int startBorder = row;
+			String sName = "Name";
+			String sGapScore = "Gap Score";
+			
+			if (ST.LangVer == 2)
+			{
+				sName = "Nama";
+				sGapScore = "Nilai Selisih";
+			}
+	
+			OO.insertString(xSpreadsheet, "S/N", row, column);
+			OO.insertString(xSpreadsheet, sName, row, column+2);
+			OO.insertString(xSpreadsheet, sGapScore, row, column+7);
+			OO.setFontBold(xSpreadsheet, startColumn, column+7, row, row);
+			OO.setBGColor(xSpreadsheet, startColumn, column+8, row, row, BGCOLOR);
+			
+			row++;		
+									
+			for(int j=0; j<vSorted.size(); j++) {
+				
+				int user = Integer.parseInt(((String [])vSorted.elementAt(j))[0]);
+				target[i] 	= (String) NameMap.get(new Integer(user));					
+				gap[i] 		= Double.valueOf(((String [])vSorted.elementAt(j))[1]).doubleValue();
+				
+				OO.insertNumeric(xSpreadsheet, i+1, row, column);
+				OO.insertString(xSpreadsheet, target[i], row, column+2);
+				OO.insertNumeric(xSpreadsheet, gap[i], row, column+7);
+				i++;
+				
+				row++;
+			}
+			
+			int endBorder = row-1;
+			
+			OO.setTableBorder(xSpreadsheet, 0, 8, startBorder, endBorder, false, false, true, true, true, true);
+	    	
+			row++;
+			
+			drawChartRank(target, gap, 2, maxScale);
+		}
+		else
+		{
+			System.out.println("9. Removing Group Ranking Report (No CPR)");
+			
+			int [] address = OO.findString(xSpreadsheet, "This report lists the Targets in ranked order based on the aggregate of all their competency gaps");
+			
+			column = address[0];
+			row = address[1];
+
+			OO.deleteChart(xSpreadsheet, "Object 2");
+			OO.deleteRows(xSpreadsheet, 0, 12, row-6, row+46, 52, 1);
+		}
+	}
+	
+	/**
+	 * 	Count total records in tblGap for the particular survey, group, department, and division.
+	 *	
+	 *	@return int TotalTarget
+	 */
+	public int getTotalTarget() throws SQLException 
+	{
+		int total = 0;
+
+		String query = "SELECT COUNT(DISTINCT tblAssignment.TargetLoginID) AS Total ";
+		query += "FROM         tblAssignment INNER JOIN ";
+		query += "[User] ON tblAssignment.TargetLoginID = [User].PKUser ";
+		query += "WHERE     tblAssignment.SurveyID =  " + surveyID;
+		
+		if(divID != 0) 
+			query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+			
+		if(deptID != 0) 
+			query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+			
+		if(groupSection != 0)
+			query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		if(rs.next())
+			total = rs.getInt(1);
+		
+		rs.close();
+		stmt.close();
+		
+		return total;
+	}
+	
+	/**
+	 * 	Retrieves all targets under that particular survey.
+	 *	
+	 *	@return ResultSet All targets under a survey
+	 */
+	public ResultSet getAllTargets() throws SQLException 
+	{
+		String query = "SELECT DISTINCT tblAssignment.TargetLoginID FROM tblAssignment INNER JOIN ";
+		query += "[User] ON tblAssignment.TargetLoginID = [User].PKUser WHERE ";
+		query += "tblAssignment.SurveyID = " + surveyID;
+		
+		if(divID != 0) 
+			query = query + " AND tblAssignment.FKTargetDivision = " + divID;
+			
+		if(deptID != 0) 
+			query = query + " AND tblAssignment.FKTargetDepartment = " + deptID;
+			
+		if(groupSection != 0)
+			query = query + " AND tblAssignment.FKTargetGroup = " + groupSection;
+			
+		query += " ORDER BY tblAssignment.TargetLoginID ";
+
+		if(db.con == null)
+			db.openDB();
+			
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+
+		return rs;
+	}
+	
+	
+	/**
+	 * 	Get the gap username based on the name sequence
+	 *	@param int TargetID
+	 *
+	 *	@return String Username
+	 */
+	public voUser getTargetGap(int targetID) throws SQLException 
+	{
+		String query = "";
+		String name = "";
+
+		int nameSeq = Integer.parseInt(surveyInfo[3]);	//0=familyname first
+		
+		query += "SELECT ROUND(AVG(tblGap.Gap), 2) AS Gap, tblGap.TargetLoginID, [User].PKUser, [User].FamilyName, [User].GivenName " +
+				  "FROM tblGap INNER JOIN " +
+		          "[User] ON tblGap.TargetLoginID = [User].PKUser " +
+		          "WHERE (tblGap.SurveyID = "+ surveyID + ") AND (tblGap.TargetLoginID = "+ targetID + ") "+
+		          "GROUP BY tblGap.TargetLoginID, [User].PKUser, [User].FamilyName, [User].GivenName " +
+		          "HAVING  ([User].PKUser = "+targetID+") ";
+		
+		if(db.con == null) db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		voUser vo = new voUser();
+		
+		if(rs.next()) 
+		{
+			double dGap = rs.getDouble("Gap");
+			vo.setGap(dGap);
+			
+			String family = rs.getString("FamilyName");
+			String given = rs.getString("GivenName");
+			
+			if(nameSeq == 0)
+				name =  family + " " + given;
+			else
+				name = given + " " + family;		
+			
+			vo.setName(name);
+		}	
+
+		return vo;
+	}
+	
+	
+	/**
+	 * 	Draw Group Ranking Report chart
+	 */
+	public void drawChartRank(String Rating [], double Result [], int type, int maxScale) throws IOException, Exception 
+	{
+		int r = row;
+		int c = 0;
+		XSpreadsheet xSpreadsheet2 = OO.getSheet(xDoc, "Sheet2");
+		OO.insertString(xSpreadsheet2, "Targets", r, c);
+		OO.insertString(xSpreadsheet2, "Gap", r, c+1);
+		r++;
+			
+		for(int i=Rating.length-1; i>=0; i--) 
+		{
+			OO.insertString(xSpreadsheet2, Rating[i], r, c);
+			OO.insertNumeric(xSpreadsheet2, Result[i], r, c+1);
+			r++;
+		}
+		
+		OO.setSourceData(xSpreadsheet, xSpreadsheet2, 1, c, c+1, row, r-1);
+		
+		row++;
+	}
+	
+	
+	/*********************************END TARGET RANK**********************************************/
+	
+	
+	/******************************REPLACEMENT***************************************************/
+	/**
+	 * Replace one string with another, this is used only if we are using template.
+	 * 
+	 * @throws Exception
+	 * @throws IOException
+	 */
+	public void Replacement() throws Exception, IOException {
+		// job position
+		System.out.println("3. Replacement Starts");
+		OO.findAndReplace(xSpreadsheet, "<Job Position>", surveyInfo[1]);
+	}
+
+	/**************************END OF REPLACEMENT******************************************/
+	
+
+	
+	
+	/************************START REPORT GENERATION************************************************************/
+	/**
+	 * Method to call all report generation method.
+	 * 
+	 * @param surveyID
+	 * @param groupSection
+	 * @param deptID
+	 * @param divID
+	 * @param pkUser
+	 * @param fileName
+	 * @param type
+	 * @throws SQLException
+	 * @throws Exception
+	 * @throws IOException
+	 * @see Report()
+	 */
+	public void generateReport(int surveyID, int groupSection, int deptID, int divID, int pkUser, String fileName, int type) throws SQLException, Exception, IOException 
+	{		
+		try 
+		{
+			vGap.clear();
+			CPCPRMap.clear();
+			CompIDGapMap.clear();
+			vCompDetails.clear();
+			vRatingTask.clear();
+			vCP.clear();
+			vCPR.clear();
+			
+			InitializeExcel(fileName);
+		
+			Replacement();
+			
+			vCompDetails = getCompetency(0);
+			vRatingTask = getRatingTask();
+			iReportType = type;
+			//to check for CP / CPR and assign value to variables.
+			checkCPCPR();
+			
+			printCPvsCPR();
+			
+			printGap();
+			printCompetency();
+			
+			int included = Q.commentIncluded(surveyID);
+			if(included == 1)
+				printComments();
+
+			printTotalTargets();
+			printTargetRank();
+			InsertLogo();
+			
+			System.out.println("Insert Header Footer");
+			OO.insertHeaderFooter(xDoc, surveyInfo[1], surveyInfo[4], "Copyright © 3-Sixty Profiler® is a product of Pacific Century Consulting Pte Ltd.");
+			
+			
+			System.out.println("================ Group Report Completed ================");
+
+		}catch(SQLException SE) {
+			System.out.println("1Store Document");
+			OO.storeDocComponent(xRemoteServiceManager, xDoc, storeURL);
+			System.out.println("SQL " + SE.getMessage());
+			OO.closeDoc(xDoc);
+		}catch(Exception E) {
+			System.out.println("2Store Document");
+			OO.storeDocComponent(xRemoteServiceManager, xDoc, storeURL);
+			System.out.println("DD " + E.getMessage());
+			OO.closeDoc(xDoc);
+		} finally {
+			if(db.con != null)
+				db.closeDB();
+				
+			try {
+				System.out.println("Store Document");
+				OO.storeDocComponent(xRemoteServiceManager, xDoc, storeURL);
+				System.out.println("CLosing OO");
+				OO.closeDoc(xDoc);
+				System.out.println("OO Closed");
+			}catch (SQLException SE) {
+				System.out.println("a " + SE.getMessage());
+			}catch (Exception E) {
+				System.out.println("b " + E.getMessage());
+			}   
+    	}
+	}
+	
+	/**
+	 * get competency
+	 * 
+	 * @param iOrder
+	 * @return
+	 * @throws SQLException
+	 * @see generateReport()
+	 */
+	public Vector getCompetency(int iOrder) throws SQLException {
+		String query = "";
+		int surveyLevel = Integer.parseInt(surveyInfo[0]);
+		Vector v = new Vector();
+		
+		if(surveyLevel == 0) {
+			query = query + "SELECT tblSurveyCompetency.CompetencyID, Competency.CompetencyName, ";
+			query = query + "CompetencyDefinition FROM tblSurveyCompetency INNER JOIN Competency ON ";
+			query = query + "tblSurveyCompetency.CompetencyID = Competency.PKCompetency ";
+			query = query + "WHERE tblSurveyCompetency.SurveyID = " + surveyID;
+			
+			if (iOrder == 0)
+				query = query + " ORDER BY tblSurveyCompetency.CompetencyID";
+			else
+				query = query + " ORDER BY tblSurveyCompetency.CompetencyID DESC";
+				
+		} else {
+			
+			query = query + "SELECT DISTINCT tblSurveyBehaviour.CompetencyID, Competency.CompetencyName, ";
+			query = query + "Competency.CompetencyDefinition FROM Competency INNER JOIN ";
+			query = query + "tblSurveyBehaviour ON Competency.PKCompetency = tblSurveyBehaviour.CompetencyID ";
+			query = query + "AND Competency.PKCompetency = tblSurveyBehaviour.CompetencyID ";
+			query = query + "WHERE tblSurveyBehaviour.SurveyID = " + surveyID;
+			
+			if (iOrder == 0)
+				query = query + " ORDER BY tblSurveyBehaviour.CompetencyID";
+			else
+				query = query + " ORDER BY tblSurveyBehaviour.CompetencyID DESC";
+		}
+
+		if(db.con == null) 
+			db.openDB();
+		
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+
+	
+		while(rs.next()) {
+			int compID = rs.getInt("CompetencyID");
+			String compName = UnicodeHelper.getUnicodeStringAmp(rs.getString("CompetencyName").trim());
+			String compDef = UnicodeHelper.getUnicodeStringAmp(rs.getString("CompetencyDefinition").trim());
+			
+			voCompetency vo = new voCompetency();
+			vo.setCompetencyID(compID);
+			vo.setCompetencyName(compName);
+			vo.setCompetencyDefinition(compDef);
+			v.add(vo);
+		}
+
+		return v;
+	}
+	
+	/**
+	 *	Insert Logo
+	 */
+	public void InsertLogo() throws IOException, Exception 
+	{	
+		if(surveyInfo[6] != "") //Org Logo
+		{
+			File F = new File(ST.getOOLogoPath()+ surveyInfo[6]); //directory where the file supposed to be stored
+			
+			System.out.println(ST.getOOLogoPath()+ surveyInfo[6]);
+			
+			if(F.exists())
+				OO.replaceLogo(xSpreadsheet, xDoc, "<Logo>", ST.getOOLogoPath()+ surveyInfo[6]);
+			else
+				OO.replaceLogo(xSpreadsheet, xDoc, "<Logo>", "");
+		}
+	}
+	/************************END REPORT GENERATION***************************************************/
+	
+	
+	/**************************START - JSP METHODS******************************/
+	
+	public String Report(int surveyID, int groupSection, int deptID, int divID, int pkUser, String fileName, int type) throws SQLException, Exception, IOException {				
+		System.out.println("----Group Report Generation Starts----");
+		
+		InitializeSurvey(surveyID, groupSection, deptID, divID);
+		
+		String jobName = surveyInfo[1].replaceAll("/", "-");
+		
+		String save = jobName + " (" + surveyInfo[4] + ")";
+		
+		generateReport(surveyID, groupSection, deptID, divID, pkUser, fileName, type);
+		
+		
+		//---adding event viewer
+		String [] UserInfo = U.getUserDetail(pkUser);
+		
+		try {
+			String groupSect = "All";
+			String deptName = "All";
+			String divName = "All";
+			
+			if(groupSection != 0)
+				groupSect = getGroupName();
+			if(deptID != 0)
+				deptName = getDeptName();
+			if(divID != 0)
+				divName = getDivName();
+			
+			String temp = surveyInfo[4] + "(S); " + groupSect + "(G); " + deptName + "(Dept); " + divName + "(Div)";
+			
+			EV.addRecord("Print", "Rater Result", temp, UserInfo[2], UserInfo[11], UserInfo[10]);
+
+		} catch(SQLException SE) {
+			System.out.println(SE.getMessage());
+		}
+	
+		
+		return save;
+	
+	}
+	
+	/***********************END - JSP FUNCTIONS*************************/
+	
+	
+	
+	
+	public static void main (String [] args)throws SQLException, Exception 
+	{	
+		int surveyID = 466;
+		int groupSection = 0;
+		int deptID = 0;
+		int divID = 0;
+		
+		long now = System.currentTimeMillis();
+		//new java.util.Date(t1)
+		
+		GroupReport IR = new GroupReport();
+		IR.Report(surveyID, groupSection, deptID, divID, 101, "GroupReport(KLC).xls", 2); //type = 1 (simple), 2 (full)
+		//IR.ReportToyota(surveyID, groupSection, deptID, divID, 101, "GroupReportToyota.xls");
+		long then = System.currentTimeMillis();
+		
+		System.out.println((then-now) / 1000);
+		System.exit(1);
+	}
+}

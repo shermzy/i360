@@ -1,0 +1,27 @@
+<%@ page import="java.sql.*,
+                 java.io.*" %>  
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/> 
+
+<html>
+
+<head>
+<title>3-Sixty Profiler</title>
+</head>
+
+<frameset framespacing="0" border="0" frameborder="0" rows="138,*,27">
+	<frame name="Top" border="0" scrolling="no" noresize target="main" src="Top_Login_DE.jsp">
+	<frameset cols="159,*" framespacing="0" border="0" frameborder="0">
+		<frame name="Side" target="main" src="Side_PARTICIPANT.jsp">
+		<frame name="main" src="Login.jsp" target="main">
+	</frameset>
+	<frame name="bottom" scrolling="no" noresize target="contents" src="Bottom.html">
+	<noframes>
+	<body>
+
+	<p>This page uses frames, but your browser doesn't support them.</p>
+
+	</body>
+	</noframes>
+</frameset>
+
+</html>

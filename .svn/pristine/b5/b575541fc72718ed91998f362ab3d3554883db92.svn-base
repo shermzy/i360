@@ -1,0 +1,120 @@
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+<%@ page pageEncoding="UTF-8"%>
+<%//by Yiting 19/09/2008 Fix jsp files to support Thai Language%>  
+<html>
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html">
+<title>New Page 1</title>
+<base target="middle">
+</head>
+
+<body leftmargin="0" topmargin="0" style="text-align: left">
+
+
+<TABLE WIDTH=947 BORDER=0 CELLPADDING=0 CELLSPACING=0 height="440">
+	<TR>
+		<TD width="10" ROWSPAN=9 valign="top">
+			<IMG SRC="images/360_01.jpg" WIDTH=10 HEIGHT=440 ALT=""></TD>
+	</TR>
+	<tr>
+	<TD width="937" ROWSPAN=9 valign="top">
+<table border="0" width="610" height="26">
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><font face="Arial" color="#000080"><b><%=trans.tslt("Welcome")%>!</b></font></td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><font face="Arial" size="2">3-Sixty Profiler</font><font face="Times New Roman" size="2"> </font>
+		<font face="Arial"><sup>®</sup></font><font face="Arial" size="2"> 
+		<%=trans.tslt("is a performance management and 360° feedback management software designed")%> </font></td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><font face="Arial" size="2">
+		<%=trans.tslt("to help deliver real time information on employee performance and skills gaps. Login to proceed")%>.</font></td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><font face="Arial" size="2"><%=trans.tslt("Find out more about")%> <a href="http://www.pcc.com.sg/360.htm" target="_blank">3-Sixty 
+		Profiler</a> <%=trans.tslt("or")%> <a href="http://www.pcc.com.sg" target="_blank"><%=trans.tslt("our company")%></a>.</font></td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td><font face="Arial" size="2"><a href="ForgotPass.jsp"><%=trans.tslt("Forgot your password")%>?</a></font></td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td height="5"></td>
+		<td align="center" height="5" valign="top">&nbsp;</td>
+
+	</tr>
+	<tr>
+		<td height="5"></td>
+		<td align="center" height="5" valign="top"><font size="1" color="navy" face="Arial">&nbsp;<a style="TEXT-DECORATION: none; color:navy;" href="Login_midpage.htm">Home</a> 
+		| <a style="TEXT-DECORATION: none; color:navy;" href="mailto:3SixtyProfiler@pcc.com.sg?subject=Regarding:">Contact 
+		Us</a><a color="navy" face="Arial" href="termofuse_Login.htm"><span style="color: #000080; text-decoration: none"> 
+		| Terms of Use </span></a>|
+		<a color="navy" face="Arial" href="http://www.pcc.com.sg/" target="_blank">
+		<span style="color: #000080; text-decoration: none">PCC Website</span></a></font></td>
+
+	</tr>
+	<tr>
+		<td height="5"></td>
+		<td align="center" height="5" valign="top">
+		<font size="1" color="navy" face="Arial">&nbsp;Copyright 
+		© 2004 Pacific Century Consulting Pte Ltd. All Rights Reserved.</font></td>
+
+	</tr>
+	</table>
+	</TD>
+
+	</tr>
+</body>
+
+</html>

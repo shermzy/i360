@@ -1,0 +1,454 @@
+<%@ page import = "java.sql.*" %>
+<%@ page import = "java.io.*" %>
+<%@ page import = "java.util.*" %>
+<%@ page import = "CP_Classes.vo.*" %>
+<%@ page import = "CP_Classes.Competency" %>
+<%@ page import = "CP_Classes.DevelopmentActivities"%>
+<%@ page import="java.sql.*" %>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+<jsp:useBean id="Database" class="CP_Classes.Database" scope="session"/>
+<jsp:useBean id="Comp" class="CP_Classes.Competency" scope="session"/>
+<jsp:useBean id="DRAQuery" class="CP_Classes.DevelopmentActivities" scope="session"/>
+<jsp:useBean id="DRA" class="CP_Classes.DevelopmentActivities" scope="session"/>
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>  
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+<jsp:useBean id="exportDRA" class="CP_Classes.ExportDRA" scope="session"/>
+<jsp:useBean id="Setting" class="CP_Classes.Setting" scope="session"/>
+<% 	// added to check whether organisation is a consulting company
+// Mark Oei 09 Mar 2010 %>
+<jsp:useBean id="Org" class="CP_Classes.Organization" scope="session"/>
+<jsp:useBean id="CE_Survey" class="CP_Classes.Create_Edit_Survey" scope="session"/>
+<%@ page import="CP_Classes.vo.votblOrganization"%>
+
+<title>Development Activities</title>
+
+<meta http-equiv="Content-Type" content="text/html">
+<%@ page pageEncoding="UTF-8"%>
+<%// by lydia Date 05/09/2008 Fix jsp file to support Thai language %>
+
+
+</head>
+
+<body>
+<p>
+  <SCRIPT LANGUAGE="JavaScript">
+<!-- Begin
+
+var x = parseInt(window.screen.width) / 2 - 225;  // the number 250 is the exact half of the width of the pop-up and so should be changed according to the size of the pop-up
+var y = parseInt(window.screen.height) / 2 - 100; 
+
+function check(field)
+{
+	var isValid = 0;
+	var clickedValue = 0;
+	//check whether any checkbox selected
+	if( field == null ) {
+		isValid = 2;
+	
+	} else {
+
+		if(isNaN(field.length) == false) {
+			for (i = 0; i < field.length; i++)
+				if(field[i].checked) {
+					clickedValue = field[i].value;
+					isValid = 1;
+				}
+		}else {		
+			if(field.checked) {
+				clickedValue = field.value;
+				isValid = 1;
+			}
+				
+		}
+	}
+	
+	if(isValid == 1)
+		return clickedValue;
+	else if(isValid == 0)
+		alert("No record selected");
+	else if(isValid == 2)
+		alert("No record available");
+	
+	isValid = 0;
+
+}
+
+
+//Edited by Xuehai 02 Jun 2011. Remove 'void'. Enable to run on different browers like Chrome&Firefox.
+//void function confirmAdd(form, CompID) {
+function confirmAdd(form, CompID) {
+	var myWindow=window.open('AddDRA.jsp','windowRef','scrollbars=no, width=450, height=200');
+	myWindow.moveTo(x,y);
+    myWindow.location.href = 'AddDRA.jsp?CompID=' + CompID;
+}
+
+//Edited by Xuehai 02 Jun 2011. Remove 'void'. Enable to run on different browers like Chrome&Firefox.
+//void function confirmEdit(form, field) {	
+function confirmEdit(form, field) {	
+	var value = check(field);
+	
+	if(value) {
+		var myWindow=window.open('EditDRA.jsp','windowRef','scrollbars=no, width=500, height=750');
+		myWindow.moveTo(x,y);
+		var query = "EditDRA.jsp?clicked=" + value;
+    	myWindow.location.href = query;
+	}
+}
+
+function confirmDelete(form, field) {
+	var value = check(field);
+	
+	if(value) {
+		if(confirm('<%=trans.tslt("Delete Development Activity")%>?')) {
+			form.action = "DevelopmentActivities.jsp?delete="+value;
+			form.method = "post";
+			form.submit();
+			
+			return true;
+		} else
+			return false;
+	}
+}
+
+/*------------------------------------------------------------start: LOgin modification 1------------------------------------------*/
+/*	choosing organization*/
+
+function proceed(form, org, comp)
+{
+	form.action="DevelopmentActivities.jsp?org="+org.value+"&comp=" + comp.value;
+	form.method="post";
+	form.submit();
+}	
+
+function proceed1(form, org, comp)
+{
+    
+	form.action="DevelopmentActivities.jsp?org="+org.value+"&comp=" + 0;
+	form.method="post";
+	form.submit();
+}
+</script>
+
+<%	
+	//response.setHeader("Pragma", "no-cache");
+	//response.setHeader("Cache-Control", "no-cache");
+	//response.setDateHeader("expires", 0);
+
+	int comp = 0;
+	String username=(String)session.getAttribute("username");
+
+  	if (!logchk.isUsable(username)) 
+  	{%> <font size="2">
+   		<script>
+			parent.location.href = "index.jsp";
+		</script>
+<%  } 
+  	else 
+  	{ 	
+		String compDef = " ";
+		if(request.getParameter("org") != null)
+		{ 
+			int PKOrg = new Integer(request.getParameter("org")).intValue();
+ 			logchk.setOrg(PKOrg);
+	
+			comp = new Integer(request.getParameter("comp")).intValue();
+			DRA.setFKCom(comp);
+			if(comp != 0)
+				compDef = Comp.CompetencyDefinition(comp);
+		}
+		
+/*-------------------------------------------------------------------end login modification 1--------------------------------------*/
+
+
+/************************************************** ADDING TOGGLE FOR SORTING PURPOSE *************************************************/
+
+	int toggle = DRAQuery.getToggle();	//0=asc, 1=desc
+	int type = 1; //1=name, 2=origin		
+			
+	if(request.getParameter("name") != null)
+	{	 
+		if(toggle == 0)
+			toggle = 1;
+		else
+			toggle = 0;
+		
+		DRAQuery.setToggle(toggle);
+		
+		type = Integer.parseInt(request.getParameter("name"));			 
+		DRAQuery.setSortType(type);									
+	} 
+	
+/************************************************** ADDING TOGGLE FOR SORTING PURPOSE *************************************************/
+
+%>
+
+<form name="DRAList" method="post" action="DevelopmentActivities.jsp">
+<table border="0" width="592" cellspacing="0" cellpadding="0" font span style='font-size:10.0pt;font-family:Arial;'>
+	<tr>
+	  <td colspan="3"><b><font color="#000080" size="2" face="Arial"><%= trans.tslt("Development Activity") %> </font></b></td>
+	  <td>&nbsp;</td>
+    </tr>
+	<tr>
+	  <td colspan="4"><ul>
+	      <li><font face="Arial" size="2"><%= trans.tslt("To Add, click on the Add button to create English version, then use Edit function to fill in information for other languages")%>.</font></li>>
+          <li><font face="Arial" size="2"><%= trans.tslt("To Edit, click on the relevant radio button and click on the Edit button")%>.</font></li>
+          <li><font face="Arial" size="2"><%= trans.tslt("To Delete, click on the relevant radio button and click on the Delete button")%>.</font></li>
+	      </ul></td>
+    </tr>
+	<tr>
+	
+	 <td width="80"><%= trans.tslt("Organisation") %></td> 
+		<td width="8">&nbsp;</td>
+		<td width="325"><select size="1" name="selOrg" onChange="proceed1(this.form,this.form.selOrg, this.form.Competency)">
+<%
+// Added to check whether organisation is also a consulting company
+// if yes, will display a dropdown list of organisation managed by this company
+// else, it will display the current organisation only
+// Mark Oei 09 Mar 2010
+	String [] UserDetail = new String[14];
+	UserDetail = CE_Survey.getUserDetail(logchk.getPKUser());
+	boolean isConsulting = true;
+	isConsulting = Org.isConsulting(UserDetail[10]); // check whether organisation is a consulting company 
+	if (isConsulting){
+		Vector vOrg = logchk.getOrgList(logchk.getCompany());
+
+		for(int i=0; i<vOrg.size(); i++)
+		{
+			votblOrganization vo = (votblOrganization)vOrg.elementAt(i);
+			int PKOrg = vo.getPKOrganization();
+			String OrgName = vo.getOrganizationName();
+
+			if(logchk.getOrg() == PKOrg)
+			{ %>
+				<option value=<%=PKOrg%> selected><%=OrgName%></option>
+			<% } else { %>
+				<option value=<%=PKOrg%>><%=OrgName%></option>
+			<%	}	
+		} 
+	} else { %>
+		<option value=<%=logchk.getSelfOrg()%>><%=UserDetail[10]%></option>
+	<% } // End of isConsulting %>
+</select></td>
+		<td width="179">&nbsp;</td>
+	</tr>
+    <tr>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td align="center">&nbsp;</td>
+    </tr>
+
+<%	
+	int DisplayNo, DRAID, pkComp, fkComp;
+	String CompName, DRAName, fkCompName, origin;
+	DisplayNo = 1;
+	DRAID = 0;
+	DRAName = "";
+	CompName = "";
+	fkCompName = "";
+	pkComp = 0;
+	fkComp = 0;
+	fkComp = DRA.getFKCom();
+	
+	if(request.getParameter("btnExport") != null) {
+		exportDRA.AllDevelopment(logchk.getCompany(), logchk.getOrg() ,logchk.getPKUser());
+		
+		//read the file name.
+		String file_name = "List Of Development Activities.xls";		
+		String output = Setting.getReport_Path() + "\\"+file_name;
+		File f = new File (output);
+
+		response.reset();
+		//set the content type(can be excel/word/powerpoint etc..)
+		response.setContentType ("application/xls");
+		//set the header and also the Name by which user will be prompted to save
+		response.addHeader ("Content-Disposition", "attachment;filename=\"List Of Development Activities.xls\"");
+		
+		//get the file name
+		String name = f.getName().substring(f.getName().lastIndexOf("/") + 1,f.getName().length());
+		//OPen an input stream to the file and post the file contents thru the 
+		//servlet output stream to the client m/c
+	
+		InputStream in = new FileInputStream(f);
+		ServletOutputStream outs = response.getOutputStream();
+		
+		int bit = 256;
+		int i = 0;
+
+    	try {
+        	while ((bit) >= 0) {
+        		bit = in.read();
+        		outs.write(bit);
+        	}
+       	} catch (IOException ioe) {
+       		ioe.printStackTrace(System.out);
+       	}
+       		
+       	outs.flush();
+        outs.close();
+        in.close();	
+	}
+	
+	if(fkComp > 0)
+		compDef = Comp.CompetencyDefinition(fkComp);
+	
+	
+	int orgID = logchk.getOrg();	
+	int compID = logchk.getCompany();
+	int pkUser = logchk.getPKUser();
+	System.out.println("*********" + compID);
+	System.out.println("*********" + orgID);
+	//Edit by Xuehai, 1 Jul 2011.
+	//Vector CompResult = Comp.FilterRecord(compID, orgID);
+	Vector CompResult = Comp.FilterRecordWithoutSystemGenerated(compID, orgID);
+	
+	Vector DRAResult = null;
+	
+	if(fkComp != 0) {
+		DRAResult = DRAQuery.FilterRecord(fkComp, compID, orgID);
+		fkCompName = Comp.CompetencyName(fkComp);				
+	}
+	
+	DRAResult = DRAQuery.FilterRecord(fkComp, compID, orgID);
+	
+%>
+    <tr>
+      <td><%= trans.tslt("Competency") %></td>
+      <td>&nbsp;</td>
+      <td><select name="Competency">
+        <% int t = 0;
+		%>
+        <option value=<%=t%>><%=trans.tslt("All")%>
+        <%
+			/********************
+			* Edited by James 30 Oct 2007
+			************************/
+			for(int i=0; i<CompResult.size(); i++) {
+				voCompetency voC = (voCompetency)CompResult.elementAt(i);
+				
+				pkComp = voC.getPKCompetency();
+				CompName = voC.getCompetencyName();
+				if(fkComp != 0 && fkComp == pkComp) {
+		%>
+        <option value = <%=fkComp%> selected><%=CompName%>
+        <%		
+				fkComp = 0;
+				}else {
+		%>
+        <option value = <%=pkComp%>><%=CompName%>
+        <%
+			}
+			}
+		%>
+          </select></td>
+      <td align="left"><input type="button" value="<%= trans.tslt("Show") %>" name="btnShow" onclick="proceed(this.form,this.form.selOrg, this.form.Competency)"></td>
+    </tr>
+	
+	 <tr>
+	   <td>&nbsp;</td>
+	   <td>&nbsp;</td>
+	   <td>&nbsp;</td>
+	   <td>&nbsp;</td>
+    </tr>
+	 <tr>
+      <td><%= trans.tslt("Definition") %></td>
+      <td>&nbsp;</td>
+      <td colspan="2"><textarea name="compDef" style='font-size:10.0pt;font-family:Arial' cols="44" rows="5" readonly><%=compDef%></textarea></td>
+    </tr>
+		
+  </table>
+  <p></p>
+<div style="width:610px; height:300px; z-index:1; overflow:auto;"> 
+<table width="593" border="1" style='font-size:10.0pt;font-family:Arial' bordercolor="#3399FF" bgcolor="#FFFFCC">
+<th width="20" bgcolor="navy">&nbsp;</th>
+<th width="27" bgcolor="navy"><b>
+<font span style='color:white'>No</font></b></th>
+<th width="639" bgcolor="navy"><a href="DevelopmentActivities.jsp?name=1"><b>
+<font span style='color:white'><u><%= trans.tslt("Development Activity") %></u></font></b></a></th>
+<th bgcolor="navy" align="center" width="100"><a href="DevelopmentActivities.jsp?name=2"><b>
+<font style='color:white'><u><%= trans.tslt("Origin") %></u></font></b></a></th>
+
+<% 
+	/********************
+	* Edited by James 30 Oct 2007
+	************************/
+	//while(DRAResult.next()) {
+	for(int i=0; i<DRAResult.size(); i++) {
+		votblDRA voDRA = (votblDRA)DRAResult.elementAt(i);
+		DRAID = voDRA.getDRAID();		
+		DRAName =  voDRA.getDRAStatement();
+		origin = voDRA.getDescription();
+%>
+   <tr onMouseOver = "this.bgColor = '#99ccff'"
+    	onMouseOut = "this.bgColor = '#FFFFCC'">
+       <td bordercolor="#3399FF">
+	   		<input type="radio" name="radioDRA" value=<%=DRAID%>>
+	   </td>
+	   	<td align="center" bordercolor="#3399FF">
+   		  <% out.print(DisplayNo);%>&nbsp;</td>
+	   <td bordercolor="#3399FF">
+           <% out.print(DRAName); %>&nbsp;
+	   </td>
+	   <td align="center" bordercolor="#3399FF">
+		<% out.print(origin); %>&nbsp;
+
+	   </td>
+   </tr>
+<% 	DisplayNo++;
+	}  
+%>
+</table>
+</div>
+
+
+<p></p>
+<input type="button" name="Add" value="<%= trans.tslt("Add") %>" onclick="confirmAdd(this.form, this.form.Competency.options[Competency.selectedIndex].value)">
+<input type="button" name="btnEdit" value="<%= trans.tslt("Edit") %>"  onclick = "confirmEdit(this.form, this.form.radioDRA)">
+<input type="button" name="Submit" value="<%= trans.tslt("Delete") %>"  onclick = "return confirmDelete(this.form, this.form.radioDRA)">&nbsp;&nbsp;
+</form>
+<%
+	if(request.getParameter("delete") != null) {
+		int pkDRA = Integer.parseInt(request.getParameter("delete"));
+		int check = DRAQuery.CheckSysLibDRA(pkDRA);
+		int userType = logchk.getUserType();	// 1= super admin
+		
+		if((userType == 1) || (check == 0)) {
+		try {
+			boolean delete = DRAQuery.deleteRecord(pkDRA, pkUser);			
+			if(delete) {
+			
+%>
+		<script>
+			alert("Deleted successfully");
+			window.location.href = "DevelopmentActivities.jsp";
+		</script>
+<%
+			}
+
+	} catch(SQLException SE) {
+%>
+		<script>
+			alert("<%=trans.tslt("Deletion cannot be performed. Data is being used")%>!");
+			window.location.href = "DevelopmentActivities.jsp";
+		</script>
+<%	
+	}
+	}else if((userType != 1) && check == 1){
+%>
+		<script>
+			alert("<%=trans.tslt("You are not allowed to delete System Generated Libraries")%>!");
+			//window.location.href = "Competency.jsp";
+		</script>
+<%	
+	}
+	}
+	}
+%>
+
+<p></p>
+<%@ include file="Footer.jsp"%>
+</body>
+</html>

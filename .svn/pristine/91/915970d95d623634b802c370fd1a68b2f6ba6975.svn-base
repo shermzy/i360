@@ -1,0 +1,352 @@
+<%@ page import="java.sql.*"%>
+<%@ page import="java.io.*"%>
+<%@ page import="java.text.DateFormat"%>
+<%@ page import="java.util.*"%>
+<%@ page import="java.util.Date"%>
+<%@ page import="java.text.*"%>
+<%@ page import="java.lang.String"%>
+<%@ page pageEncoding="UTF-8"%>
+<%//by Yiting 19/09/2008 Fix jsp files to support Thai Language%>  
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>                   
+<jsp:useBean id="db" class="CP_Classes.Database" scope="session"/>
+<jsp:useBean id="CE_Survey" class="CP_Classes.Create_Edit_Survey" scope="session"/>    
+<jsp:useBean id="global" class="CP_Classes.GlobalFunc" scope="session"/>
+<jsp:useBean id="adv" class="CP_Classes.AdvanceSettings" scope="session"/>
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+</head>
+<SCRIPT LANGUAGE=JAVASCRIPT>
+
+function Save(form,field)
+{
+	form.action="RatingSetup.jsp?Save=1";
+	form.method="post";
+	form.submit();
+}
+
+function tutup(form,field)
+{
+	form.action="RatingSetup.jsp?close=1";
+	form.method="post";
+	form.submit();
+}
+
+function change(form, field,field2)
+{
+	form.action="RatingSetup.jsp?change="+field;
+	form.method="post";
+	form.submit();
+}
+
+</SCRIPT>
+<body>
+<%
+String username=(String)session.getAttribute("username");
+
+  if (!logchk.isUsable(username)) 
+  {%> <font size="2">
+   
+    	    	<script>
+	parent.location.href = "index.jsp";
+</script>
+<% 	} 
+
+	if(request.getParameter("Save") != null || request.getParameter("close") != null)
+	{
+		boolean masuk = false;
+		int CompID=0;
+		int ratingValue =0;
+		int RatingTaskID_sql [] = adv.getRatingTaskID();
+		int hide =0;
+
+		adv.delete_tblRatingSetup(CE_Survey.getSurvey_ID(),logchk.getPKUser());
+		
+		for(int j=0; j<RatingTaskID_sql.length;j++)
+		{
+			ResultSet rs_check2 = adv.getAllRecord_SurveyCompetency(CE_Survey.getSurvey_ID(),logchk.getPKUser());
+			while(rs_check2.next())
+			{
+				CompID = rs_check2.getInt("PKCompetency");
+				String str_value = request.getParameter("selRatSca"+RatingTaskID_sql[j]+","+CompID);
+				
+				if(str_value != null)
+					ratingValue = Integer.parseInt(str_value);
+				
+				if(ratingValue != 0 && RatingTaskID_sql[j] != 0)
+				{
+					adv.insert_tblRatingSetup(CE_Survey.getSurvey_ID(),CompID,RatingTaskID_sql[j],ratingValue,logchk.getPKUser());
+				}
+				else
+				{
+					adv.delete_tblRatingSetup_Spec(CE_Survey.getSurvey_ID(),RatingTaskID_sql[j],logchk.getPKUser());
+				}
+			
+			}
+			
+			hide =1;
+			if(RatingTaskID_sql[j] != 0)
+			{
+				String hide_str = request.getParameter("chkHide"+RatingTaskID_sql[j]);
+				
+				if(hide_str != null)
+				{
+					hide = 2;
+				}
+		
+				adv.update_adminSetup(CE_Survey.getSurvey_ID(),RatingTaskID_sql[j],hide,logchk.getPKUser());		
+			}
+		}
+		
+		
+		if(request.getParameter("Save") != null)
+		{
+%>
+<script>
+    alert("<%=trans.tslt("Data has been saved successfully")%>");
+    </script>	
+<%		}
+		if(request.getParameter("close") != null)
+		{
+%>
+<script>
+    window.close();
+
+    </script>	
+<%		}    			
+	}	
+
+	if(request.getParameter("change") != null)
+	{
+		int CompID=0;
+		int hide =0;
+		int ratingValue =0;
+		int rating_no = new Integer(request.getParameter("change")).intValue();
+		int ratingTaskID_value = new Integer(request.getParameter("selAllSca"+rating_no)).intValue();	
+		
+		adv.delete_tblRatingSetup_Spec(CE_Survey.getSurvey_ID(),rating_no,logchk.getPKUser());
+		int RatingTaskID_sql [] = adv.getRatingTaskID();
+		
+		/**
+		 *	To check whether to hide the rating task 
+		 */
+				
+		ResultSet rs_check2 = adv.getAllRecord_SurveyCompetency(CE_Survey.getSurvey_ID(),logchk.getPKUser());
+		while(rs_check2.next())
+		{
+			CompID = rs_check2.getInt("PKCompetency");
+			
+			if(ratingTaskID_value != 0)
+				adv.insert_tblRatingSetup(CE_Survey.getSurvey_ID(),CompID,rating_no,ratingTaskID_value,logchk.getPKUser());
+		}
+		
+		for(int j=0; j<RatingTaskID_sql.length;j++)
+		{
+			String hide_str = request.getParameter("chkHide"+RatingTaskID_sql[j]);
+			
+			if(RatingTaskID_sql[j] != 0)
+			{
+				hide =1;
+				if(hide_str != null)
+				{
+					hide = 2;
+				}
+
+				adv.update_adminSetup(CE_Survey.getSurvey_ID(),RatingTaskID_sql[j],hide,logchk.getPKUser());
+			}
+		}
+
+	%>
+	<script>
+   location.href('RatingSetup.jsp');
+    </script>	
+<%    
+	}
+	
+	%>
+		
+<form name="RatingSetup" action="RatingSetup.jsp" method="post">
+
+<table border="0" width="97%" cellspacing="0" cellpadding="0">
+
+	<tr>
+		<td><b>
+<font face="Arial" size="2" color="#000080"><%=trans.tslt("Rating Scale Settings For Individual Competency")%></font></b></td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+	</tr>
+	<tr>
+		<td width="100%">
+		<p align="center"><font face="Arial">
+
+		</font></td>
+	</tr>
+	<tr>
+		<td>&nbsp;</td>
+	</tr>
+</table>
+<table border="1" width="97%" bordercolor="#3399FF">
+	
+	<tr>
+		<td width="32" bgcolor="#000080" align="center"><b>
+		<font color="#FFFFFF" face="Arial" size="2">No</font></b></td>
+		<td width="370" bgcolor="#000080" align="center"><b>
+		<font color="#FFFFFF" face="Arial" size="2"><%=trans.tslt("Competency Name")%></font></b></td>
+<%
+	
+	int counter = 0;
+	String RatingName[] = new String [10];
+	int RatingTaskID[] = new int [10];
+	int AdminSetup [] = new int [10];
+	int ScaleRange [] = new int [10];
+	ResultSet rs = adv.getAllRecord_SurveyRating(CE_Survey.getSurvey_ID(),logchk.getPKUser());
+	while(rs.next())
+	{
+		RatingTaskID[counter] = rs.getInt("RatingTaskID");
+		RatingName[counter] = rs.getString("RatingTaskName");
+		AdminSetup[counter] = rs.getInt("AdminSetup");
+		ScaleRange[counter] = rs.getInt("ScaleRange");
+		
+		%>
+			<td bgcolor="#000080" align="center"><b>
+				<font color="#FFFFFF" face="Arial" size="2"><%=RatingName[counter]%></font></b></td>
+<%		counter++;	
+	}
+	adv.setRatingTaskID(RatingTaskID);
+%>
+	</tr>
+	<tr>
+	<td width="402" bgcolor="#66CCFF" align="center" colspan="2"><b> <font face="Arial" size="2"><%=trans.tslt("Tick to Hide")%></font></b></td>
+	<%
+	for(int d=0; d<RatingName.length;d++)
+	{
+		if(RatingName[d] != null)
+		{	
+			if(AdminSetup[d] == 2)
+			{	%>
+				<td align ="center" bgcolor="#66CCFF" >
+				<font size="2">
+   
+				<input type="checkbox" name="<%="chkHide"+RatingTaskID[d]%>0" style="float: center" value="2" checked></td>
+		<%	}	
+			else
+			{%>			
+				<td bgcolor="#66CCFF" align ="center"><input type="checkbox" name="<%="chkHide"+RatingTaskID[d]%>"  style="float: center" value="1"></td>	
+		<%	}	%>
+		
+	<%	}%>
+			
+<%	}	%>						
+		</tr>
+	
+	<tr>
+		<td width="402" bgcolor="#66FF99" align="center" colspan="2"><b> <font face="Arial"size="2"><%=trans.tslt("Fixed For All")%></font></b></td>
+		<%	counter = 0;
+			for(int x=0; x<RatingName.length;x++)
+			{
+				if(RatingName[x] != null)
+				{
+				%>  <td bgcolor="#66FF99" align="center"><b>
+					<font face="Arial">
+					<select size="1" name="<%="selAllSca"+RatingTaskID[x]%>" onchange="change(this.form, <%=RatingTaskID[x]%>, this.form.chkHide)">
+					<option value="" selected>&nbsp</option>
+					<option value="0">Don't Fix</option>
+				<%	
+					//int ratsca = CE_Survey.getRatScale();
+					int ratsca = ScaleRange[x];
+					for(int i = 1; i<ratsca+1; i++)
+					{	%>
+						<option value=<%=i%>><%=i%></option>
+				<%	}	%>
+					</select>
+					</font>
+					</td>
+					
+	<%			}
+			}	
+%>
+		</tr>
+	
+<%	
+	counter = 0;
+	int numbering = 1;
+	ResultSet rs2 = adv.getAllRecord_SurveyCompetency(CE_Survey.getSurvey_ID(),logchk.getPKUser());
+	while(rs2.next())
+	{
+		int CompID = rs2.getInt("PKCompetency");
+		String CompetencyName = rs2.getString("CompetencyName");
+		%>
+
+		<tr>
+		<td width="32" bgcolor="#FFFFCC" align="center"><font face="Arial" size="2"><%=numbering%></font></td>
+		<td width="370" bgcolor="#FFFFCC"><font face="Arial" size="2">&nbsp;<%=CompetencyName.trim()%></font></td>
+	
+<%	
+		for(int j=0; j<RatingName.length;j++)
+		{
+			if(RatingName[j] != null)
+			{
+				%>
+			<td width="529" bgcolor="#FFFFCC" align="center">
+			<font face="Arial">
+			<select size="1" name="<%="selRatSca"+RatingTaskID[j]+","+CompID%>">
+			<option value="0">&nbsp</option>
+			<%	
+				int compid_ratSet=0;
+				int ratingid_ratSet=0;
+				int score=0;
+				
+				int ratsca = CE_Survey.getRatScale();
+				
+				for(int i = 1; i<ratsca+1; i++)
+				{	
+					String command = "SELECT * FROM tblRatingSetup WHERE SurveyID = "+CE_Survey.getSurvey_ID()+" AND CompetencyID ="+CompID+" AND RatingTaskID ="+RatingTaskID[j];
+					ResultSet rs3 = db.getRecord(command);
+					while(rs3.next())
+					{
+						score = rs3.getInt("Score");
+
+						if(score == i)
+						{	
+						%>
+							<option value="<%=i%>" selected><%=i%></option>
+				<%		}	
+						else
+						{ 
+						%>
+							<option value="<%=i%>"><%=i%></option>
+			<%			}
+					}
+				}	
+			}%>	
+				</select>
+			</font>
+			</td>
+<%		}%>
+
+		</tr>
+<%		counter++;
+		numbering++;
+	}%>			
+		
+	
+</table>
+
+<table border="0" width="97%" cellspacing="0" cellpadding="0">
+	<tr>
+		<td>&nbsp;</td>
+		<td width="220">&nbsp;</td>
+	</tr>
+	<tr>
+		<td><input type="button" value="<%=trans.tslt("Close")%>" name="btnClose" onclick ="tutup(this.form,this.form.chkHide)"></td>
+		<td width="220">
+		<input type="button" value="<%=trans.tslt("Save")%>" name="btnSave" style="float: right" onclick="Save(this.form,this.form.chkHide)"></td>
+	</tr>
+</table>
+</form>
+</body>
+
+</html>

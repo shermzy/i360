@@ -1,0 +1,425 @@
+<%@ page import="java.sql.*"%>
+<%@ page import="java.io.*"%>
+<%@ page import="java.text.DateFormat"%>
+<%@ page import="java.util.*"%>
+<%@ page import="java.util.Date"%>
+<%@ page import="java.text.*"%>
+<%@ page import="java.lang.String"%>
+<%@ page pageEncoding="UTF-8"%>
+<%//by Yiting 19/09/2008 Fix jsp files to support Thai Language%>  
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Survey Result</title>
+<meta http-equiv="Content-Type" content="text/html">
+<style type="text/css">
+<!--
+.style1 {
+	color: #0066FF;
+	font-weight: bold;
+}
+.style7 {color: #000099; font-weight: bold; }
+.style8 {color: #000000}
+.style12 {
+	font-style: italic;
+	color: #FFFFFF;
+	font-weight: bold;
+	font-size: 10pt;
+}
+.style13 {
+	color: #003399;
+	border-left-style: solid;
+	border-left-width: 1px;
+	border-right-style: solid;
+	border-right-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+}
+.style15 {color: #003399}
+-->
+</style>
+</head>
+
+<body>
+<jsp:useBean id="Database" class="CP_Classes.Database" scope="session"/>
+<jsp:useBean id="RDE" class="CP_Classes.RatersDataEntry" scope="session"/>
+<jsp:useBean id="CE_Survey" class="CP_Classes.Create_Edit_Survey" scope="session"/>
+<jsp:useBean id="SurveyResult" class="CP_Classes.SurveyResult" scope="session"/>
+<jsp:useBean id="Calculation" class="CP_Classes.Calculation" scope="session"/>
+<jsp:useBean id="User" class="CP_Classes.User_Jenty" scope="session"/>  
+<jsp:useBean id="logchk" class="CP_Classes.Login" scope="session"/>  
+<jsp:useBean id="trans" class="CP_Classes.Translate" scope="session"/>
+
+<script language="javascript">
+
+var x; 
+var y; 
+
+void function surveyOption(form, field, type)
+{
+	var isValid = 0;
+	var checkedValue = 0;
+	
+	//check which radio button clicked	
+	for (i = 0; i < field.length; i++) 
+		if(field[i].checked) {
+			checkedValue = field[i].value;
+			field[i].checked = false;
+			isValid = 1;
+		}
+	
+	if (isValid == 1)
+	{		
+			var myWindow, height, width;
+			
+			if(type == 2) {
+				height = 200;
+				width = 250;
+				x = parseInt(window.screen.width) / 2 - 125; 
+				y = parseInt(window.screen.height) / 2 - 100;   
+			} else {
+				height = 150;
+				width = 350;
+				x = parseInt(window.screen.width) / 2 - 175; 
+				y = parseInt(window.screen.height) / 2 - 75;   
+			}
+			myWindow=window.open('','windowRef','scrollbars=no, width=' + width + ', height=' + height);
+			myWindow.moveTo(x,y);
+
+    		myWindow.location.href = 'SurveyOptions.jsp?type=' + type + "&clicked=" + checkedValue;
+	}
+	else
+		alert("No record selected!");
+	isValid = 0;
+	
+	//form.action = "SurveyOptions.jsp?type=" + type;
+	//form.submit();
+}
+
+void function closeSurvey(form)
+{
+	
+	if(confirm("No more rater can be added once the survey is closed")) {
+		form.action = "SurveyResult.jsp?close=1";
+		form.submit();
+	}
+}
+
+void function openSurvey(form)
+{
+	
+	if(confirm("Are you sure you want to re-open the Survery?")) {
+		form.action = "SurveyResult.jsp?open=1";
+		form.submit();
+	}
+}
+
+</script>
+
+<%
+String username=(String)session.getAttribute("username");
+
+  if (!logchk.isUsable(username)) 
+  {%> <font size="2">
+   
+    	    	<script>
+	parent.location.href = "index.jsp";
+</script>
+<%  } 
+  else 
+  { 	
+	int OrgID = logchk.getOrg();	
+	int compID = logchk.getCompany();
+	int pkUser = logchk.getPKUser();
+	int userType = logchk.getUserType();	// 1= super admin
+
+	SimpleDateFormat day_view= new SimpleDateFormat ("dd/MM/yyyy");
+	
+	int surveyID = CE_Survey.getSurvey_ID();
+	String strReliability = "";
+	int nameSeq = User.NameSequence(OrgID);
+	
+	int reliability = Calculation.ReliabilityCheck(surveyID);
+	if(reliability == 0)
+		strReliability = "Trimmed Mean";
+	else
+		strReliability = "Group Wise Correlation";
+		
+	ResultSet SurveyInfo = SurveyResult.SurveyInfo(surveyID);
+	SurveyInfo.next();
+	
+	String surveyName = SurveyInfo.getString("SurveyName");
+	String dateOpened = day_view.format(SurveyInfo.getDate("DateOpened"));
+	
+	String surveyLevel = "";
+	int Level = Calculation.LevelOfSurvey(surveyID);
+	if(Level == 0)
+		surveyLevel = "Competency";
+	else
+		surveyLevel = "Key Behaviour";	
+		
+	String deadline = day_view.format(SurveyInfo.getDate("DeadlineSubmission"));
+	//if(deadline.length() > 10)
+		//deadline = deadline.substring(0, 10);
+	
+	int surveyStatus = SurveyInfo.getInt("SurveyStatus");
+	String jobPost = RDE.getJobPosition(surveyID);
+	
+	SurveyResult.setSurveyID(surveyID);
+	SurveyResult.setSurveyLevel(Level);
+	
+	ResultSet groupSection = SurveyResult.GroupSection(surveyID);
+	ResultSet targetID = null;
+	ResultSet raterID = null;
+	
+	int group = 0, target = 0, rater = 0;
+%>	
+
+<form action="SurveyOptions.jsp" method="post" name="SurveyResult">
+<table width="610" border="0" font style='font-size:10.0pt;font-family:Arial'>
+  <tr>
+    <td width="91" height="24" align="right">Survey Name : </td>
+    <td width="6">&nbsp;</td>
+    <td width="159">
+      <input type="text" name="surveyName" value="<%=surveyName%>" disabled>
+    </td>
+    <td width="9">&nbsp;</td>
+    <td width="150" align="right">Date Opened : </td>
+    <td width="9">&nbsp;</td>
+    <td width="156"><input type="text" name="dateOpened" value="<%=dateOpened%>" disabled></td>
+  </tr>
+  <tr>
+    <td height="26" align="right">Level : </td>
+    <td>&nbsp;</td>
+    <td><input type="text" name="surveyLevel" value="<%=surveyLevel%>" disabled></td>
+    <td>&nbsp;</td>
+    <td align="right">Deadline Submission : </td>
+    <td>&nbsp;</td>
+    <td><input type="text" name="deadline" value="<%=deadline%>" disabled></td>
+  </tr>  
+  <tr>
+    <td align="right">Job Position : </td>
+    <td>&nbsp;</td>
+    <td><input type="text" name="jobPost" value="<%=jobPost%>" disabled></td>
+    <td>&nbsp;</td>
+    <td align="right">Reliability Check : </td>
+    <td>&nbsp;</td>
+    <td><input type="text" name="reliability" value="<%=strReliability%>" disabled></td>
+  </tr>
+  <tr>
+  	<td>&nbsp;</td>	  	
+	<td>&nbsp;</td>
+<% if (userType == 1) {
+%>	
+  	<td><input name="btnOpen" type="button" value="Re-Open Survey" onClick="openSurvey(this.form)"></td>
+<% } else { %>
+<td>&nbsp;</td>
+<% } %>
+  	<td>&nbsp;</td>
+  	<td>&nbsp;</td>
+	<td>&nbsp;</td>  		
+	<td><input name="btnClose" type="button" value="Close Survey" onClick="closeSurvey(this.form)"></td>
+  </tr>
+</table>
+<hr width="610" align="left">
+
+<table width="398" border="0" align="left" style='font-size:10.0pt;font-family:Arial'>
+  <tr align="left" height="20">
+<%
+	String surveyImage = "";
+	switch(surveyStatus) {
+		case 1 : surveyImage = "images/ViewSurveyOpen.bmp";
+				 break;
+		case 2 : surveyImage = "images/ViewSurveyClosed.bmp";
+				 break;
+		case 3 : surveyImage = "images/ViewSurveyClosed.bmp";
+				 break;	
+	}
+%>	  
+    <td colspan="4"><span class="style7"><img src=<%=surveyImage%>>     <%=surveyName%></span></td>
+  </tr>
+<%
+	SurveyResult.setSurveyID(surveyID);
+	
+	while(groupSection.next()) {
+		group = groupSection.getInt("PKGroup");
+		String groupName = groupSection.getString("GroupName");				
+%>  
+<tr height="20">
+    <td width="29">&nbsp;</td>
+    <td colspan="3"><span class="style7"><img src="images/Group.bmp">     <%=groupName%></span></td>
+</tr>
+<%	
+		targetID = SurveyResult.TargetID(surveyID,	group);
+		while(targetID.next()) {
+			target = targetID.getInt("TargetLoginID");
+			String givenName = targetID.getString(2);
+			String familyName = targetID.getString(3);
+			
+			String targetName = "";
+			
+			//0=familyname first
+				if(nameSeq == 0)
+					targetName = familyName + " " + givenName;
+				else
+					targetName = givenName + " " + familyName;
+%>
+  <tr height="20">
+    <td width="29">&nbsp;</td>
+    <td width="23">&nbsp;</td>
+    <td colspan="2"><span class="style1"><input name="survey" type="radio" value="<%=target%>" onClick="surveyOption(this.form, this.form.survey, 2)"><img src="images/Person.bmp">     <%=targetName%></span></td>
+  </tr>
+ <%  
+ 		raterID = SurveyResult.RaterID(surveyID, group, target);
+		while(raterID.next()) {
+			rater = raterID.getInt("RaterLoginID");
+			
+			String name [] = SurveyResult.RatersName(rater);
+			
+			givenName = name[0];
+			familyName = name[1];
+			
+			String raterName = "";
+			
+			//0=familyname first
+				if(nameSeq == 0)
+					raterName = familyName + " " + givenName;
+				else
+					raterName = givenName + " " + familyName;
+			
+			
+			int assignment = Calculation.AssignmentID(surveyID, target, rater);
+			int status = SurveyResult.RatersStatus(assignment);
+%>
+  <tr height="20">
+    <td width="29"></td>
+    <td width="23"></td>
+    <td width="23"></td>
+<%
+	String image = "";
+	String raterCode = SurveyResult.RaterCode(assignment);
+	switch(status) {
+		case 0 : image = "images/RaterIncomplete.bmp";
+				 break;
+		case 1 : image = "images/RaterCompleted.bmp";
+				 break;
+		case 2 : image = "images/RaterUnreliable.bmp";
+				 break;
+		case 3 : image = "images/RaterExcluded.bmp";
+				 break;	
+		case 4 : image = "images/RaterCompleted.bmp";
+				 break;	 
+		case 5 : image = "images/RaterUnreliable.bmp";
+				 break;
+	}
+	
+	if(rater != 0) {
+%>	
+    <td width="279"><span class="style8"><input name="survey" type="radio" value="<%=assignment%>" onClick="surveyOption(this.form, this.form.survey, 3)"><img src=<%=image%>>     <%=raterName + " (" + raterCode + ")"%></span></td>
+    <td width="22">&nbsp;</td>
+  </tr>
+ <%		}
+ 	}
+%>
+  <tr height="20">
+    <td width="29">&nbsp;</td>
+  </tr>
+<% 
+ 	}
+%>
+<tr height="20">
+    <td width="29">&nbsp;</td>
+</tr>
+<%	
+ }
+ %>
+
+</table>
+
+
+<table width="178" border="1" style='font-size:10.0pt;font-family:Arial' bordercolor="#0099FF">
+  <tr height="20">
+    <td colspan="2" align="center" bordercolor="#0099FF" bgcolor="#000099" style="border-style: solid; border-width: 1px"><span class="style12">
+	LEGEND</span></td>
+    </tr>
+  <tr height="20">
+    <td width="32" align="center" bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><img src="images/ViewSurveyOpen.bmp"></td>
+    <td width="131" bgcolor="#FFFFCC" class="style13">&nbsp;Survey Open</td>
+  </tr>
+  <tr height="20">
+    <td align="center" bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><img src="images/ViewSurveyClosed.bmp"></td>
+    <td bgcolor="#FFFFCC" class="style8" style="border-style: solid; border-width: 1px; color: #003399;">&nbsp;Survey 
+	Closed</td>
+  </tr>
+  <tr height="20">
+    <td align="center" bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><img src="images/Group.bmp"></td>
+    <td bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><span class="style15">&nbsp;Group</span></td>
+  </tr>
+  <tr height="20">
+    <td align="center" bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><img src="images/Person.bmp"></td>
+    <td bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><span class="style15">&nbsp;Target</span></td>
+  </tr>
+  <tr height="20">
+    <td align="center" bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><img src="images/RaterCompleted.bmp"></td>
+    <td bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><span class="style15">&nbsp;Rater 
+	Completed</span></td>
+  </tr>
+  <tr height="20">
+    <td align="center" bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><img src="images/RaterIncomplete.bmp"></td>
+    <td bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><span class="style15">&nbsp;Rater 
+	Incomplete</span></td>
+  </tr>
+  <tr height="20">
+    <td align="center" bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><img src="images/RaterUnreliable.bmp"></td>
+    <td bgcolor="#FFFFCC" style="border-style: solid; border-width: 1px"><span class="style15">&nbsp;Rater 
+	Unreliable</span></td>
+  </tr>
+</table>
+
+
+</form>
+<%
+	if(request.getParameter("close") != null) {
+		Date today = new Date();
+		SurveyResult.CloseSurvey(surveyID, pkUser, day_view.format(today));
+%>
+<script>
+	alert("Survey has been closed !");
+</script>
+
+<%	
+	} else if(request.getParameter("open") != null) {
+		SurveyResult.OpenSurvey(surveyID, pkUser);
+%>
+<script>
+	alert("Survey status has been set to Open !");
+</script>
+
+<%	
+	}
+			
+	}
+%>
+
+
+
+</div>
+<table border="0" width="610" height="26" >
+	<tr>
+		<td align="center" height="5" valign="top">
+		<font size="1" color="navy" face="Arial">&nbsp;<a style="TEXT-DECORATION: none; color:navy;" href="Login.jsp">Home</a>&nbsp;|
+		<a color="navy" face="Arial">&nbsp;</a><a style="TEXT-DECORATION: none; color:navy;" href="mailto:3SixtyProfiler@pcc.com.sg?subject=Regarding:">Contact 
+		Us</a><a color="navy" face="Arial" href="termofuse.htm"><span style="color: #000080; text-decoration: none"> 
+		| Terms of Use </span></a>|
+		<span style="color: #000080; text-decoration: none">
+		<a style="TEXT-DECORATION: none; color:navy;" href="http://www.pcc.com.sg/" target=_blank">
+		PCC Website</a></span></font></td>
+	</tr>
+	<tr>
+		<td align="center" height="5" valign="top">
+		<font size="1" color="navy" face="Arial">&nbsp;Copyright © 2004 Pacific 
+		Century Consulting Pte Ltd. All Rights Reserved.</font></td>
+	</tr>
+</table>
+</body>
+</html>

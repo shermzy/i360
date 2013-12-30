@@ -1,0 +1,37 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Please navigate to Tools -</title>
+<style>
+<!--
+div.Section1
+	{page:Section1;}
+p.MsoPlainText
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:10.0pt;
+	font-family:"Courier New";}
+-->
+</style>
+</head>
+
+<body>
+
+<p><span style="font-family: Arial"><font size="2">Please</font></span><font face="Times New Roman" size="3"><span style="font-size: 10pt; font-family: Arial"> 
+navigate to <b><span style="font-weight: bold">Tools -&gt; Internet Options</span></b>. 
+Under the <b><span style="font-weight: bold">Privacy</span></b> tab, make sure 
+you uncheck the <b><span style="font-weight: bold">Block pop-up windows.</span></b></span></font></p>
+<p><font face="Arial" size="2">
+<img border="0" src="images/image001.jpg" width="410" height="518"></font></p>
+<p><font face="Times New Roman" size="3">
+<span style="font-size: 10pt; font-family: Arial">Alternatively, if you see a 
+notification like this on top of your browser, left click on it and choose <b>
+<span style="font-weight: bold">Always allow pop-ups from this site.</span></b></span></font></p>
+<p><font face="Arial" size="2">
+<img border="0" src="images/image002.jpg" width="963" height="23"></font></p>
+
+</body>
+
+</html>

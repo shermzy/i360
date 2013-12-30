@@ -1,0 +1,1395 @@
+package CP_Classes;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Vector;
+
+import CP_Classes.common.ConnectionBean;
+import CP_Classes.vo.voCompetency;
+/**
+ * This class implements all the operations for Competency, which is to be used in System Libraries, Survey, and Report..
+ */
+public class Competency
+{
+	
+	/**
+	 * Declaration of new object of class User.
+	 */
+	private User_Jenty U;
+	
+	/**
+	 * Declaration of new object of class EventViewer.
+	 */
+	private EventViewer EV;
+	
+	/**
+	 * Bean Variable to store the Competency Name.
+	 */
+	private String Comp;
+	
+	/**
+	 * Bean Variable to store the Organization ID.
+	 */
+	private int OrgID;
+	
+	/**
+	 * Bean Variable to store the Competency ID.
+	 */
+	private int PKComp;
+	
+	/**
+	 * Bean Variable for sorting purposes. Total Array depends on total SortType.
+	 * 0 = ASC
+	 * 1 = DESC
+	 */
+	private int Toggle [];	// 0=asc, 1=desc
+	
+	/**
+	 * Bean Variable to store the Sorting type, such as sort by CompetencyName, Definition, Origin.
+	 */
+	public int SortType;
+
+	/**
+	 * Creates a new intance of Competency object.
+	 */
+	public Competency(){
+		U = new User_Jenty();
+		EV = new EventViewer();
+		
+		PKComp = 0;
+		Toggle = new int [3];
+		
+		for(int i=0; i<3; i++)
+			Toggle[i] = 0;
+			
+		SortType = 1;
+	}
+
+	/**
+	 * Store Bean Variable Competency Name.
+	 */
+	public void setComp(String Comp) {
+		this.Comp = Comp;
+	}
+
+	/**
+	 * Get Bean Variable Competency Name.
+	 */
+	public String getComp() {
+		return Comp;
+	}
+	
+	/**
+	 * Store Bean Variable toggle either 1 or 0.
+	 */	
+	public void setToggle(int toggle) {
+		Toggle[SortType - 1] = toggle;
+	}
+
+	/**
+	 * Get Bean Variable toggle.
+	 */
+	public int getToggle() {
+		return Toggle [SortType - 1];
+	}	
+	
+	/**
+	 * Store Bean Variable Sort Type.
+	 */
+	public void setSortType(int SortType) {
+		this.SortType = SortType;
+	}
+
+	/**
+	 * Get Bean Variable SortType.
+	 */
+	public int getSortType() {
+		return SortType;
+	}	
+
+
+	/**
+	 * Store Bean Variable Organization ID.
+	 */
+	public void setOrgID(int OrgID) {
+		this.OrgID = OrgID;
+	}
+
+	/**
+	 * Get Bean Variable Organization ID.
+	 */
+	public int getOrgID() {
+		return OrgID;
+	}
+	
+	/**
+	 * Store Bean Variable CompetencyID.
+	 */
+	public void setPKComp(int PKComp) {
+		this.PKComp = PKComp;
+	}
+	
+	/**
+	 * Get Bean Variable CompetencyID.
+	 */
+	public int getPKComp() {
+		return PKComp;
+	}
+
+
+	/**
+	 * Add a new record to the Competency table.
+	 *
+	 * Parameters:
+	 *		name - the name of the Competency.
+	 *		definition - the definition that described the new created Competency.
+	 *
+	 * Returns:
+	 *		a boolean that represents the success of inserting to the database.
+	 */
+	public boolean addRecord(String name, String definition, int CompanyID, int OrgID, int pkUser, int userType) throws SQLException, Exception {											
+		int isSysGenerated = 0;
+		
+		Connection con = null;
+		Statement st = null;
+
+		//if(CompanyID == 1 && OrgID == 1)
+		if(userType == 1)	
+			isSysGenerated = 1;
+	
+		String sql = "Insert into Competency (CompetencyName, CompetencyDefinition, IsSystemGenerated, ";
+		
+		//Added "N" to query by Alvis on 08-Sep-09 to add support for chinese characters
+		sql = sql + "FKCompanyID, FKOrganizationID) values (N'" + name + "', N'" + definition + "', " + isSysGenerated + ", ";
+		sql = sql + CompanyID + "," + OrgID + ")";
+				
+		/*db.openDB();		
+		PreparedStatement ps = db.con.prepareStatement(sql);
+			
+		ps.executeUpdate();
+			
+		db.closeDB();*/
+		boolean bIsAdded = false;
+		try
+		{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			int iSuccess=st.executeUpdate(sql);
+			if(iSuccess!=0)
+			bIsAdded=true;
+
+		}
+		catch(Exception E)
+		{
+            System.err.println("Competency.java - addRecord - " + E);
+		}
+		finally
+        {
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+        }
+			
+		String [] UserInfo = U.getUserDetail(pkUser);
+		
+		try {
+			EV.addRecord("Insert", "Competency", name, UserInfo[2], UserInfo[11], UserInfo[10]);
+		} catch(SQLException SE) {
+			System.out.println(SE.getMessage());
+		}
+		
+		return bIsAdded;
+	}
+	
+	// add record with all language versions
+	public boolean addRecord(String[] name, String[] definition, int CompanyID, int OrgID, int pkUser, int userType) throws SQLException, Exception {											
+		int isSysGenerated = 0;
+		
+		Connection con = null;
+		Statement st = null;
+
+		//if(CompanyID == 1 && OrgID == 1)
+		if(userType == 1)	
+			isSysGenerated = 1;
+	
+		String sql = "Insert into Competency (CompetencyName, CompetencyDefinition, CompetencyName1, CompetencyDefinition1," +
+				" CompetencyName2, CompetencyDefinition2, CompetencyName3, CompetencyDefinition3, CompetencyName4, CompetencyDefinition4," +
+				" CompetencyName5, CompetencyDefinition5, IsSystemGenerated, ";
+		
+		//Added "N" to query by Alvis on 08-Sep-09 to add support for chinese characters
+		sql = sql + "FKCompanyID, FKOrganizationID) values (N'" + name[0] + "', N'" + definition[0]+"',";
+		if(name[1].trim().length() != 0)
+			sql += "N'"+ name[1] +"',";
+		else
+			sql +="null,";
+		if(definition[1].trim().length() != 0)
+			sql += "N'" + definition[1]  +"',";
+		else
+			sql +="null,";
+		if(name[2].trim().length() != 0)
+			sql += "N'"+ name[2]  +"',";
+		else
+			sql +="null,";
+		if(definition[2].trim().length() != 0)
+			sql += "N'"+ definition[2] +"',";
+		else
+			sql +="null,";
+		if(name[3].trim().length() != 0)
+			sql += "N'"+ name[3]  +"',";
+		else
+			sql +="null,";
+		if(definition[3].trim().length() != 0)
+			sql += "N'"+ definition[3] +"',";
+		else
+			sql +="null,";
+		if(name[4].trim().length() != 0)
+			sql += "N'"+ name[4]  +"',";
+		else
+			sql +="null,";
+		if(definition[4].trim().length() != 0)
+			sql += "N'"+ definition[4] +"',";
+		else
+			sql +="null,";
+		if(name[5].trim().length() != 0)
+			sql += "N'"+ name[5]  +"',";
+		else
+			sql +="null,";
+		if(definition[5].trim().length() != 0)
+			sql += "N'"+ definition[5] +"',";
+		else
+			sql +="null,";
+		
+		sql +=  isSysGenerated + ", ";
+		sql = sql + CompanyID + "," + OrgID + ")";
+				
+		/*db.openDB();		
+		PreparedStatement ps = db.con.prepareStatement(sql);
+			
+		ps.executeUpdate();
+			
+		db.closeDB();*/
+		boolean bIsAdded = false;
+		try
+		{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			int iSuccess=st.executeUpdate(sql);
+			if(iSuccess!=0)
+			bIsAdded=true;
+
+		}
+		catch(Exception E)
+		{
+            System.err.println("Competency.java - addRecord - " + E);
+		}
+		finally
+        {
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+        }
+			
+		String [] UserInfo = U.getUserDetail(pkUser);
+		
+		try {
+			EV.addRecord("Insert", "Competency", name[0], UserInfo[2], UserInfo[11], UserInfo[10]);
+		} catch(SQLException SE) {
+			System.out.println(SE.getMessage());
+		}
+		
+		return bIsAdded;
+	}
+	
+	/**
+	 * Add a new record to the Competency table with a foreign language version.
+	 *
+	 * Parameters:
+	 *		name - the name of the Competency.
+	 *		definition - the definition that described the new created Competency.
+	 *		name2 - the name of the Competency in foreign language
+	 *		definition2 - the definition in foreign language
+	 *		lang - language code of foreign language : 1 Indonesian, 2 Thai, 3 Korean, 4 Traditional Chinese, 5 Simplified Chinese
+	 *
+	 * Returns:
+	 *		a boolean that represents the success of inserting to the database.
+	 */
+	public boolean addRecord(String name, String definition, String name2, String definition2, int lang, int CompanyID, int OrgID, int pkUser, int userType) throws SQLException, Exception {											
+		int isSysGenerated = 0;
+		
+		Connection con = null;
+		Statement st = null;
+
+		//if(CompanyID == 1 && OrgID == 1)
+		if(userType == 1)	
+			isSysGenerated = 1;
+	
+		String sql = "";
+		if(lang == 4 || lang == 5){
+			sql = "Insert into Competency (CompetencyName, CompetencyDefinition, IsSystemGenerated, CompetencyName4, CompetencyDefinition4, CompetencyName5, CompetencyDefinition5, ";
+			
+			//Added "N" to query by Alvis on 08-Sep-09 to add support for chinese characters
+			sql = sql + "FKCompanyID, FKOrganizationID) values (N'" + name + "', N'" + definition + "', " + isSysGenerated + ", N'"+name2+"', N'"+definition2+"', N'"+name2+"', N'"+definition2+"',";
+			sql = sql + CompanyID + "," + OrgID + ")";
+		}else{
+			sql = "Insert into Competency (CompetencyName, CompetencyDefinition, IsSystemGenerated, CompetencyName"+lang+", CompetencyDefinition"+lang+", ";
+			
+			//Added "N" to query by Alvis on 08-Sep-09 to add support for chinese characters
+			sql = sql + "FKCompanyID, FKOrganizationID) values (N'" + name + "', N'" + definition + "', " + isSysGenerated + ", N'"+name2+"', N'"+definition2+"',";
+			sql = sql + CompanyID + "," + OrgID + ")";
+		}
+				
+		/*db.openDB();		
+		PreparedStatement ps = db.con.prepareStatement(sql);
+			
+		ps.executeUpdate();
+			
+		db.closeDB();*/
+		boolean bIsAdded = false;
+		try
+		{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			int iSuccess=st.executeUpdate(sql);
+			if(iSuccess!=0)
+			bIsAdded=true;
+
+		}
+		catch(Exception E)
+		{
+            System.err.println("Competency.java - addRecord - " + E);
+		}
+		finally
+        {
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+        }
+			
+		String [] UserInfo = U.getUserDetail(pkUser);
+		
+		try {
+			EV.addRecord("Insert", "Competency", name, UserInfo[2], UserInfo[11], UserInfo[10]);
+		} catch(SQLException SE) {
+			System.out.println(SE.getMessage());
+		}
+		
+		return bIsAdded;
+	}
+
+	public boolean addRecord(String name, String definition, int CompanyID, int OrgID) throws SQLException, Exception {											
+		int isSysGenerated = 0;
+		
+		Connection con = null;
+		Statement st = null;
+
+		//if(CompanyID == 1 && OrgID == 1)
+		
+	
+		String sql = "Insert into Competency (CompetencyName, CompetencyDefinition, IsSystemGenerated, ";
+		sql = sql + "FKCompanyID, FKOrganizationID) values (N'" + name + "', N'" + definition + "', " + isSysGenerated + ", ";
+		sql = sql + CompanyID + "," + OrgID + ")";
+				
+		/*db.openDB();		
+		PreparedStatement ps = db.con.prepareStatement(sql);
+			
+		ps.executeUpdate();
+			
+		db.closeDB();*/
+		boolean bIsAdded = false;
+		try
+		{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			int iSuccess=st.executeUpdate(sql);
+			if(iSuccess!=0)
+			bIsAdded=true;
+
+		}
+		catch(Exception E)
+		{
+            System.err.println("Competency.java - addRecord - " + E);
+		}
+		finally
+        {
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+        }
+			
+		
+		return bIsAdded;
+	}
+	/**
+	 * Edit a record in the Competency table.
+	 *
+	 * Parameters:
+	 *		name - the name of the Competency.
+	 *		definition - the definition that described the new created Competency.
+	 *		pkCompetency - the primary key of Competency to determine which record to be edited.
+	 *
+	 * Returns:
+	 *		a boolean that represents the success of editing to the database.
+	 */
+	/*public boolean editRecord(String name, String definition, int pkCompetency, int pkUser) throws SQLException, Exception {
+		String compBefore = CompetencyName(pkCompetency);
+		//Added "N" to query by Alvis on 08-Sep-09 to add support for chinese characters
+		String sql = "Update Competency Set CompetencyName = N'" + name +
+						"', CompetencyDefinition = N'" + definition + "' where PKCompetency = " + pkCompetency;
+			
+		Connection con = null;
+		Statement st = null;
+		
+		boolean bIsUpdated = false;
+        try	
+		{
+        	con=ConnectionBean.getConnection();
+        	st=con.createStatement();
+        	int iSuccess = st.executeUpdate(sql);
+        	if(iSuccess!=0)
+        	bIsUpdated=true;
+
+		}
+		catch(Exception E)
+		{
+	        System.err.println("Competency.java - editRecord- " + E);
+		}
+		finally
+	    {
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+	    }
+	
+		String [] UserInfo = U.getUserDetail(pkUser);		
+		try {
+			EV.addRecord("Update", "Competency", "(" + compBefore + ") - (" + name + ")", UserInfo[2], UserInfo[11], UserInfo[10]);
+		
+		} catch(SQLException SE) {
+			System.out.println(SE.getMessage());
+		}
+		
+		return bIsUpdated;
+	}*/
+	/**
+	 * Edit a record in the Competency table.
+	 *
+	 * Parameters:
+	 *		name - the name of the Competency.
+	 *		definition - the definition that described the new created Competency.
+	 *		pkCompetency - the primary key of Competency to determine which record to be edited.
+	 *		lang - language code of foreign language : 1 Indonesian, 2 Thai, 3 Korean, 4 Traditional Chinese, 5 Simplified Chinese
+	 *
+	 * Returns:
+	 *		a boolean that represents the success of editing to the database.
+	 */
+	public boolean editRecord(String name, String definition, int pkCompetency, int pkUser, int lang) throws SQLException, Exception {
+		String compBefore = CompetencyName(pkCompetency);
+		//Added "N" to query by Alvis on 08-Sep-09 to add support for chinese characters
+		
+		String sql = "Update Competency Set CompetencyName"+lang+" = N'" + name +
+						"', CompetencyDefinition"+lang+" = N'" + definition + "' where PKCompetency = " + pkCompetency;
+		if(lang == 0)
+			sql = "Update Competency Set CompetencyName= N'" + name +
+					"', CompetencyDefinition= N'" + definition + "' where PKCompetency = " + pkCompetency;
+		Connection con = null;
+		Statement st = null;
+		
+		boolean bIsUpdated = false;
+        try	
+		{
+        	con=ConnectionBean.getConnection();
+        	st=con.createStatement();
+        	int iSuccess = st.executeUpdate(sql);
+        	if(iSuccess!=0)
+        	bIsUpdated=true;
+
+		}
+		catch(Exception E)
+		{
+	        System.err.println("Competency.java - editRecord- " + E);
+		}
+		finally
+	    {
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+	    }
+	
+		String [] UserInfo = U.getUserDetail(pkUser);		
+		try {
+			EV.addRecord("Update", "Competency", "(" + compBefore + ") - (" + name + ")", UserInfo[2], UserInfo[11], UserInfo[10]);
+		
+		} catch(SQLException SE) {
+			System.out.println(SE.getMessage());
+		}
+		
+		return bIsUpdated;
+	}
+	
+	public boolean editRecord(String[] name, String[] definition, int pkCompetency, int pkUser) throws SQLException, Exception {
+		String compBefore = CompetencyName(pkCompetency);
+		//Added "N" to query by Alvis on 08-Sep-09 to add support for chinese characters
+		
+		String sql = "Update Competency Set CompetencyName = N'" + name[0] + "',CompetencyDefinition = N'" + definition[0] + "'";
+		if(name[1].trim().length() != 0)
+			sql += ", CompetencyName1 = N'"+ name[1] +"'";
+		if(name[2].trim().length() != 0)
+			sql += ", CompetencyName2 = N'"+ name[2] +"'";
+		if(name[3].trim().length() != 0)
+			sql += ", CompetencyName3 = N'"+ name[3] +"'";
+		if(name[4].trim().length() != 0)
+			sql += ", CompetencyName4 = N'"+ name[4] +"'";
+		if(name[5].trim().length() != 0)
+			sql += ", CompetencyName5 = N'"+ name[5] +"'";
+		if(definition[1].trim().length() != 0)
+			sql += ", CompetencyDefinition1 = N'" + definition[1]+"'";
+		if(definition[2].trim().length() != 0)
+			sql += ", CompetencyDefinition2 = N'" + definition[2]+"'";
+		if(definition[3].trim().length() != 0)
+			sql += ", CompetencyDefinition3 = N'" + definition[3]+"'";
+		if(definition[4].trim().length() != 0)
+			sql += ", CompetencyDefinition4 = N'" + definition[4]+"'";
+		if(definition[5].trim().length() != 0)
+			sql += ", CompetencyDefinition5 = N'" + definition[5]+"'";
+		sql += " where PKCompetency = " + pkCompetency;
+		
+		Connection con = null;
+		Statement st = null;
+		
+		boolean bIsUpdated = false;
+        try	
+		{
+        	con=ConnectionBean.getConnection();
+        	st=con.createStatement();
+        	int iSuccess = st.executeUpdate(sql);
+        	if(iSuccess!=0)
+        	bIsUpdated=true;
+
+		}
+		catch(Exception E)
+		{
+	        System.err.println("Competency.java - editRecord- " + E);
+		}
+		finally
+	    {
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+	    }
+	
+		String [] UserInfo = U.getUserDetail(pkUser);		
+		try {
+			EV.addRecord("Update", "Competency", "(" + compBefore + ") - (" + name + ")", UserInfo[2], UserInfo[11], UserInfo[10]);
+		
+		} catch(SQLException SE) {
+			System.out.println(SE.getMessage());
+		}
+		
+		return bIsUpdated;
+	}
+
+	/**
+	 * Delete an existing record from the Competency table.
+	 *
+	 * Parameters:
+	 *		pkCompetency - the primary key of Competency to determine which record to be deleted.
+	 */
+	public boolean deleteRecord(int pkCompetency, int pkUser) throws SQLException, Exception {
+		String name = CompetencyName(pkCompetency);
+		
+		String sql = "Delete from Competency where PKCompetency = " + pkCompetency;
+
+		Connection con = null;
+		Statement st = null;
+		
+		boolean bIsDeleted = false;
+		
+		try
+		{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			int iSuccess = st.executeUpdate(sql);
+			if(iSuccess!=0)
+			bIsDeleted=true;
+
+		} 
+		catch (Exception E)
+		{
+			System.err.println("Competency.java - deleteRecord - " + E);
+			
+		}
+		finally
+		{
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		
+		String [] UserInfo = U.getUserDetail(pkUser);		
+		try {
+			EV.addRecord("Delete", "Competency", name, UserInfo[2], UserInfo[11], UserInfo[10]);
+		} catch(SQLException SE) {
+			System.out.println(SE.getMessage());
+		}
+		return bIsDeleted;
+	}
+
+	/**
+	 * Retrieves all the Competencies from Competency table order by Competency Name.
+	 */
+	public Vector getAllRecord() throws SQLException, Exception {
+		String query = "Select * from Competency order by CompetencyName";
+		Vector v=new Vector();
+		/*
+		db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		*/
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			
+			while(rs.next()){
+				
+				voCompetency vo=new voCompetency();
+				vo.setCompetencyDefinition(rs.getString("CompetencyDefinition"));
+				vo.setCompetencyName(rs.getString("CompetencyName"));
+				vo.setFKCompanyID(rs.getInt("FKCompanyID"));
+				vo.setFKOrganizationID(rs.getInt("FKOrganizationID"));
+				vo.setIsExpert(rs.getInt("IsExpert"));
+				vo.setIsSystemGenerated(rs.getInt("IsSystemGenerated"));
+				vo.setIsTraitOrSimulation(rs.getInt("IsTraitOrSimulation"));
+				vo.setPKCompetency(rs.getInt("PKCompetency"));
+				v.add(vo);
+			 }
+
+		}catch(SQLException SE)
+		{
+			System.out.println("Competency.java - getAllRecord() - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		
+		return v;
+	}
+
+	/**
+	 * Retrieves all Competencies based on the Company ID.
+	 */	
+	
+	//@karen not complete
+	public Vector getRecord(int companyID) throws SQLException, Exception {
+		String query = "SELECT Competency.PKCompetency, Competency.CompetencyName, ";
+		query = query + "Competency.CompetencyDefinition, tblOrigin.Description FROM ";
+		query = query + "Competency INNER JOIN tblOrigin ON ";
+		query = query + "Competency.IsSystemGenerated = tblOrigin.PKIsSystemGenerated ";
+		query = query + "WHERE Competency.FKCompanyID = " + companyID;
+		query = query + " ORDER BY Competency.CompetencyName";
+		/*
+		db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		*/
+		Vector v=new Vector();	
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				voCompetency vo=new voCompetency();
+				vo.setCompetencyDefinition(rs.getString("CompetencyDefinition"));
+				vo.setCompetencyName(rs.getString("CompetencyName"));
+				vo.setPKCompetency(rs.getInt("PKCompetency"));
+				vo.setDescription(rs.getString("Description"));
+				v.add(vo);
+			}
+
+		}catch(SQLException SE)
+		{
+			System.out.println("Competency.java - getRecord - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return v;
+	}
+	
+	/**
+	 * Retrieves all Competencies based on Company and Organization ID.
+	 * @param compID
+	 * @param OrgID
+	 * @return
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	/* 
+	 * Edit by Xuehai, 1 Jul 2011. This function is used by DevelopmentResources.jsp and DevelopmentActivities.jsp.
+	 * only show Resources that belong to the specified company and organisation.
+	 */
+	public Vector FilterRecordWithoutSystemGenerated(int compID, int OrgID) throws SQLException, Exception {
+		Vector v=new Vector();
+		
+		String query = "SELECT PKCompetency, CompetencyName, ";
+		query = query + "CompetencyDefinition, tblOrigin.Description FROM Competency ";
+		query = query + "INNER JOIN tblOrigin ON ";
+		query = query + "Competency.IsSystemGenerated = tblOrigin.PKIsSystemGenerated ";
+		query = query + "WHERE (FKOrganizationID = " + OrgID + " AND ";		
+		query = query + "FKCompanyID = " + compID + ") order by CompetencyName";
+		
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				voCompetency vo=new voCompetency();
+				vo.setCompetencyDefinition(rs.getString("CompetencyDefinition"));
+				vo.setCompetencyName(rs.getString("CompetencyName"));
+				vo.setPKCompetency(rs.getInt("PKCompetency"));
+				vo.setDescription(rs.getString("Description"));
+				v.add(vo);
+			}
+
+		}catch(SQLException SE){
+			System.out.println("Competency.java - FilterRecordWithoutSystemGenerated - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return v;
+	}
+	
+	/**
+	 * Retrieves all Competencies based on Company and Organization ID.
+	 * @param compID
+	 * @param OrgID
+	 * @return
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	public Vector FilterRecord(int compID, int OrgID) throws SQLException, Exception {
+		Vector v=new Vector();
+		
+		String query = "SELECT PKCompetency, CompetencyName, IsSystemGenerated,";
+		query = query + "CompetencyDefinition, tblOrigin.Description FROM Competency ";
+		query = query + "INNER JOIN tblOrigin ON ";
+		query = query + "Competency.IsSystemGenerated = tblOrigin.PKIsSystemGenerated ";
+		query = query + "WHERE (IsSystemGenerated = 1) or (FKOrganizationID = " + OrgID + " AND ";		
+		query = query + "FKCompanyID = " + compID + ") order by ";
+		
+		if(SortType == 1)
+			query = query + "CompetencyName";
+		else if(SortType == 2)
+			query = query + "CompetencyDefinition";
+		else if(SortType == 3)
+			query = query + "IsSystemGenerated";
+		
+		if(Toggle[SortType - 1] == 1)
+			query = query + " DESC";
+		/*	
+		db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		return rs;
+		 */
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			while(rs.next()){
+				voCompetency vo=new voCompetency();
+				vo.setCompetencyDefinition(rs.getString("CompetencyDefinition"));
+				vo.setCompetencyName(rs.getString("CompetencyName"));
+				vo.setPKCompetency(rs.getInt("PKCompetency"));
+				vo.setIsSystemGenerated(rs.getInt("isSystemGenerated"));
+				vo.setDescription(rs.getString("Description"));
+				
+				
+				v.add(vo);
+				
+			}
+			
+		}catch(SQLException SE)
+		{
+			System.out.println("Competency.java - FilterRecord - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+			
+		}
+		return v;
+	}
+
+	/**
+	 * Get total number of competencies
+	 * @return
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	public int getTotalRecord() throws SQLException, Exception {
+		String query = "Select count(*) from Competency";
+			
+		/*db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+			
+		if(rs.next())
+			return rs.getInt(1);*/
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		
+		int total = 0;
+
+		try
+        {          
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+        
+            if(rs.next())
+            {
+            	total = rs.getInt(1);
+            }
+           }
+        catch(Exception E) 
+        {
+            System.err.println("Competency.java - getTotalRecord - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+
+        }
+
+		return total;
+	}
+	
+	/**
+	 * Check the existance of the particular Competency in the database.
+	 * Returns: 0 = NOT Exist
+	 *		    1 = Exist
+	 */
+	public int CheckCompetencyExist(String CompName, String CompDef, int OrgID, int CompID) throws SQLException, Exception {
+		int pkComp = 0;
+		//by Ha 10/06/08 change query no need Competency Definion
+		String query = "SELECT * FROM Competency  ";
+		//added 'N' in front of CompName by Alvis on 22-sep-09 to ensure chinese characters are correctly compared
+		query = query + "WHERE CompetencyName = N'" + CompName + "' AND ";
+		query = query + "((FKOrganizationID = " + OrgID + " AND ";
+		query = query + "FKCompanyID = " + CompID + ") or (IsSystemGenerated = 1))";
+		
+		/*db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+			
+		if(rs.next())
+			pkComp = rs.getInt(1);
+				
+		rs.close();
+		db.closeDB();*/
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try
+        {          
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+      
+            if(rs.next())
+            {
+            	pkComp = rs.getInt(1);
+            }
+       
+        }
+        catch(Exception E) 
+        {
+            System.err.println("Competency.java - CheckCompetencyExist - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+
+        }	
+		return pkComp;
+	}
+	
+	/**
+	 * Check whether the Competency belonged to System Generated of User Generated.
+	 */
+	public int CheckSysLibCompetency(int CompID) throws SQLException, Exception {
+		int system = 0;
+
+		String query = "SELECT IsSystemGenerated FROM Competency  ";
+		query = query + "WHERE PKCompetency = " + CompID;
+
+		/*db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+								
+		if(rs.next())
+			pkComp = rs.getInt(1);*/
+
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+	
+		try
+        {          
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+            if(rs.next())
+            {
+            	system = rs.getInt(1);
+            }
+           
+        }
+        catch(Exception E) 
+        {
+            System.err.println("Competency.java - CheckSysLibCompetency - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+
+        }	
+	
+		return system;
+	}
+	
+	/**
+	 * Retrives the Competency Name based on Competency ID.
+	 */
+	public String CompetencyName(int pkComp) throws SQLException, Exception {
+		String query = "Select CompetencyName from Competency where PKCompetency = " + pkComp;
+		String competencyName="";
+		/*db.openDB();
+		Statement stmt = db.con.createStatement();	
+		ResultSet return = stmt.executeQuery(query);
+			
+		if(rs.next())
+			return rs.getString(1);*/
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+		
+		try
+        {          
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+			if(rs.next())
+            {
+            	competencyName= rs.getString(1);
+            } 
+          
+        }
+        catch(Exception E) 
+        {
+            System.err.println("Competency.java - CompetencyName - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+
+        }	 
+		return competencyName;				
+	}
+	
+	/**
+	 * Retrieves Competency Definition based on Competency ID.
+	 */
+	public String CompetencyDefinition(int pkComp) throws SQLException, Exception {
+		String query = "Select CompetencyDefinition from Competency where PKCompetency = " + pkComp;
+		String definition="";
+		/*db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+			
+		if(rs.next())
+			return rs.getString(1);*/
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+
+		try
+        {          
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+         
+            if(rs.next())
+            {
+            	definition= rs.getString(1);
+            }
+            
+        
+       
+        }
+        catch(Exception E) 
+        {
+            System.err.println("Competency.java - CompetencyDefinition - " + E);
+        }
+        finally
+        {
+
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+
+        }
+		
+				
+		return definition;				
+	}
+	
+	/** (13-01-05) Maruli
+	 *	For import DRA purpose
+	 *	Check whether Competency already exist in database
+	 *
+	 *	Parameters:
+	 *		- Competency name
+	 *		- Company ID
+	 *		- Organisation ID
+	 *
+	 *	Return:
+	 *		- CompetencyID
+	 */
+	public int getCompetencyID_Import(String CompName, int CompanyID, int OrgID) throws SQLException, Exception {
+		int compID = 0;
+		String query = "SELECT PKCompetency FROM Competency ";
+		//added 'N' in front of CompName by Alvis on 22-sep-09 to ensure chinese characters are correctly compared
+		//Modified query to include condition for PKCompetecny that are system generated. To ensure that user can use System competency to add Development Activities or Development Resources, Sebastian 29 July 2010
+		query = query + "WHERE ((FKCompanyID = " + CompanyID + ") AND (FKOrganizationID = " + OrgID + ") AND (CompetencyName = N'" + CompName + "')) " +
+				"OR ((CompetencyName = N'" + CompName + "') AND (IsSystemGenerated = 1))";
+
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		/*db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		
+		if(rs.next())
+			compID = rs.getInt("PKCompetency");*/
+		try
+        {          
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+            if(rs.next())
+            {
+            	compID = rs.getInt("PKCompetency");
+            }
+            
+        }
+        catch(Exception E) 
+        {
+            System.err.println("Competency.java - CompetencyDefinition - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+
+        }	
+		return compID;
+	}
+	
+	/**
+	 * Check the relationship existance of Competency table and tblSurveyCompetency and tblSurveyBehaviour.
+	 * This is to be used in deletion process.
+	 * We have to manually check because we allow cascade delete for all System Libraries.
+	 */
+	
+//@karen not complete CP, there are 2 var at the end of the function namely exist 1 and exist2 but return is only exist 1 
+	public int relationExists(int pkComp){
+		String query = "";
+		int exist1 = 0;
+		int exist2 = 0;
+		
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		query = query + "Select * from tblSurveyCompetency where CompetencyID = " + pkComp;
+
+		/*db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+			
+		if(rs.next())
+			exist1 = 1;
+		*/	
+		try
+        {          
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+             
+            if(rs.next())
+            {
+            	exist1 = 1;
+            }
+       
+        }
+        catch(Exception E) 
+        {
+            System.err.println("Competency.java - relationExists - " + E);
+        }
+        finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+			
+		query = query + "Select * from tblSurveyBehaviour where CompetencyID = " + pkComp;
+
+		try {
+		
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+             
+			if(rs.next())
+				exist2 = 1;	
+					
+			if(exist1 == 1 || exist2 == 1)
+				exist1 = 1;
+		
+		
+		}catch(SQLException SE) {
+			
+			 System.err.println("Competency.java - relationExists - " + SE);
+		}
+		finally
+        {
+        	ConnectionBean.closeRset(rs); //Close ResultSet
+        	ConnectionBean.closeStmt(st); //Close statement
+        	ConnectionBean.close(con); //Close connection
+        }
+					
+		return exist1;				
+	}
+	
+	/**
+	 * get Competency
+	 * 
+	 * @param iPKComp
+	 * @return voCompetency
+	 * @throws SQLException
+	 * @throws Exception
+	 * Last Updated 12/12/07 by Yuni
+	 */
+	public voCompetency getCompetency(int iPKComp) {
+		String query = "Select * from Competency where PKCompetency = " + iPKComp;
+		
+		voCompetency vo=new voCompetency();
+		/*
+		db.openDB();
+		Statement stmt = db.con.createStatement();
+		ResultSet rs = stmt.executeQuery(query);
+		*/
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+			
+			if(rs.next()){
+				
+				
+				vo.setCompetencyDefinition(rs.getString("CompetencyDefinition"));
+				vo.setCompetencyName(rs.getString("CompetencyName"));
+				for(int n = 1; n < 6; n++){
+					vo.setCompetencyDefinition(n, rs.getString("CompetencyDefinition"+n));
+					vo.setCompetencyName(n, rs.getString("CompetencyName"+n));
+				}
+			    /*
+			     * Change(s):to also retrieve other information of the competency
+			     * Reason(s):To display these information in Cluster.jsp
+			     * Updated By: Liu Taichen
+			     * Updated On:18/6/2012
+			     */
+				vo.setPKCompetency(rs.getInt("PKCompetency"));
+				int origin = rs.getInt("IsSystemGenerated");
+				String des = "";
+				if(origin == 0){
+					des = "User";
+				}
+				else{
+					des = "System";
+				}
+				vo.setDescription(des);
+			 }
+
+		}catch(SQLException SE)
+		{
+			System.out.println("Competency.java - getCompetency() - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		
+		return vo;
+	}
+
+	/**
+	 * Retrieves all Competencies based on Company and Organization ID.
+	 * @param compID
+	 * @param OrgID
+	 * @return
+	 * @throws SQLException
+	 * @throws Exception
+	 */
+	public Vector getAllCompetencies(int FKCompanyID, int FKOrganizationID) throws SQLException, Exception {
+		Vector v=new Vector();
+		
+		String Sql = "SELECT * FROM Competency a INNER JOIN tblOrganization b ON a.FKOrganizationID = b.PKOrganization ";
+		Sql = Sql +  " WHERE IsSystemGenerated = 1 OR (IsSystemGenerated = 0 AND a.FKCompanyID = "+ FKCompanyID;
+		
+		if(FKOrganizationID != 0)
+		Sql = Sql +" AND a.FKOrganizationID = "+FKOrganizationID;
+		/*
+ * Change : Change the where clause put bracket for or in isSystemGenerated
+ * Reason : Missing bracket before
+ * Add by : Johanes
+ * Add on : 26/10/2009
+ */	
+		Sql = Sql + ")";
+		
+		Sql = Sql +" ORDER BY isSystemGenerated, CompetencyName";
+		
+		if(FKOrganizationID == 0)
+		Sql = Sql +", OrganizationName ";
+		
+		System.out.println(Sql);
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(Sql);
+			while(rs.next()){
+				voCompetency vo=new voCompetency();
+				vo.setCompetencyDefinition(rs.getString("CompetencyDefinition"));
+				vo.setCompetencyName(rs.getString("CompetencyName"));
+				vo.setPKCompetency(rs.getInt("PKCompetency"));
+				vo.setIsSystemGenerated(rs.getInt("IsSystemGenerated"));
+				
+				vo.setOrganisationName(rs.getString("OrganizationName"));
+		
+				v.add(vo);
+			
+			}
+
+		}catch(SQLException SE)
+		{
+			System.out.println("Competency.java - getAllCompetencies - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return v;
+	}
+	
+	/**
+	 * Gets a list of Competency by FKOrg
+	 * @param FKOrg The FK Organization ID
+	 * @see i360_Pool/Report_DevelopmentGuide_CompetencyList.jsp
+	 */
+	public Vector getCompetencyByOrg(int FKOrg){
+		Vector v = new Vector();
+		String sql = "SELECT * FROM Competency WHERE FKOrganizationID = "+FKOrg;
+		
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try{
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(sql);
+			while(rs.next()){
+				voCompetency vo=new voCompetency();
+
+				vo.setPKCompetency(rs.getInt("PKCompetency"));
+				vo.setCompetencyName(rs.getString("CompetencyName"));
+				vo.setCompetencyDefinition(rs.getString("CompetencyDefinition"));
+				
+				v.add(vo);
+			}
+
+		}catch(SQLException SE)
+		{
+			System.out.println("Competency.java - getCompetencyByOrg(int) - "+SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+		}
+		return v;
+	}
+
+	
+	
+	public static void main(String[] args) throws Exception{
+		Competency c=new Competency();
+		Vector cV=c.getAllRecord();
+		System.out.println("Debug Information : "+cV.size());
+	}
+}

@@ -1,0 +1,39 @@
+/*
+ * Author: Dai Yong
+ * June 2013
+ */
+package CP_Classes.vo;
+
+public class voCoachSlotGroup {
+	
+	int pk;
+	String slotGroupName;
+	
+	public voCoachSlotGroup() {
+		super();
+	}
+
+	public voCoachSlotGroup(int pk, String slotGroupName) {
+		super();
+		this.pk = pk;
+		this.slotGroupName = slotGroupName;
+	}
+
+	public int getPk() {
+		return pk;
+	}
+
+	public void setPk(int pk) {
+		this.pk = pk;
+	}
+
+	public String getSlotGroupName() {
+		return slotGroupName;
+	}
+
+	public void setSlotGroupName(String slotGroupName) {
+		this.slotGroupName = slotGroupName;
+	}
+	
+
+}

@@ -1,0 +1,82 @@
+<%@ page import="java.sql.*"%>
+<%2 page errorPage="" %>
+<%@ page pageEncoding="UTF-8"%>
+<%//by Yiting 19/09/2009 Fix jsp files to support Thai lanugage%>
+<%request.setCharacterEncoding("UTF-8");%>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>View Template</title>
+<style type="text/css">
+<!--
+.navy {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000066;
+}
+-->
+</style>
+
+<script language="javascript">
+function Delete(form)
+{
+	form.action = "DeleteAssignment.jsp?delete=1";
+	form.method = "post";
+	form.submit();
+	return true;
+
+}
+</script>
+
+</head>
+
+<link REL="stylesheet" TYPE="text/css" href="Settings\Settings.css">
+
+<jsp:useBean id="db" class="CP_Classes.Database" scope="session"/>
+
+<body class="pagecolor">
+<%
+	if(request.getParameter("delete") != null)
+	{
+		String sSQL = "DELETE FROM tblAssignment WHERE SurveyID IN (459,460,461,462) AND RaterLoginID = 0";
+
+		db.openDB();
+		PreparedStatement ps = db.con.prepareStatement(sSQL);
+		ps.executeUpdate();
+		db.closeDB();		
+%>
+		<script>
+			alert("Corrupted assignments have been deleted successfully");
+		</script>
+<%
+		//out.println("Corrupted assignments have been deleted successfully");
+	}
+%>
+<form name="Template" method="post" action="DeleteAssignment.jsp">
+<table width="630" class="fontstyle">
+  <tr>
+    <td class="navy">
+    &nbsp;</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+  </tr>
+</table>
+<p></p>
+<table width="630" class="fontstyle">
+  <tr>
+    <td width="191" align="left">&nbsp;</td>
+    <td width="346" align="right">&nbsp;</td>
+    <td width="77" align="right"><input type="button" name="btnDelete" value="Delete Corrupted Assignments" onclick="Delete(this.form)"></td>
+  </tr>
+</table>
+</form>
+</body>
+
+</html>

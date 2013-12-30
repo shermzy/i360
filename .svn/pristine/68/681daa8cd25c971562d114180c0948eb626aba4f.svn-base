@@ -1,0 +1,44 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>HVMenu installation instructions Produced by Dynamic Drive</title>
+</head>
+
+<body>
+
+<p>HV Menu installation instructions<br>
+Produced by Dynamic Drive (http://www.dynamicdrive.com)<br>
+<br>
+Two steps to installing the menu:<br>
+<br>
+<b>STEP 1:</b> Add the below into the &lt;BODY> section of your page, RIGHT below the tag itself:<br>
+<br>
+&lt;script type='text/javascript'><br>
+<br>
+//HV Menu- by Ger Versluis (http://www.burmees.nl/)<br>
+//Submitted to Dynamic Drive (http://www.dynamicdrive.com)<br>
+//Visit http://www.dynamicdrive.com for this script and more<br>
+<br>
+function Go(){return}<br>
+<br>
+&lt;/script><br>
+&lt;script type='text/javascript' src='exmplmenu_var.js'>&lt;/script><br>
+&lt;script type='text/javascript' src='menu_com.js'>&lt;/script><br>
+&lt;noscript>Your browser does not support script&lt;/noscript><br>
+<br>
+<b>STEP 2:</b> Unzip "hvmenu.zip", and upload the following files into your webpage directory:<br>
+<br>
+-exmplmenu_var.js<br>
+-menu_com.js<br>
+-tri.gif<br>
+-tridown.gif<br>
+-trileft.gif<br>
+<br>
+To configure the menu, edit exmplmenu.js using any text editor (ie: <a href="http://download.cnet.com/downloads/0-1475101-100-2787783.html?tag=st.dl.10001_103_1.lst.td_2787783">http://download.cnet.com/downloads/0-1475101-100-2787783.html?tag=st.dl.10001_103_1.lst.td_2787783</a>). See accompanying config.htm for documentation on the variables</p>
+
+</body>
+
+</html>

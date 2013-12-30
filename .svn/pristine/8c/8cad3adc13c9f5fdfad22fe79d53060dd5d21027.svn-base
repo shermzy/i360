@@ -1,0 +1,259 @@
+package CP_Classes.common;
+
+import java.sql.*;
+
+import javax.naming.InitialContext;
+import javax.sql.DataSource;
+
+public class ConnectionBean 
+{
+  private static DBConnectionManager db = null;
+ // private static Connection con = null;
+
+  public static void main(String args[])
+  {
+	  //Test connection
+	  ConnectionBean C = new ConnectionBean();
+	  Connection connection = C.getConnection();
+	  try
+	  {
+		  C.close(connection);
+	  }
+      catch(Exception E) 
+      {
+    	  System.out.println(E.toString());
+      }
+      
+      System.out.println("connection done");
+  }
+  
+  /**
+   * @return
+   */
+  public static Connection getConnection() 
+  {
+	  Connection con = null;
+	  
+    try 
+    {
+    
+    	
+    	
+    	//if(SET.getConnectionType() == 1)
+    	//{
+		    //USING PCC'S OWN CONNECTION POOLING
+		      if (db == null) 
+		      {
+		    	  db = DBConnectionManager.getInstance();
+		      }
+		      //if (con != null && !con.isClosed())
+		      //{
+		      //  return con;
+		      //}
+		      con = db.getConnection("sql", 30);
+		      
+		      //System.out.println("Current Open Cursor: " + getCurrentORACLEOpenCursors(con));
+		      
+		      //END USING PCC'S OWN CONNECTION POOLING
+    	/*
+    	}
+    	else
+		{
+	      //USING JNDI CONNECTION
+		      //    Use JDBC pool that was being setup in Sun App Server
+		      //    Ensure that the relevant JDBC jar file is in the lib
+		      //    	 Obtain our environment naming context
+		      
+		      InitialContext context = new InitialContext();
+		      //Look up our data source
+		      DataSource ds = (DataSource) context.lookup("jdbc/sps");
+		      //Allocate and use a connection from the pool
+		      con = ds.getConnection();
+  
+		      System.out.println("Current Open Cursor: " + getCurrentORACLEOpenCursors(con));
+		      
+		      
+	      //END USING JNDI CONNECTION
+		}
+		*/
+
+    }
+    catch (Exception e) 
+    {
+      System.out.println("getConnection" + e);
+    }
+    
+    return con;
+  }
+
+  /**
+   * 
+   */
+  public synchronized static void close(Connection con)
+  {
+    if (con != null) 
+    {
+    	try
+    	{
+	    	//if(Settings.getConnectionType() == 1)
+	    	//{
+	    		db.freeConnection("sql", con);
+	    	
+	    	/*
+	    	}
+	    	else
+	    	{
+	    		con.close();
+	        	con = null;
+	    	}
+	    	*/
+	    		
+	    	/*
+	    	System.out.println("Connection.close() = '"+con+"'");
+	    	con.close();
+	    	con = null;
+	    	System.out.println("Connection.close() = '"+con+"'");
+	    	*/
+    	}
+  		catch(Exception er)
+  		{
+  			System.out.println("con='" + con + "' close is abnormal "+er);
+  		}
+    }
+  }
+
+	public static void closeStmt(Statement st)
+  	{  		
+  		try
+  		{
+  			//System.out.println("Statement='" + st + "'");
+  			if (st != null) {
+  				st.close();
+  				st = null;
+  			}
+  		} 
+  		catch(Exception er)
+  		{
+  			System.out.println("st='" + st + "' close is abnormal "+er);
+  		}
+
+  	}
+	
+	public static void closePStmt(PreparedStatement ps)
+  	{  		
+  		try
+  		{
+  			//System.out.println("Statement='" + st + "'");
+  			if (ps != null) {
+  				ps.close();
+  				ps = null;
+  			}
+  		} 
+  		catch(Exception er)
+  		{
+  			System.out.println("ps='" + ps + "' close is abnormal "+er);
+  		}
+
+  	}
+	
+  public static void closeRset(ResultSet rs)
+	{
+		try
+		{
+			//System.out.println("Statement='" + st + "'");
+			if (rs != null) {
+				rs.close();
+				rs = null;
+			}
+		} 
+		catch(Exception er)
+		{
+			System.out.println("rs='" + rs + "' close is abnormal "+er);
+		}
+
+	}
+  
+  
+  /**
+   * Returns the number of open cursors on an Oracle Database.
+   * @return  Number of currently open cursors - note that this method will produce one of these
+   *          but it cleanly closes it so will not accumulate them.
+   * @param enhanceConnection Connection to the Oracle Database
+   */
+  public static int getCurrentORACLECachedOpenCursors(Connection conn) {
+    PreparedStatement psQuery = null;
+    ResultSet rs = null;
+    //Statement st = null;
+    
+    int cursors = -1;
+    try {
+      String sqlQuery = "select count(*) AS COUNT from v$open_cursor where user_name like 'PRISREQ02'";
+      psQuery = conn.prepareStatement(sqlQuery);
+      rs = psQuery.executeQuery();
+        
+      //st=conn.createStatement();
+		//rs=st.executeQuery(sqlQuery);
+      if (rs.next()) {
+        cursors = rs.getInt("COUNT");
+      }
+    } catch (SQLException e) {
+      System.out.println("SQLException in getCurrentOpenCursors(Connection conn): "+e);
+    } finally {
+      try {
+        if (rs != null) {rs.close();}
+        if (psQuery != null) {psQuery.close();}
+      }
+      catch (SQLException ex)  {
+        System.out.println("A SQLException error has occured in getCurrentOpenCursors(Connection conn): " + ex.getMessage());
+        ex.printStackTrace();
+      }
+      try {
+        if (psQuery != null) {psQuery.close();}
+      }
+      catch (SQLException ex)  {
+        System.out.println("A SQLException error has occured in getCurrentOpenCursors(Connection conn): " + ex.getMessage());
+        ex.printStackTrace();
+      }
+    }
+    return cursors;
+  }
+
+  public static int getCurrentORACLEOpenCursors(Connection conn) {
+	    PreparedStatement psQuery = null;
+	    ResultSet rs = null;
+	    //Statement st = null;
+	    
+	    int cursors = -1;
+	    try {
+	      String sqlQuery = "select sum(a.value) total_cur, avg(a.value) avg_cur, max(a.value) max_cur, s.username, ";  
+	      sqlQuery+="s.machine from v$sesstat a, v$statname b, v$session s where a.statistic#=b.statistic# ";
+	      sqlQuery+="and s.sid=a.sid and b.name='opened cursors current' and username = 'PRISREQ02' ";
+	      sqlQuery+="group by s.username, s.machine order by 1 desc";
+	      psQuery = conn.prepareStatement(sqlQuery);
+	      rs = psQuery.executeQuery();
+
+	      if (rs.next()) {
+	        cursors = rs.getInt("total_cur");
+	      }
+	    } catch (SQLException e) {
+	      System.out.println("SQLException in getCurrentOpenCursors(Connection conn): "+e);
+	    } finally {
+	      try {
+	        if (rs != null) {rs.close();}
+	      }
+	      catch (SQLException ex)  {
+	        System.out.println("A SQLException error has occured in getCurrentOpenCursors(Connection conn): " + ex.getMessage());
+	        ex.printStackTrace();
+	      }
+	      try {
+	        if (psQuery != null) {psQuery.close();}
+	      }
+	      catch (SQLException ex)  {
+	        System.out.println("A SQLException error has occured in getCurrentOpenCursors(Connection conn): " + ex.getMessage());
+	        ex.printStackTrace();
+	      }
+	    }
+	    return cursors;
+	  }
+
+}

@@ -1,0 +1,24 @@
+<%@ page import="java.util.Calendar "%> 
+<%@ page pageEncoding="UTF-8"%>
+<%// by lydia Date 05/09/2008 Fix jsp file to support Thai language %>
+<table border="0" width="610" id="table1">
+
+	<tr>
+		<font size="2" face="Arial" style="font-size: 14pt" color="#000080">
+   		<% // Denise 05/01/2010 update new email address %>
+		<td align="center" height="5" valign="top"><font size="1" color="navy" face="Arial">&nbsp;&nbsp;<a style="TEXT-DECORATION: none; color:navy;" href="Login_midpage.jsp">Home</a>&nbsp;| <a color="navy" face="Arial">&nbsp;<a style="TEXT-DECORATION: none; color:navy;" href="mailto:3SixtyAdmin@pcc.com.sg?subject=Regarding:">Contact 
+		Us</a><a color="navy" face="Arial" href="termofuse.jsp" target="_blank"><span style="color: #000080; text-decoration: none"> | Terms of Use </span></a>| <span style="color: #000080; text-decoration: none"><a style="TEXT-DECORATION: none; color:navy;" href="http://www.pcc.com.sg/" target="_blank">PCC Website</a></span></font></td></tr><tr>
+		<font size="2" face="Arial" style="font-size: 14pt" color="#000080">
+   
+   		<%
+			Calendar c = Calendar.getInstance();
+			int iYear = c.get(c.YEAR);	
+		%>
+		<td align="center" height="5" valign="top">
+		<font size="1" color="navy" face="Arial">&nbsp;Copyright &copy; <%=iYear%> Pacific Century Consulting Pte Ltd. All Rights Reserved.
+		</font>
+		</td>
+		
+	</tr>
+		
+</table>
