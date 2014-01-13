@@ -60,6 +60,7 @@ public class RatersDataEntry
 	 * Bean Variable to store job position.
 	 */
 	public String JobPost;
+	
 
 	/**
 	 * Creates a new intance of RatersDataEntry object.

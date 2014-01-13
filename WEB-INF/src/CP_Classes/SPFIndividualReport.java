@@ -201,7 +201,7 @@ public class SPFIndividualReport {
 	private XSpreadsheet			xSpreadsheet2			= null;
 	private XSpreadsheet			xSpreadsheet3			= null;
 	private XSpreadsheet			xSpreadsheet4			= null;
-	private XSpreadsheet			xSpreadsheet5			= null;				// used
+	private XSpreadsheet			xSpreadsheet5			= null;			// used
 																				// for
 																				// item
 																				// frequency
@@ -274,11 +274,11 @@ public class SPFIndividualReport {
 																				// language
 	private int						templateLanguage		= 0;
 	private int						format					= 0;				// To
-	private boolean					combineDIRIDR=false;																			// track
-																				// the
-																				// format
-																				// to
-																				// use
+	private boolean					combineDIRIDR			= false;			// track
+	// the
+	// format
+	// to
+	// use
 
 	DecimalFormat					df						= new DecimalFormat(
 																	"#.##");
@@ -3334,8 +3334,6 @@ public class SPFIndividualReport {
 		String templateURL = "file:///" + ST.getOOReportTemplatePath()
 				+ sTemplateName;
 
-		
-
 		xRemoteServiceManager = OO
 				.getRemoteServiceManager("uno:socket,host=localhost,port=2002;urp;StarOffice.ServiceManager");
 
@@ -3428,9 +3426,6 @@ public class SPFIndividualReport {
 		OO.findAndReplace(xSpreadsheet,"<ClusterOption>",clusterOpt);
 		OO.findAndReplace(xSpreadsheet,"<Job Position>",surveyInfo[1]);
 
-
-		
-		
 		// Changed the default language to English by Chun Yeong 9 Jun 2011
 		// Commented away to allow translation below, Chun Yeong 1 Aug 2011
 		// if (ST.LangVer == 2) //Indonesian
@@ -4140,7 +4135,7 @@ public class SPFIndividualReport {
 
 	public void InsertGapTitleCluster(int surveyID) throws SQLException,
 			IOException, Exception {
-		 System.out.println("5.1 Gap Title Insertion Starts");
+		System.out.println("5.1 Gap Title Insertion Starts");
 
 		int[] address = OO.findString(xSpreadsheet,"<Gap Title Cluster>");
 
@@ -4228,7 +4223,7 @@ public class SPFIndividualReport {
 
 			String gapTitle = "";
 			// Insert title to excel file
-			
+
 			OO.insertString(xSpreadsheet,info,row,0);// added to display
 														// info
 														// programmatically,
@@ -6301,7 +6296,7 @@ public class SPFIndividualReport {
 								 */
 								totalPeer = totalRater(RTID,compID,-1,"PEER%",
 										surveyLevel);
-								
+
 								totalDirect = totalRater(RTID,compID,-1,"DIR%",
 										surveyLevel);
 								totalIndirect = totalRater(RTID,compID,-1,
@@ -6315,7 +6310,7 @@ public class SPFIndividualReport {
 
 								if (totalDirect < 3 || totalIndirect < 3) {
 									combineDirIdr = true;
-									combineDIRIDR =true;
+									combineDIRIDR = true;
 								}
 								// Re-locate and modified codes to include Peers
 								// and Subordinates by Desmond 21 Oct 09
@@ -6463,8 +6458,7 @@ public class SPFIndividualReport {
 								}
 							}
 						}
-					
-					
+
 						// rater type can change depends on whether "Others" is
 						// splitted
 						// get the appropriate number and prepareCells(Qiao Li
@@ -6478,10 +6472,13 @@ public class SPFIndividualReport {
 						totRaterType = 6; // special case for SPF (All,
 											// Superior, Peer, Direct, Indirect,
 											// and Self)
-						
-						//cater for combination of both direct and indirect reports into 1. 
+
+						// cater for combination of both direct and indirect
+						// reports into 1.
 						if (totalDirect < 3 || totalIndirect < 3) {
-							totRaterType-=1;//so that the line spacing will not go off for the count for the graph.
+							totRaterType -= 1;// so that the line spacing will
+												// not go off for the count for
+												// the graph.
 							double directScore = Result[7];
 							double indirectScore = Result[8];
 							double newGroupScore = (directScore + indirectScore) / 2;
@@ -6928,7 +6925,8 @@ public class SPFIndividualReport {
 								row++;
 							}
 						} else {
-							//if indirect or direct less than 3, combine them to form 1 group called subordinates
+							// if indirect or direct less than 3, combine them
+							// to form 1 group called subordinates
 							for (int k = 0; k < dirComments.size(); k++) {
 								boolean blnDirCommentExist = false;
 								String[] arr = (String[]) dirComments
@@ -6981,14 +6979,14 @@ public class SPFIndividualReport {
 								}
 							}
 							boolean blnIndirCommentExist = false; // Added to
-							row++;								// get
+							row++; // get
 							// rid of extra
 							// '-'s
 							for (int k = 0; k < indirComments.size(); k++) {
 								String[] arr = (String[]) indirComments
 										.elementAt(k);
 								String comment = arr[1];
-								if (dirComments.size()==0) {
+								if (dirComments.size() == 0) {
 									// Allow dynamic translation, Chun Yeong 1
 									// Aug
 									// 2011
@@ -14351,23 +14349,25 @@ public class SPFIndividualReport {
 
 			// Edited printing ind report with Normative option
 			// by Tracy 01 Sep 08***
-			try{
-			if (chkNormative != "") {
-				InsertNormative();
+			try {
+				if (chkNormative != "") {
+					InsertNormative();
 
-			} else {
-				// by Hemilda 23/08/2008 for not include normative hasn't define
-				// the array, always got error
-				int total = totalCompetency();
-				// Initialise array for arrN
-				arrN = new int[total * 10 * 6]; // size = total competency * max
-												// 10 KBs * max 6 Rating
+				} else {
+					// by Hemilda 23/08/2008 for not include normative hasn't
+					// define
+					// the array, always got error
+					int total = totalCompetency();
+					// Initialise array for arrN
+					arrN = new int[total * 10 * 6]; // size = total competency *
+													// max
+													// 10 KBs * max 6 Rating
 
-			}
-			}catch (Exception ex){
+				}
+			} catch (Exception ex) {
 				System.out.println("Normative page missing");
 			}
-			
+
 			// End edit by Tracy 01 Sep 08***
 
 			// Added by Tracy 01 Sep 08************************
@@ -14517,16 +14517,17 @@ public class SPFIndividualReport {
 			insertItemFrequency(surveyID);
 			printTargetRank();
 			insertCompetencyRankTable();
-//			OO.insertHeaderFooter(
-//					xDoc,
-//					surveyInfo[1],
-//					surveyInfo[6] + "\n" + UserName() + "\n",
-//					"Date of printing: "
-//							+ temp
-//							+ "\n"
-//							+ "Copyright \u00a9 3-Sixty Profiler\u00AE is a product of Pacific Century Consulting Pte Ltd.",
-//					1,5);
-			//for MM 360
+			// OO.insertHeaderFooter(
+			// xDoc,
+			// surveyInfo[1],
+			// surveyInfo[6] + "\n" + UserName() + "\n",
+			// "Date of printing: "
+			// + temp
+			// + "\n"
+			// +
+			// "Copyright \u00a9 3-Sixty Profiler\u00AE is a product of Pacific Century Consulting Pte Ltd.",
+			// 1,5);
+			// for MM 360
 			OO.insertHeaderFooter(
 					xDoc,
 					"",
@@ -14596,14 +14597,14 @@ public class SPFIndividualReport {
 					rowFreq);
 			rowFreq++;
 			int startBorder = rowFreq;
-			if(!combineDIRIDR){
-				OO.setBGColor(xSpreadsheet3,startColumnFreq,endColumnFreq,rowFreq,
-						rowFreq + 1,12632256);
+			if (!combineDIRIDR) {
+				OO.setBGColor(xSpreadsheet3,startColumnFreq,endColumnFreq,
+						rowFreq,rowFreq + 1,12632256);
 				OO.mergeCells(xSpreadsheet3,startColumnFreq,startColumnFreq,
 						rowFreq,rowFreq + 1);
 			} else {
-				OO.setBGColor(xSpreadsheet3,startColumnFreq,endColumnFreq-6,rowFreq,
-						rowFreq + 1,12632256);
+				OO.setBGColor(xSpreadsheet3,startColumnFreq,endColumnFreq - 6,
+						rowFreq,rowFreq + 1,12632256);
 				OO.mergeCells(xSpreadsheet3,startColumnFreq,startColumnFreq,
 						rowFreq,rowFreq + 1);
 			}
@@ -14615,18 +14616,18 @@ public class SPFIndividualReport {
 					columnFreq);
 			OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"Peers"),
 					rowFreq,columnFreq + 6);
-			//combine direct and indirect if there is a <3 in direct category
-			if(!combineDIRIDR){
+			// combine direct and indirect if there is a <3 in direct category
+			if (!combineDIRIDR) {
 				OO.insertString(xSpreadsheet3,
-				trans.tslt(templateLanguage,"Direct Reports"),rowFreq,
-					columnFreq + 12);
-			OO.insertString(xSpreadsheet3,
-					trans.tslt(templateLanguage,"Indirect Reports"),rowFreq,
-					columnFreq + 18);
-			}else{
+						trans.tslt(templateLanguage,"Direct Reports"),rowFreq,
+						columnFreq + 12);
 				OO.insertString(xSpreadsheet3,
-						trans.tslt(templateLanguage,"Subordinate Reports"),rowFreq,
-							columnFreq + 12);
+						trans.tslt(templateLanguage,"Indirect Reports"),
+						rowFreq,columnFreq + 18);
+			} else {
+				OO.insertString(xSpreadsheet3,
+						trans.tslt(templateLanguage,"Subordinate Reports"),
+						rowFreq,columnFreq + 12);
 			}
 			OO.mergeCells(xSpreadsheet3,columnFreq,columnFreq + 5,rowFreq,
 					rowFreq);
@@ -14640,11 +14641,11 @@ public class SPFIndividualReport {
 					rowFreq,rowFreq);
 			OO.setCellAllignment(xSpreadsheet3,columnFreq + 12,columnFreq + 17,
 					rowFreq,rowFreq,1,2);
-			if(!combineDIRIDR){
-			OO.mergeCells(xSpreadsheet3,columnFreq + 18,columnFreq + 23,
-					rowFreq,rowFreq);
-			OO.setCellAllignment(xSpreadsheet3,columnFreq + 18,columnFreq + 23,
-					rowFreq,rowFreq,1,2);
+			if (!combineDIRIDR) {
+				OO.mergeCells(xSpreadsheet3,columnFreq + 18,columnFreq + 23,
+						rowFreq,rowFreq);
+				OO.setCellAllignment(xSpreadsheet3,columnFreq + 18,
+						columnFreq + 23,rowFreq,rowFreq,1,2);
 			}
 			rowFreq++;
 			OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"1"),
@@ -14683,19 +14684,19 @@ public class SPFIndividualReport {
 					rowFreq,columnFreq + 16);
 			OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"6"),
 					rowFreq,columnFreq + 17);
-			if(!combineDIRIDR){
+			if (!combineDIRIDR) {
 				OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"1"),
-					rowFreq,columnFreq + 18);
-			OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"2"),
-					rowFreq,columnFreq + 19);
-			OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"3"),
-					rowFreq,columnFreq + 20);
-			OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"4"),
-					rowFreq,columnFreq + 21);
-			OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"5"),
-					rowFreq,columnFreq + 22);
-			OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"6"),
-					rowFreq,columnFreq + 23);
+						rowFreq,columnFreq + 18);
+				OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"2"),
+						rowFreq,columnFreq + 19);
+				OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"3"),
+						rowFreq,columnFreq + 20);
+				OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"4"),
+						rowFreq,columnFreq + 21);
+				OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"5"),
+						rowFreq,columnFreq + 22);
+				OO.insertString(xSpreadsheet3,trans.tslt(templateLanguage,"6"),
+						rowFreq,columnFreq + 23);
 			}
 			rowFreq++;
 			columnFreq = startColumnFreq;
@@ -14739,11 +14740,12 @@ public class SPFIndividualReport {
 				}
 				columnFreq += 6;
 				// insert frequency for Direct Reports
-				if(!combineDIRIDR){
+				if (!combineDIRIDR) {
 					for (int k = 1; k <= 6; k++) {
 						int scoreFreq = getFreqScore(compID,k,"DIR");
 						if (scoreFreq != 0) {
-							OO.insertString(xSpreadsheet3,
+							OO.insertString(
+									xSpreadsheet3,
 									trans.tslt(templateLanguage,"" + scoreFreq),
 									rowFreq,columnFreq + k);
 						}
@@ -14753,7 +14755,8 @@ public class SPFIndividualReport {
 					for (int k = 1; k <= 6; k++) {
 						int scoreFreq = getFreqScore(compID,k,"IDR");
 						if (scoreFreq != 0) {
-							OO.insertString(xSpreadsheet3,
+							OO.insertString(
+									xSpreadsheet3,
 									trans.tslt(templateLanguage,"" + scoreFreq),
 									rowFreq,columnFreq + k);
 						}
@@ -14772,12 +14775,13 @@ public class SPFIndividualReport {
 				}
 				rowFreq++;
 			}
-			if(!combineDIRIDR){
+			if (!combineDIRIDR) {
 				OO.setTableBorder(xSpreadsheet3,startColumnFreq,endColumnFreq,
-					startBorder,rowFreq - 1,true,true,true,true,true,true);
-			} else {
-				OO.setTableBorder(xSpreadsheet3,startColumnFreq,endColumnFreq-6,
 						startBorder,rowFreq - 1,true,true,true,true,true,true);
+			} else {
+				OO.setTableBorder(xSpreadsheet3,startColumnFreq,
+						endColumnFreq - 6,startBorder,rowFreq - 1,true,true,
+						true,true,true,true);
 			}
 
 			rowFreq++; // restart next cluster
@@ -15059,22 +15063,27 @@ public class SPFIndividualReport {
 			 */
 			row++;
 
-			Vector numberOfGroupsOfUsers = getTotalNumberOfGroups(surveyID);
+			Vector numberOfGroupsOfUsers = getSurveyOverViewGroups(surveyID,
+					targetID);
+			
 			String raterCode = "";
 			String groupName = "";
 			int self = -1;
-			
+
 			String newSubGroup = "Subordinates";
-			int[] dir =  getSurveyRaterStatus(targetID,"DIR%");
-			int[] idr =  getSurveyRaterStatus(targetID,"IDR%");
-			boolean checkSplit=false;
-		
-			if (dir[0]<3 ||idr[0]<3){
-				checkSplit=true;
+			int[] dir = getSurveyRaterStatus(targetID,"DIR%");
+			int[] idr = getSurveyRaterStatus(targetID,"IDR%");
+			boolean checkSplit = false;
+
+			if (dir[0] < 3 || idr[0] < 3) {
+				checkSplit = true;
 			}
-		
-			int newNumOfRater=dir[0]+idr[0];
-			int newRatedNumOfRaters=dir[1]+idr[1];
+
+			int newNumOfRater = dir[0] + idr[0];
+			int newRatedNumOfRaters = dir[1] + idr[1];
+			System.out.println("dir: " + dir[0]);
+			System.out.println("idr: " + idr[0]);
+			boolean skipIdr = false;
 			for (int i = 0; i < numberOfGroupsOfUsers.size(); i++) {
 
 				int type = (Integer) numberOfGroupsOfUsers.elementAt(i);
@@ -15095,115 +15104,207 @@ public class SPFIndividualReport {
 				} else if (type == 9) {
 					raterCode = "IDR%";
 					groupName = "Indirect";
+				} else if (type == 1 || type == 10) {
+					continue;
 				}
 				int[] distribution = getSurveyRaterStatus(targetID,raterCode);
+
 				if (distribution[0] != 0) {
-					if(checkSplit==false){
+					// condition where there is no need to split direct and
+					// indirect reports
+					if (checkSplit == false) {
 						OO.mergeCells(xSpreadsheet,column,column + 2,row,row);
 						OO.insertString(xSpreadsheet,groupName,row,column);
-						OO.mergeCells(xSpreadsheet,column + 3,column + 4,row,row);
+						OO.mergeCells(xSpreadsheet,column + 3,column + 4,row,
+								row);
 						OO.insertString(xSpreadsheet,
 								String.valueOf(distribution[0]),row,column + 3);
-						OO.mergeCells(xSpreadsheet,column + 5,column + 6,row,row);
+						OO.mergeCells(xSpreadsheet,column + 5,column + 6,row,
+								row);
 						OO.insertString(xSpreadsheet,
-								String.valueOf(distribution[1] / 2),row,column + 5);
-	
+								String.valueOf(distribution[1] / 2),row,
+								column + 5);
+
 						PrelimQuestionController pqc = new PrelimQuestionController();
 						Vector<PrelimQuestion> pq = pqc.getQuestions(surveyID);
 						double averageOfAllQuestions = 0;
 						for (int j = 0; j < pq.size(); j++) {
 							PrelimQuestion prelimQn = pq.elementAt(j);
-							double prelimQnAns = pqc.getReportAnswersScore(
-									raterCode,prelimQn.getPrelimQnId(),targetID);
-	
+							double prelimQnAns = pqc
+									.getReportAnswersScore(raterCode,
+											prelimQn.getPrelimQnId(),targetID);
+
 							averageOfAllQuestions += prelimQnAns;
 						}
-	
-						OO.mergeCells(xSpreadsheet,column + 7,column + 10,row,row);
-	
-						if (groupName.equalsIgnoreCase("Self")) {
-	
-							OO.insertString(xSpreadsheet,"N.A.",row,column + 7);
-						} else {
-							OO.insertString(
-									xSpreadsheet,
-									String.valueOf(df.format(averageOfAllQuestions
-											/ pq.size())),row,column + 7);
-						}
-					} else {
+
+						OO.mergeCells(xSpreadsheet,column + 7,column + 10,row,
+								row);
+
 						
-						if(groupName.equals("Direct")){
-							groupName=newSubGroup;
-							OO.mergeCells(xSpreadsheet,column,column + 2,row,row);
-							OO.insertString(xSpreadsheet,groupName,row,column);
-							OO.mergeCells(xSpreadsheet,column + 3,column + 4,row,row);
 							OO.insertString(xSpreadsheet,
-									String.valueOf(newNumOfRater),row,column + 3);
-							OO.mergeCells(xSpreadsheet,column + 5,column + 6,row,row);
-							OO.insertString(xSpreadsheet,
-									String.valueOf(newRatedNumOfRaters / 2),row,column + 5);
-		
+									String.valueOf(df
+											.format(averageOfAllQuestions
+													/ pq.size()/distribution[0])),row,
+									column + 7);
+					
+
+					} else {
+						// conditions where there is a need to split. Group is
+						//direct
+						if (groupName.equals("Direct")) {
+
+							groupName = newSubGroup;
+
 							PrelimQuestionController pqc = new PrelimQuestionController();
-							Vector<PrelimQuestion> pq = pqc.getQuestions(surveyID);
+							Vector<PrelimQuestion> pq = pqc
+									.getQuestions(surveyID);
 							double averageOfAllQuestions = 0;
 							for (int j = 0; j < pq.size(); j++) {
 								PrelimQuestion prelimQn = pq.elementAt(j);
-								double prelimQnAnsDir = pqc.getReportAnswersScore(
-										"DIR%",prelimQn.getPrelimQnId(),targetID);
-								double prelimQnAnsIdr = pqc.getReportAnswersScore(
-										"IDR%",prelimQn.getPrelimQnId(),targetID);
-
-								averageOfAllQuestions += (prelimQnAnsIdr+prelimQnAnsDir);
+								double prelimQnAnsDir = pqc
+										.getReportAnswersScore("DIR%",
+												prelimQn.getPrelimQnId(),
+												targetID);
+								double prelimQnAnsIdr = pqc
+										.getReportAnswersScore("IDR%",
+												prelimQn.getPrelimQnId(),
+												targetID);
+								if ((prelimQnAnsIdr > 0)) {
+									averageOfAllQuestions += (prelimQnAnsIdr);
+								}
+								if ((prelimQnAnsDir > 0)) {
+									averageOfAllQuestions += (prelimQnAnsDir);
+								}
 							}
-								OO.mergeCells(xSpreadsheet,column + 7,column + 10,row,row);
+
+							OO.mergeCells(xSpreadsheet,column,column + 2,row,
+									row);
+							OO.insertString(xSpreadsheet,groupName,row,column);
+							OO.mergeCells(xSpreadsheet,column + 3,column + 4,
+									row,row);
+							OO.insertString(xSpreadsheet,
+									String.valueOf(newNumOfRater),row,
+									column + 3);
+							OO.mergeCells(xSpreadsheet,column + 5,column + 6,
+									row,row);
+							OO.insertString(xSpreadsheet,
+									String.valueOf(newRatedNumOfRaters / 2),
+									row,column + 5);
+
+							OO.mergeCells(xSpreadsheet,column + 7,column + 10,
+									row,row);
+
+							
+								OO.insertString(xSpreadsheet,String.valueOf(df
+										.format(averageOfAllQuestions
+												/ (pq.size())/newNumOfRater)),row,
+										column + 7);
 								
-								if (groupName.equalsIgnoreCase("Self")) {
-			
-									OO.insertString(xSpreadsheet,"N.A.",row,column + 7);
-								} else {
+								System.out.println("allscores : " + averageOfAllQuestions + " pq.size():" +  pq.size() + "nnum of raterds"+ newNumOfRater);
+							skipIdr = true;
+						} else if (groupName.equals("Indirect")) {
+							//if group is indirect 
+							if (!skipIdr) {
+								//if individual does not have a direct group
+								groupName = newSubGroup;
+
+								PrelimQuestionController pqc = new PrelimQuestionController();
+								Vector<PrelimQuestion> pq = pqc
+										.getQuestions(surveyID);
+								double averageOfAllQuestions = 0;
+								for (int j = 0; j < pq.size(); j++) {
+									PrelimQuestion prelimQn = pq.elementAt(j);
+									double prelimQnAnsDir = pqc
+											.getReportAnswersScore("DIR%",
+													prelimQn.getPrelimQnId(),
+													targetID);
+									double prelimQnAnsIdr = pqc
+											.getReportAnswersScore("IDR%",
+													prelimQn.getPrelimQnId(),
+													targetID);
+									if ((prelimQnAnsIdr > 0)) {
+										averageOfAllQuestions += (prelimQnAnsIdr);
+									}
+									if ((prelimQnAnsDir > 0)) {
+										averageOfAllQuestions += (prelimQnAnsDir);
+									}
+								}
+
+								OO.mergeCells(xSpreadsheet,column,column + 2,
+										row,row);
+								OO.insertString(xSpreadsheet,groupName,row,
+										column);
+								OO.mergeCells(xSpreadsheet,column + 3,
+										column + 4,row,row);
+								OO.insertString(xSpreadsheet,
+										String.valueOf(newNumOfRater),row,
+										column + 3);
+								OO.mergeCells(xSpreadsheet,column + 5,
+										column + 6,row,row);
+								OO.insertString(
+										xSpreadsheet,
+										String.valueOf(newRatedNumOfRaters / 2),
+										row,column + 5);
+
+								OO.mergeCells(xSpreadsheet,column + 7,
+										column + 10,row,row);
+
+							
 									OO.insertString(
 											xSpreadsheet,
-											String.valueOf(df.format(averageOfAllQuestions
-													/ (pq.size()*2))),row,column + 7);
-									
-								}
-							
-						}else if(groupName.equals("Indirect")){
-							continue;
-						}else{
-						
-						OO.mergeCells(xSpreadsheet,column,column + 2,row,row);
-						OO.insertString(xSpreadsheet,groupName,row,column);
-						OO.mergeCells(xSpreadsheet,column + 3,column + 4,row,row);
-						OO.insertString(xSpreadsheet,
-								String.valueOf(distribution[0]),row,column + 3);
-						OO.mergeCells(xSpreadsheet,column + 5,column + 6,row,row);
-						OO.insertString(xSpreadsheet,
-								String.valueOf(distribution[1] / 2),row,column + 5);
-	
-						PrelimQuestionController pqc = new PrelimQuestionController();
-						Vector<PrelimQuestion> pq = pqc.getQuestions(surveyID);
-						double averageOfAllQuestions = 0;
-						for (int j = 0; j < pq.size(); j++) {
-							PrelimQuestion prelimQn = pq.elementAt(j);
-							double prelimQnAns = pqc.getReportAnswersScore(
-									raterCode,prelimQn.getPrelimQnId(),targetID);
-	
-							averageOfAllQuestions += prelimQnAns;
-						}
-	
-						OO.mergeCells(xSpreadsheet,column + 7,column + 10,row,row);
-	
-						if (groupName.equalsIgnoreCase("Self")) {
-	
-							OO.insertString(xSpreadsheet,"N.A.",row,column + 7);
+											String.valueOf(df
+													.format(averageOfAllQuestions
+															/ (pq.size())/newNumOfRater)),
+											row,column + 7);
+
+								
+							} else {
+								//if group already went past the direct group.
+								continue;
+
+							}
 						} else {
-							OO.insertString(
-									xSpreadsheet,
-									String.valueOf(df.format(averageOfAllQuestions
-											/ pq.size())),row,column + 7);
-					
-						}
+							System.out.println("gn " + groupName);
+							OO.mergeCells(xSpreadsheet,column,column + 2,row,
+									row);
+							OO.insertString(xSpreadsheet,groupName,row,column);
+							OO.mergeCells(xSpreadsheet,column + 3,column + 4,
+									row,row);
+							OO.insertString(xSpreadsheet,
+									String.valueOf(distribution[0]),row,
+									column + 3);
+							OO.mergeCells(xSpreadsheet,column + 5,column + 6,
+									row,row);
+							OO.insertString(xSpreadsheet,
+									String.valueOf(distribution[1] / 2),row,
+									column + 5);
+
+							PrelimQuestionController pqc = new PrelimQuestionController();
+							Vector<PrelimQuestion> pq = pqc
+									.getQuestions(surveyID);
+							double averageOfAllQuestions = 0;
+							for (int j = 0; j < pq.size(); j++) {
+								PrelimQuestion prelimQn = pq.elementAt(j);
+								double prelimQnAns = pqc.getReportAnswersScore(
+										raterCode,prelimQn.getPrelimQnId(),
+										targetID);
+
+								averageOfAllQuestions += prelimQnAns;
+							}
+
+							OO.mergeCells(xSpreadsheet,column + 7,column + 10,
+									row,row);
+
+							if (groupName.equalsIgnoreCase("Self")) {
+
+								OO.insertString(xSpreadsheet,"N.A.",row,
+										column + 7);
+							} else {
+								OO.insertString(xSpreadsheet,String.valueOf(df
+										.format(averageOfAllQuestions
+												/ pq.size()/distribution[0])),row,column + 7);
+
+							}
 						}
 					}
 				} else {
@@ -15223,7 +15324,7 @@ public class SPFIndividualReport {
 
 				row++;
 			}
-			if (self != -1) {
+		
 				OO.mergeCells(xSpreadsheet,column,column + 2,row,row);
 				OO.insertString(xSpreadsheet,"Self",row,column);
 				OO.mergeCells(xSpreadsheet,column + 3,column + 4,row,row);
@@ -15232,7 +15333,7 @@ public class SPFIndividualReport {
 				OO.insertString(xSpreadsheet,"1",row,column + 5);
 				OO.mergeCells(xSpreadsheet,column + 7,column + 10,row,row);
 				OO.insertString(xSpreadsheet,"N.A.",row,column + 7);
-			}
+			
 			int endRow = row;
 
 			OO.setCellAllignment(xSpreadsheet,0,11,startRow - 1,endRow,1,2);
@@ -15248,7 +15349,7 @@ public class SPFIndividualReport {
 	public void InsertAdditionalQuestions() {
 		try {
 			// insert the additional questions header
-			
+
 			int firstRowOfPage = row;
 			OO.insertString(xSpreadsheet,
 					trans.tslt(templateLanguage,"ADDITIONAL QUESTIONS"),row,
@@ -15265,12 +15366,14 @@ public class SPFIndividualReport {
 					.getQuestions(surveyID);
 			for (int i = 0; i < questions.size(); i++) {
 				OO.insertPageBreak(xSpreadsheet,startColumn,endColumn,row);
-				if(i==0){
-					
-					OO.insertString(xSpreadsheet,
-							trans.tslt(templateLanguage,"ADDITIONAL QUESTIONS"),row,
-							column);
-					OO.setFontSize(xSpreadsheet,startColumn,endColumn,row,row,16);
+				if (i == 0) {
+
+					OO.insertString(
+							xSpreadsheet,
+							trans.tslt(templateLanguage,"ADDITIONAL QUESTIONS"),
+							row,column);
+					OO.setFontSize(xSpreadsheet,startColumn,endColumn,row,row,
+							16);
 					OO.setFontBold(xSpreadsheet,startColumn,endColumn,row,row);
 				}
 				int startborder = row + 1;
@@ -15337,7 +15440,7 @@ public class SPFIndividualReport {
 				if (splitOthers == 1)
 				// check to see if split others options is enabled
 				{
-					
+
 					if (subAns.size() > 0)// if there are comments by
 											// subordinates print them
 					{
@@ -15378,102 +15481,110 @@ public class SPFIndividualReport {
 								row,column + 1);
 						row += 2;
 					}
-					if(!combineDIRIDR){
-						if (dirAns.size() > 0)// if there are comments by superiors
+					if (!combineDIRIDR) {
+						if (dirAns.size() > 0)// if there are comments by
+												// superiors
 						// print them
 						{
 							// row++;
-							OO.insertString(
-									xSpreadsheet,
-									trans.tslt(templateLanguage,"Direct Report(s)"),
-									row,column + 1); // Change from Supervisors to
-														// Superior,
-														// Desmond 22 Oct 09
-							OO.setFontBold(xSpreadsheet,startColumn,endColumn,row,
-									row);
-							OO.setFontItalic(xSpreadsheet,startColumn,endColumn,
-									row,row);
-							row++;
-							insertAnswer(dirAns);
-	
-						} else {
-							OO.insertString(
-									xSpreadsheet,
-									trans.tslt(templateLanguage,"Direct Report(s)"),
-									row,column + 1);
-							row++;
-							OO.insertString(xSpreadsheet,"No Comments Provided.",
-									row,column + 1);
-							row += 2;
-						}
-						OO.insertPageBreak(xSpreadsheet,startColumn,endColumn,row);
-						OO.setTableBorder(xSpreadsheet,startColumn,endColumn,
-								startborder,row - 1,false,false,true,true,true,true);
-					
-	
-					if (idrAns.size() > 0)// if there are comments by superiors
-					// print them
-					{
-						// row++;
-						OO.insertString(xSpreadsheet,
-								trans.tslt(templateLanguage,"Indirect Report(s)"),
-								row,column + 1); // Change from Supervisors to
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Direct Report(s)"),row,
+									column + 1); // Change from Supervisors to
 													// Superior,
 													// Desmond 22 Oct 09
-						OO.setFontBold(xSpreadsheet,startColumn,endColumn,row,row);
-						OO.setFontItalic(xSpreadsheet,startColumn,endColumn,row,row);
-						row++;
-						insertAnswer(idrAns);
-	
-					} else {
-						OO.insertString(xSpreadsheet,
-								trans.tslt(templateLanguage,"Indirect Reports(s)"),
-								row,column + 1);
-						row++;
-						OO.insertString(xSpreadsheet,"No Comments Provided.",row,
-								column + 1);
-						row += 2;
-					}
-				} else {
-					if (dirAns.size() > 0 ||idrAns.size() > 0 )// if there are comments by superiors
+							OO.setFontBold(xSpreadsheet,startColumn,endColumn,
+									row,row);
+							OO.setFontItalic(xSpreadsheet,startColumn,
+									endColumn,row,row);
+							row++;
+							insertAnswer(dirAns);
+
+						} else {
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Direct Report(s)"),row,
+									column + 1);
+							row++;
+							OO.insertString(xSpreadsheet,
+									"No Comments Provided.",row,column + 1);
+							row += 2;
+						}
+						OO.insertPageBreak(xSpreadsheet,startColumn,endColumn,
+								row);
+						OO.setTableBorder(xSpreadsheet,startColumn,endColumn,
+								startborder,row - 1,false,false,true,true,true,
+								true);
+
+						if (idrAns.size() > 0)// if there are comments by
+												// superiors
 						// print them
 						{
 							// row++;
-							OO.insertString(
-									xSpreadsheet,
-									trans.tslt(templateLanguage,"Subordinate Report(s)"),
-									row,column + 1); // Change from Supervisors to
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Indirect Report(s)"),row,
+									column + 1); // Change from Supervisors to
+													// Superior,
+													// Desmond 22 Oct 09
+							OO.setFontBold(xSpreadsheet,startColumn,endColumn,
+									row,row);
+							OO.setFontItalic(xSpreadsheet,startColumn,
+									endColumn,row,row);
+							row++;
+							insertAnswer(idrAns);
+
+						} else {
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Indirect Reports(s)"),
+									row,column + 1);
+							row++;
+							OO.insertString(xSpreadsheet,
+									"No Comments Provided.",row,column + 1);
+							row += 2;
+						}
+					} else {
+						if (dirAns.size() > 0 || idrAns.size() > 0)// if there
+																	// are
+																	// comments
+																	// by
+																	// superiors
+						// print them
+						{
+							// row++;
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Subordinate Report(s)"),
+									row,column + 1); // Change from Supervisors
+														// to
 														// Superior,
 														// Desmond 22 Oct 09
-							OO.setFontBold(xSpreadsheet,startColumn,endColumn,row,
-									row);
-							OO.setFontItalic(xSpreadsheet,startColumn,endColumn,
+							OO.setFontBold(xSpreadsheet,startColumn,endColumn,
 									row,row);
+							OO.setFontItalic(xSpreadsheet,startColumn,
+									endColumn,row,row);
 							row++;
 							insertAnswer(dirAns);
-							
-									// row++;
-									
-									OO.setFontBold(xSpreadsheet,startColumn,endColumn,row,row);
-									OO.setFontItalic(xSpreadsheet,startColumn,endColumn,row,row);
-									row++;
-									insertAnswer(idrAns);
-				
-							
-	
+
+							// row++;
+
+							OO.setFontBold(xSpreadsheet,startColumn,endColumn,
+									row,row);
+							OO.setFontItalic(xSpreadsheet,startColumn,
+									endColumn,row,row);
+							row++;
+							insertAnswer(idrAns);
+
 						} else {
-							OO.insertString(
-									xSpreadsheet,
-									trans.tslt(templateLanguage,"Subordinate Report(s)"),
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Subordinate Report(s)"),
 									row,column + 1);
 							row++;
-							OO.insertString(xSpreadsheet,"No Comments Provided.",
-									row,column + 1);
+							OO.insertString(xSpreadsheet,
+									"No Comments Provided.",row,column + 1);
 							row += 1;
 						}
-						OO.insertPageBreak(xSpreadsheet,startColumn,endColumn,row);
+						OO.insertPageBreak(xSpreadsheet,startColumn,endColumn,
+								row);
 						OO.setTableBorder(xSpreadsheet,startColumn,endColumn,
-								startborder,row - 1,false,false,true,true,true,true);
+								startborder,row - 1,false,false,true,true,true,
+								true);
 					}
 
 				} else// split others option disabled
@@ -15499,107 +15610,113 @@ public class SPFIndividualReport {
 						if (othAns.size() > 0)
 							insertAnswer(othAns);
 					}
-					
-					if(!combineDIRIDR){
-						if (dirAns.size() > 0)// if there are comments by superiors
+
+					if (!combineDIRIDR) {
+						if (dirAns.size() > 0)// if there are comments by
+												// superiors
 						// print them
 						{
 							// row++;
-							OO.insertString(
-									xSpreadsheet,
-									trans.tslt(templateLanguage,"Direct Report(s)"),
-									row,column + 1); // Change from Supervisors to
-														// Superior,
-														// Desmond 22 Oct 09
-							OO.setFontBold(xSpreadsheet,startColumn,endColumn,row,
-									row);
-							OO.setFontItalic(xSpreadsheet,startColumn,endColumn,
-									row,row);
-							row++;
-							insertAnswer(dirAns);
-	
-						} else {
-							OO.insertString(
-									xSpreadsheet,
-									trans.tslt(templateLanguage,"Direct Report(s)"),
-									row,column + 1);
-							row++;
-							OO.insertString(xSpreadsheet,"No Comments Provided.",
-									row,column + 1);
-							row += 2;
-						}
-						OO.insertPageBreak(xSpreadsheet,startColumn,endColumn,row);
-						OO.setTableBorder(xSpreadsheet,startColumn,endColumn,
-								startborder,row - 1,false,false,true,true,true,true);
-					
-	
-					if (idrAns.size() > 0)// if there are comments by superiors
-					// print them
-					{
-						// row++;
-						OO.insertString(xSpreadsheet,
-								trans.tslt(templateLanguage,"Indirect Report(s)"),
-								row,column + 1); // Change from Supervisors to
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Direct Report(s)"),row,
+									column + 1); // Change from Supervisors to
 													// Superior,
 													// Desmond 22 Oct 09
-						OO.setFontBold(xSpreadsheet,startColumn,endColumn,row,row);
-						OO.setFontItalic(xSpreadsheet,startColumn,endColumn,row,row);
-						row++;
-						insertAnswer(idrAns);
-	
-					} else {
-						OO.insertString(xSpreadsheet,
-								trans.tslt(templateLanguage,"Indirect Reports(s)"),
-								row,column + 1);
-						row++;
-						OO.insertString(xSpreadsheet,"No Comments Provided.",row,
-								column + 1);
-						row += 2;
-					}
-				} else {
-					if (dirAns.size() > 0 ||idrAns.size() > 0 )// if there are comments by superiors
+							OO.setFontBold(xSpreadsheet,startColumn,endColumn,
+									row,row);
+							OO.setFontItalic(xSpreadsheet,startColumn,
+									endColumn,row,row);
+							row++;
+							insertAnswer(dirAns);
+
+						} else {
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Direct Report(s)"),row,
+									column + 1);
+							row++;
+							OO.insertString(xSpreadsheet,
+									"No Comments Provided.",row,column + 1);
+							row += 2;
+						}
+						OO.insertPageBreak(xSpreadsheet,startColumn,endColumn,
+								row);
+						OO.setTableBorder(xSpreadsheet,startColumn,endColumn,
+								startborder,row - 1,false,false,true,true,true,
+								true);
+
+						if (idrAns.size() > 0)// if there are comments by
+												// superiors
 						// print them
 						{
 							// row++;
-							OO.insertString(
-									xSpreadsheet,
-									trans.tslt(templateLanguage,"Subordinate Report(s)"),
-									row,column + 1); // Change from Supervisors to
-														// Superior,
-														// Desmond 22 Oct 09
-							OO.setFontBold(xSpreadsheet,startColumn,endColumn,row,
-									row);
-							OO.setFontItalic(xSpreadsheet,startColumn,endColumn,
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Indirect Report(s)"),row,
+									column + 1); // Change from Supervisors to
+													// Superior,
+													// Desmond 22 Oct 09
+							OO.setFontBold(xSpreadsheet,startColumn,endColumn,
 									row,row);
+							OO.setFontItalic(xSpreadsheet,startColumn,
+									endColumn,row,row);
 							row++;
-							insertAnswer(dirAns);
-							
-									// row++;
-									
-									OO.setFontBold(xSpreadsheet,startColumn,endColumn,row,row);
-									OO.setFontItalic(xSpreadsheet,startColumn,endColumn,row,row);
-									row++;
-									insertAnswer(idrAns);
-				
-							
-	
+							insertAnswer(idrAns);
+
 						} else {
-							OO.insertString(
-									xSpreadsheet,
-									trans.tslt(templateLanguage,"Subordinate Report(s)"),
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Indirect Reports(s)"),
 									row,column + 1);
 							row++;
-							OO.insertString(xSpreadsheet,"No Comments Provided.",
-									row,column + 1);
+							OO.insertString(xSpreadsheet,
+									"No Comments Provided.",row,column + 1);
 							row += 2;
 						}
-						OO.insertPageBreak(xSpreadsheet,startColumn,endColumn,row);
+					} else {
+						if (dirAns.size() > 0 || idrAns.size() > 0)// if there
+																	// are
+																	// comments
+																	// by
+																	// superiors
+						// print them
+						{
+							// row++;
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Subordinate Report(s)"),
+									row,column + 1); // Change from Supervisors
+														// to
+														// Superior,
+														// Desmond 22 Oct 09
+							OO.setFontBold(xSpreadsheet,startColumn,endColumn,
+									row,row);
+							OO.setFontItalic(xSpreadsheet,startColumn,
+									endColumn,row,row);
+							row++;
+							insertAnswer(dirAns);
+
+							// row++;
+
+							OO.setFontBold(xSpreadsheet,startColumn,endColumn,
+									row,row);
+							OO.setFontItalic(xSpreadsheet,startColumn,
+									endColumn,row,row);
+							row++;
+							insertAnswer(idrAns);
+
+						} else {
+							OO.insertString(xSpreadsheet,trans.tslt(
+									templateLanguage,"Subordinate Report(s)"),
+									row,column + 1);
+							row++;
+							OO.insertString(xSpreadsheet,
+									"No Comments Provided.",row,column + 1);
+							row += 2;
+						}
+						OO.insertPageBreak(xSpreadsheet,startColumn,endColumn,
+								row);
 						OO.setTableBorder(xSpreadsheet,startColumn,endColumn,
-								startborder,row - 1,false,false,true,true,true,true);
+								startborder,row - 1,false,false,true,true,true,
+								true);
 					}
-	
-			
-			
+
 				}
 
 				if (selfAns.size() > 0)// if there are comments by superiors
@@ -17793,6 +17910,39 @@ public class SPFIndividualReport {
 		return total;
 	}
 
+	public Vector getSurveyOverViewGroups(int surveyID, int targetID)
+			throws SQLException {
+		Vector total = new Vector();
+
+		String query = "SELECT distinct type FROM tbl_prelimqnans inner join tblassignment on fkraterid = raterloginid inner join";
+		query += " tblavgmean on tblavgmean.targetloginid=tblassignment.targetloginid where tblassignment.targetloginid="
+				+ targetID;
+
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try {
+			con = ConnectionBean.getConnection();
+			st = con.createStatement();
+			rs = st.executeQuery(query);
+
+			while (rs.next())
+				total.add(rs.getInt("type"));
+
+		} catch (Exception ex) {
+			System.out
+					.println("individualreport.java - getSurveyOverViewGroups - "
+							+ ex.getMessage());
+		} finally {
+			ConnectionBean.closeRset(rs); // Close ResultSet
+			ConnectionBean.closeStmt(st); // Close statement
+			ConnectionBean.close(con); // Close connection
+		}
+
+		return total;
+	}
+
 	/******************************* TARGET RANK ***********************************************/
 	/**
 	 * Writes target rank to excel.
@@ -18008,7 +18158,7 @@ public class SPFIndividualReport {
 					results[0] = rs.getInt("Distribution");
 					results[1] = rs.getInt("Rated");
 				}
-
+				
 			} catch (Exception E) {
 				System.err
 						.println("PrelimQuestionController.java - updatePrelimQnHeader - "

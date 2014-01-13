@@ -16,6 +16,10 @@ public class voUserDemographic {
 	private String sLocation = "";
 	private String sGender = "";
 	private String sEthnic = "";
+	private int edLevel;
+	private int apptAge;
+	private int yearsInMOE;
+	private String schoolType;
 	
 	
 	public int getFKAge() {
@@ -26,6 +30,30 @@ public class voUserDemographic {
 	}
 	public int getFKEthnic() {
 		return iFKEthnic;
+	}
+	public int getEdLevel() {
+		return edLevel;
+	}
+	public void setEdLevel(int edLevel) {
+		this.edLevel = edLevel;
+	}
+	public int getApptAge() {
+		return apptAge;
+	}
+	public void setApptAge(int apptAge) {
+		this.apptAge = apptAge;
+	}
+	public int getYearsInMOE() {
+		return yearsInMOE;
+	}
+	public void setYearsInMOE(int yearsInMOE) {
+		this.yearsInMOE = yearsInMOE;
+	}
+	public String getSchoolType() {
+		return schoolType;
+	}
+	public void setSchoolType(String schoolType) {
+		this.schoolType = schoolType;
 	}
 	public void setFKEthnic(int ethnic) {
 		iFKEthnic = ethnic;

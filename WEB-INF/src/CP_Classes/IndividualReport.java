@@ -8013,6 +8013,7 @@ public class IndividualReport
 
 							totalBOSS = totalRater(RTID, compID, -1, "BOSS%",
 									surveyLevel);
+							
 
 							// Re-locate and modified codes to include Peers and
 							// Subordinates by Desmond 21 Oct 09
@@ -11394,7 +11395,8 @@ public class IndividualReport
 					OO.insertString(xSpreadsheet2,
 							trans.tslt(templateLanguage, Rating[i]), r, c);
 					OO.insertNumeric(xSpreadsheet2, Result[i], r, c + 1);
-				OO.insertNumeric(xSpreadsheet, totalRater[i],rowPos[cellIdx], 0);
+
+					OO.insertNumeric(xSpreadsheet, totalRater[i],rowPos[cellIdx], 0);
 				
 
 					r++;
@@ -15407,13 +15409,13 @@ public class IndividualReport
 		if(iNoCPR==1){ //if CP Only (no CPR)
 			if(surveyLevel == 0){ //Competency Level
 				String interpretingCompReport = "This section provides the details of the ratings obtained for each of the competencies. The first graph is the aggregated score for the first competency (e.g. Developing Others). Following that is another competency.";
-				String interpretingCompReport2 = "For competency level survey, the score obtained for the 'All' category is an average score of ratings from all the raters. Similarly, you cannot simply take the average scores from peers, subordinates and superior to arrive at the average for the �All� category. This is because different categories have different number of raters.";
+				String interpretingCompReport2 = "For competency level survey, the score obtained for the 'All' category is an average score of ratings from all the raters. Similarly, you cannot simply take the average scores from peers, subordinates and superior to arrive at the average for the 锟紸ll锟�category. This is because different categories have different number of raters.";
 				OO.findAndReplace(xSpreadsheet, "<Interpreting Comp Report>", interpretingCompReport);
 				OO.findAndReplace(xSpreadsheet, "<Interpreting Comp Report 2>", interpretingCompReport2);
 				OO.findAndReplace(xSpreadsheet, "<and behaviours>", "");
 			}else{ //KB Level Survey
 				String interpretingCompReport = "This section provides the details of the ratings obtained for each of the competencies and their corresponding key behaviours. The first graph is the aggregated score for the first competency (e.g. Developing Others) followed by ratings obtained for each of the 5 key behaviours under Developing Others. Following that is another competency and its corresponding key behaviours.";
-				String interpretingCompReport2 = "For Key Behaviour Level survey, the ratings presented for the competency is a roll-up of the scores obtained for each key behaviour from the different raters. Hence, you cannot simply take the average scores from peers, subordinates and superior to arrive at the average for the �All� category. This is because different categories have different number of raters. The �All� category score was derived by averaging the raw scores of all the raters. Other than looking at the aggregated competency graph, the ratings obtained for each of its corresponding behaviour is also important as it highlights your weaker behaviour within the competency, if any. ";
+				String interpretingCompReport2 = "For Key Behaviour Level survey, the ratings presented for the competency is a roll-up of the scores obtained for each key behaviour from the different raters. Hence, you cannot simply take the average scores from peers, subordinates and superior to arrive at the average for the 锟紸ll锟�category. This is because different categories have different number of raters. The 锟紸ll锟�category score was derived by averaging the raw scores of all the raters. Other than looking at the aggregated competency graph, the ratings obtained for each of its corresponding behaviour is also important as it highlights your weaker behaviour within the competency, if any. ";
 				String andBehaviours = "and behaviours";
 				OO.findAndReplace(xSpreadsheet, "<Interpreting Comp Report>", interpretingCompReport);
 				OO.findAndReplace(xSpreadsheet, "<Interpreting Comp Report 2>", interpretingCompReport2);
@@ -15423,7 +15425,7 @@ public class IndividualReport
 		else if(iNoCPR== 0){ //if has CPR
 			if(surveyLevel == 0){ //Competency Level
 				String interpretingCompReport = "This section provides the details of the ratings obtained for each of the competencies. The first graph is the aggregated score for the first competency (e.g. Developing Others). Following that is another competency.";
-				String interpretingCompReport2 = "For competency level survey, the score obtained for the 'All' category is an average score of ratings from all the raters. Similarly, you cannot simply take the average scores from peers, subordinates and superior to arrive at the average for the �All� category. This is because different categories have different number of raters.";
+				String interpretingCompReport2 = "For competency level survey, the score obtained for the 'All' category is an average score of ratings from all the raters. Similarly, you cannot simply take the average scores from peers, subordinates and superior to arrive at the average for the 锟紸ll锟�category. This is because different categories have different number of raters.";
 				OO.findAndReplace(xSpreadsheet, "<Interpreting Comp Report>", interpretingCompReport);
 				OO.findAndReplace(xSpreadsheet, "<Interpreting Comp Report 2>", interpretingCompReport2);
 				OO.findAndReplace(xSpreadsheet, "<and behaviours>", "");
@@ -15431,8 +15433,8 @@ public class IndividualReport
 				OO.findAndReplace(xSpreadsheet, "<Mid Gap>", ""+low+" < Gap < "+high);
 				OO.findAndReplace(xSpreadsheet, "<Low Gap>", "Gap <= "+low);
 			}else{ //KB Level Survey
-				String interpretingCompReport = "The score obtained for the 'All' category is an average score of ratings from all the raters. Similarly, you cannot simply take the average scores from peers, subordinates and superior to arrive at the average for the �All� category. This is because different categories have different number of raters.";
-				String interpretingCompReport2 = "The ratings presented for the competency is a roll-up of the scores obtained for each key behaviour from the different raters. Hence, you cannot simply take the average scores from peers, subordinates and superior to arrive at the average for the �All� category. This is because different categories have different number of raters. The �All� category score was derived by averaging the raw scores of all the raters. Other than looking at the aggregated competency graph, the ratings obtained for each of its corresponding behaviour is also important as it highlights your weaker behaviour within the competency, if any.";
+				String interpretingCompReport = "The score obtained for the 'All' category is an average score of ratings from all the raters. Similarly, you cannot simply take the average scores from peers, subordinates and superior to arrive at the average for the 锟紸ll锟�category. This is because different categories have different number of raters.";
+				String interpretingCompReport2 = "The ratings presented for the competency is a roll-up of the scores obtained for each key behaviour from the different raters. Hence, you cannot simply take the average scores from peers, subordinates and superior to arrive at the average for the 锟紸ll锟�category. This is because different categories have different number of raters. The 锟紸ll锟�category score was derived by averaging the raw scores of all the raters. Other than looking at the aggregated competency graph, the ratings obtained for each of its corresponding behaviour is also important as it highlights your weaker behaviour within the competency, if any.";
 				String andBehaviours = "and behaviours";
 				OO.findAndReplace(xSpreadsheet, "<Interpreting Comp Report>", interpretingCompReport);
 				OO.findAndReplace(xSpreadsheet, "<Interpreting Comp Report 2>", interpretingCompReport2);
@@ -18867,4 +18869,3 @@ for (int i = 0; i < vClust.size(); i++) {
 		return orderedList;
 	}
 }
-

@@ -5,12 +5,16 @@ import java.util.Vector;
 
 import CP_Classes.common.ConnectionBean;
 import CP_Classes.vo.voAge;
+import CP_Classes.vo.voAppointmentAge;
 import CP_Classes.vo.voDepartment;
+import CP_Classes.vo.voEducationLevel;
 import CP_Classes.vo.voGender;
 import CP_Classes.vo.voJobFunction;
 import CP_Classes.vo.voJobLevel;
 import CP_Classes.vo.voLocation;
+import CP_Classes.vo.voSchool;
 import CP_Classes.vo.voUserDemographic;
+import CP_Classes.vo.voYears;
 import CP_Classes.vo.votblSurveyDemos;
 import CP_Classes.vo.voEthnic;
 public class DemographicEntry
@@ -451,7 +455,150 @@ public class DemographicEntry
 		}
 		return exist;
 	}
+	
+	public int EducationLevelSelected(int surveyID) {
+		int exist = 0;
 
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		
+		try {
+			String query = "SELECT DISTINCT tblSurveyDemos.DemographicID FROM tblDemographicSelection INNER JOIN ";
+			query = query + "tblSurveyDemos ON tblDemographicSelection.DemographicID = tblSurveyDemos.DemographicID ";
+			query = query + "WHERE tblDemographicSelection.DemographicName = 'Education Level'";
+			query = query + " and tblSurveyDemos.SurveyID = " + surveyID;
+			/*
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			*/
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+			if(rs.next())
+				exist = 1;
+
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		} finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return exist;
+	}
+	
+	public int ApptAgeSelected(int surveyID) {
+		int exist = 0;
+
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		
+		try {
+			String query = "SELECT DISTINCT tblSurveyDemos.DemographicID FROM tblDemographicSelection INNER JOIN ";
+			query = query + "tblSurveyDemos ON tblDemographicSelection.DemographicID = tblSurveyDemos.DemographicID ";
+			query = query + "WHERE tblDemographicSelection.DemographicName = 'Appointment Age'";
+			query = query + " and tblSurveyDemos.SurveyID = " + surveyID;
+			/*
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			*/
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+			if(rs.next())
+				exist = 1;
+
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		} finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return exist;
+	}
+	
+	public int YearsSelected(int surveyID) {
+		int exist = 0;
+
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		
+		try {
+			String query = "SELECT DISTINCT tblSurveyDemos.DemographicID FROM tblDemographicSelection INNER JOIN ";
+			query = query + "tblSurveyDemos ON tblDemographicSelection.DemographicID = tblSurveyDemos.DemographicID ";
+			query = query + "WHERE tblDemographicSelection.DemographicName = 'Years in MOE'";
+			query = query + " and tblSurveyDemos.SurveyID = " + surveyID;
+			/*
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			*/
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+			if(rs.next())
+				exist = 1;
+
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		} finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return exist;
+	}
+
+	public int schoolSelected(int surveyID) {
+		int exist = 0;
+
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		
+		try {
+			String query = "SELECT DISTINCT tblSurveyDemos.DemographicID FROM tblDemographicSelection INNER JOIN ";
+			query = query + "tblSurveyDemos ON tblDemographicSelection.DemographicID = tblSurveyDemos.DemographicID ";
+			query = query + "WHERE tblDemographicSelection.DemographicName = 'type of school'";
+			query = query + " and tblSurveyDemos.SurveyID = " + surveyID;
+			/*
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			*/
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+
+			if(rs.next())
+				exist = 1;
+
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		} finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return exist;
+	}
 /*******************************************************************************************************/
 
 	/**
@@ -1186,7 +1333,176 @@ public class DemographicEntry
 		}
 		return v;
 	}
+	/**
+	 * Get all education levels under the particular organization.
+	 * This is to be listed out in combo box at raters data entry.
+	 */
+	public Vector getAllEdLevel(int FKOrg) {
+		Vector v=new Vector();
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
 
+		try {
+			String query = "Select * from EdLevel where edleveldesc <> 'NA' and FKOrganization = " + FKOrg;
+			query = query + " order by edleveldesc";
+			/*
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			*/
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+            
+            while(rs.next())
+            {
+            	voEducationLevel vo = new voEducationLevel();
+            	vo.setiFKOrganization(rs.getInt("FKOrganization"));
+            	vo.setEducationLevel(rs.getString("edleveldesc"));
+            	vo.setPKedLevel(rs.getInt("PKEdLevel"));
+            	
+            	v.add(vo);
+            }
+			return v;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return v;
+	}
+	/**
+	 * Get all appt age under the particular organization.
+	 * This is to be listed out in combo box at raters data entry.
+	 */
+	public Vector getAllApptAgeRange(int FKOrg) {
+		Vector v=new Vector();
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try {
+			String query = "Select * from ApptAge where apptagerangetop <> 'NA' and FKOrganization = " + FKOrg;
+			query = query + " order by ApptAge";
+			/*
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			*/
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+            
+            while(rs.next())
+            {
+            	voAppointmentAge vo = new voAppointmentAge();
+            	vo.setFKOrganization(rs.getInt("FKOrganization"));
+            	vo.setPKApptRangeTop(rs.getInt("ApptAgeRangeTp"));
+            	vo.setPKApptAge(rs.getInt("PKApptAge"));
+            	
+            	v.add(vo);
+            }
+			return v;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return v;
+	}
+	
+	/**
+	 * Get all year range under the particular organization.
+	 * This is to be listed out in combo box at raters data entry.
+	 */
+	public Vector getAllYears(int FKOrg) {
+		Vector v=new Vector();
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try {
+			String query = "Select * from Years where yearrangetop <> 'NA' and FKOrganization = " + FKOrg;
+			query = query + " order by yearrangetop";
+			/*
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			*/
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+            
+            while(rs.next())
+            {
+            	voYears vo = new voYears();
+            	vo.setFKOrganization(rs.getInt("FKOrganization"));
+            	vo.setYearsRangeTop(rs.getInt("YearRangeTop"));
+            	vo.setPKyears(rs.getInt("PKYears"));
+            	
+            	v.add(vo);
+            }
+			return v;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return v;
+	}
+	
+	/**
+	 * Get all year range under the particular organization.
+	 * This is to be listed out in combo box at raters data entry.
+	 */
+	public Vector getAllSchType(int FKOrg) {
+		Vector v=new Vector();
+		Connection con = null;
+		Statement st = null;
+		ResultSet rs = null;
+
+		try {
+			String query = "Select * from schtype where schtypedesc <> 'NA' and FKOrganization = " + FKOrg;
+			query = query + " order by yearrangetop";
+			/*
+			db.openDB();
+			Statement stmt = db.con.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			*/
+			con=ConnectionBean.getConnection();
+			st=con.createStatement();
+			rs=st.executeQuery(query);
+            
+            while(rs.next())
+            {
+            	voSchool vo = new voSchool();
+            	vo.setFKOrganization(rs.getInt("FKOrganization"));
+            	vo.setSchTypeDesc(rs.getString("schtypedesc"));
+            	vo.setPKSchType(rs.getInt("pkschtype"));
+            	
+            	v.add(vo);
+            }
+			return v;
+		} catch (SQLException SE) {
+			System.err.println(SE.getMessage());
+		}finally{
+			ConnectionBean.closeRset(rs); //Close ResultSet
+			ConnectionBean.closeStmt(st); //Close statement
+			ConnectionBean.close(con); //Close connection
+
+		}
+		return v;
+	}
 	/**
 	 * Get all departments under the particular organization.
 	 * This is to be listed out in combo box at raters data entry.
@@ -1390,7 +1706,8 @@ public class DemographicEntry
 	 * Insert new demographics record to database.
 	 * This is use only when the rater never used the system before.
 	 */
-	public boolean InsertRecord(int pkUser, int age, int ethnic, int gender, int jobFunct, int jobLevel, int location) throws SQLException, Exception  {
+	public boolean InsertRecord(int pkUser, int age, int ethnic, int gender, int jobFunct, int jobLevel, 
+			int location,String edLevel,int apptAge,int years,String schType) throws SQLException, Exception  {
 				
 		if(age == 0)
 			age = getNA(3);
@@ -1411,7 +1728,8 @@ public class DemographicEntry
 		try{
 			String sql = "Insert into [UserDemographic] values(";
 			sql = sql + pkUser + ", " + age + ", " + ethnic + ", " + gender;
-			sql = sql + ", " + jobFunct + ", " + jobLevel + ", " + location + ")";
+			sql = sql + ", " + jobFunct + ", " + jobLevel + ", " + location;
+			sql = sql + ", " + edLevel + ", " + apptAge + ", " + years + ", " + schType+ ")";
 			/*
 			db.openDB();
 			PreparedStatement ps = db.con.prepareStatement(sql);

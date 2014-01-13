@@ -168,8 +168,8 @@ public class PrelimQuestionController {
 		Connection con = null;
 		Statement st = null;
 		ResultSet rs = null;
-		double averageScore = 0;
-		
+	
+		double score =0;
 		String query="SELECT * FROM tbl_PrelimQnAns " +
 		"INNER JOIN tblAssignment ON tbl_PrelimQnAns.FKAssignmentID = tblAssignment.AssignmentID " +
 		"WHERE FKPrelimQnID ='"+fkPrelimQnId+"' AND tblAssignment.TargetLoginID='"+targetID+"' AND RaterStatus='1' AND tblAssignment.RaterCode LIKE '"+raterCategory+"'";
@@ -178,8 +178,8 @@ public class PrelimQuestionController {
 			con=ConnectionBean.getConnection();
 			st=con.createStatement();
 			rs=st.executeQuery(query);
-			double score =0;
-			int count = 0;
+			
+		
 			
 			while(rs != null && rs.next())
 			{
@@ -197,11 +197,10 @@ public class PrelimQuestionController {
 				} else if (answer.equalsIgnoreCase("Lessthanonceaweek")|| answer.equalsIgnoreCase("Notwellatall")){
 					score+=1;
 				}
-				count++;
+				
 						
 			}
-			
-			averageScore = score/count;
+System.out.println("qn: " + fkPrelimQnId + "score: " + score +  "ratercatergory: " + raterCategory );
 		}
         catch(Exception E) 
         {
@@ -214,7 +213,7 @@ public class PrelimQuestionController {
         	ConnectionBean.close(con); //Close connection
         }
 		
-		return averageScore;
+		return score;
 	}
 	
 	public Vector<PrelimQuestionAns> getAnswers(int fkPrelimQnId, int fkAssignmentId, int fkRaterId)
